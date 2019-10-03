@@ -1,13 +1,17 @@
 {
   "name": "eslint-config-discourse",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
   "dependencies": {
     "babel-eslint": "^10.0.3",
     "eslint": "^6.5.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-eslint": "^8.2",
+    "eslint": "^4.19",
+    "prettier": "^1.18.2"
+  },
   "peerDependencies": {
     "babel-eslint": "^8.2",
     "eslint": "^4.19",
