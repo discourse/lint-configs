@@ -1,0 +1,32 @@
+{
+  "name": "eslint-config-discourse",
+  "version": "1.0.0",
+  "description": "Shareable eslint config for Discourse and plugins",
+  "main": "index.js",
+  "dependencies": {
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.5.1"
+  },
+  "devDependencies": {},
+  "peerDependencies": {
+    "babel-eslint": "^8.2",
+    "eslint": "^4.19",
+    "prettier": "^1.18.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/discourse/eslint-config-discourse.git"
+  },
+  "keywords": [
+    "discourse"
+  ],
+  "author": "Joffrey Jaffeux",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/discourse/eslint-config-discourse/issues"
+  },
+  "homepage": "https://github.com/discourse/eslint-config-discourse#readme"
+}
