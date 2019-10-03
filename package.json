@@ -1,20 +1,14 @@
 {
   "name": "eslint-config-discourse",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
-  "dependencies": {
-    "babel-eslint": "^8.2",
-    "eslint": "^4.19"
-  },
+  "dependencies": {},
   "devDependencies": {},
   "peerDependencies": {
     "babel-eslint": "^8.2",
     "eslint": "^4.19",
     "prettier": "^1.18.2"
-  },
-  "scripts": {
-    "postinstall": "yarn add --dev install-peerdeps --ignore-scripts && install-peerdeps --dev eslint-config-discourse -Y --extra-args \"--ignore-scripts\""
   },
   "repository": {
     "type": "git",
