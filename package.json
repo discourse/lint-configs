@@ -4,7 +4,10 @@
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint-plugin-node": "^10.0.0",
+    "prettier": "^1.18.2"
+  },
   "peerDependencies": {
     "babel-eslint": "^8.2",
     "eslint": "^4.19",
