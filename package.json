@@ -7,7 +7,6 @@
   "devDependencies": {
     "eslint": "^4.19",
     "babel-eslint": "^8.2",
-    "eslint-plugin-node": "^10.0.0",
     "prettier": "^1.18.2"
   },
   "peerDependencies": {
