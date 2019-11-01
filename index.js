@@ -91,6 +91,7 @@ module.exports = {
     "no-undef": 2,
     "no-unused-vars": 2,
     "no-with": 2,
+    radix: 2,
     semi: 2,
     strict: 0,
     "valid-typeof": 2,
