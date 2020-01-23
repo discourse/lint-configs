@@ -95,7 +95,8 @@ module.exports = {
     semi: 2,
     strict: 0,
     "valid-typeof": 2,
-    "wrap-iife": [2, "inside"]
+    "wrap-iife": [2, "inside"],
+    "ember-objects": 2
   },
   parser: "babel-eslint"
 };
