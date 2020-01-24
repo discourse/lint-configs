@@ -15,6 +15,7 @@ module.exports = {
     ecmaVersion: 7,
     sourceType: "module"
   },
+  plugins: ["discourse-ember"],
   globals: {
     $: true,
     _: true,
@@ -59,6 +60,7 @@ module.exports = {
     pauseTest: true
   },
   rules: {
+    "discourse-ember/ember-objects": 2,
     "block-scoped-var": 2,
     "dot-notation": 0,
     eqeqeq: [2, "allow-null"],
