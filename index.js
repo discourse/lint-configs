@@ -60,7 +60,7 @@ module.exports = {
     pauseTest: true
   },
   rules: {
-    "discourse-ember/ember-objects": 2,
+    "discourse-ember/global-ember": 2,
     "block-scoped-var": 2,
     "dot-notation": 0,
     eqeqeq: [2, "allow-null"],
@@ -98,7 +98,6 @@ module.exports = {
     strict: 0,
     "valid-typeof": 2,
     "wrap-iife": [2, "inside"],
-    "ember-objects": 2
   },
   parser: "babel-eslint"
 };
