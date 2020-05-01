@@ -36,7 +36,6 @@ module.exports = {
     File: true,
     fillIn: true,
     find: true,
-    Handlebars: true,
     hasModule: true,
     I18n: true,
     invisible: true,
