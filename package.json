@@ -1,12 +1,12 @@
 {
   "name": "eslint-config-discourse",
-  "version": "1.2.0",
+  "version": "1.1.1",
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
   "dependencies": {
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.8.0",
-    "prettier": "^2.0.5"
+    "babel-eslint": "^8.2",
+    "eslint": "^4.19",
+    "prettier": "^1.19.1"
   },
   "scripts": {
     "test": "eslint --ignore-pattern !.* *.js .*.js"
