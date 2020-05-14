@@ -37,7 +37,6 @@ module.exports = {
     fillIn: true,
     find: true,
     hasModule: true,
-    I18n: true,
     invisible: true,
     jQuery: true,
     keyboardHelper: true,
