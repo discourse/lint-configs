@@ -3,18 +3,24 @@
 /* eslint-env node */
 
 module.exports = {
+  root: true,
+  parser: "babel-eslint",
   env: {
     browser: true,
     builtin: true,
     es6: true,
     jasmine: true,
     mocha: true,
-    node: true
+    node: true,
   },
   parserOptions: {
-    ecmaVersion: 7,
-    sourceType: "module"
+    ecmaVersion: 2018,
+    sourceType: "module",
+    ecmaFeatures: {
+      legacyDecorators: true,
+    },
   },
+  plugins: ["ember", "discourse-ember"],
   globals: {
     $: true,
     _: true,
@@ -54,7 +60,8 @@ module.exports = {
     triggerEvent: true,
     visible: true,
     visit: true,
-    pauseTest: true
+    pauseTest: true,
+    bootbox: true,
   },
   rules: {
     "block-scoped-var": 2,
@@ -93,7 +100,6 @@ module.exports = {
     semi: 2,
     strict: 0,
     "valid-typeof": 2,
-    "wrap-iife": [2, "inside"]
+    "wrap-iife": [2, "inside"],
   },
-  parser: "babel-eslint"
 };
