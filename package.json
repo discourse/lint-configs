@@ -4,14 +4,15 @@
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
   "dependencies": {
-    "ember-template-lint": "^2.11.0",
-    "eslint-plugin-lodash": "^7.1.0",
     "babel-eslint": "^10.1.0",
+    "ember-template-lint": "^2.11.0",
+    "ember-template-lint-plugin-discourse": "latest",
     "eslint": "^6.8.0",
-    "prettier": "^2.1.1",
     "eslint-plugin-discourse-ember": "latest",
     "eslint-plugin-ember": "^6.10.0",
-    "eslint-plugin-node": "^8.0.0"
+    "eslint-plugin-lodash": "^7.1.0",
+    "eslint-plugin-node": "^8.0.0",
+    "prettier": "^2.1.1"
   },
   "scripts": {
     "test": "eslint --ignore-pattern !.* *.js .*.js"
