@@ -11,14 +11,14 @@ module.exports = {
     es6: true,
     jasmine: true,
     mocha: true,
-    node: true
+    node: true,
   },
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module",
     ecmaFeatures: {
-      legacyDecorators: true
-    }
+      legacyDecorators: true,
+    },
   },
   plugins: ["ember", "discourse-ember"],
   globals: {
@@ -61,7 +61,7 @@ module.exports = {
     visible: true,
     visit: true,
     pauseTest: true,
-    bootbox: true
+    bootbox: true,
   },
   rules: {
     "block-scoped-var": 2,
@@ -100,6 +100,6 @@ module.exports = {
     semi: 2,
     strict: 0,
     "valid-typeof": 2,
-    "wrap-iife": [2, "inside"]
-  }
+    "wrap-iife": [2, "inside"],
+  },
 };
