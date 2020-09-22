@@ -101,5 +101,6 @@ module.exports = {
     strict: 0,
     "valid-typeof": 2,
     "wrap-iife": [2, "inside"],
+    curly: 2,
   },
 };
