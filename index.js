@@ -27,7 +27,6 @@ module.exports = {
     andThen: true,
     asyncRender: true,
     Blob: true,
-    bootbox: true,
     click: true,
     waitUntil: true,
     getSettledState: true,
