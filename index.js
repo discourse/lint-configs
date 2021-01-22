@@ -102,5 +102,12 @@ module.exports = {
     "valid-typeof": 2,
     "wrap-iife": [2, "inside"],
     curly: 2,
+    "no-duplicate-imports": 2,
+    "sort-imports": [
+      "error",
+      {
+        ignoreDeclarationSort: true,
+      },
+    ],
   },
 };
