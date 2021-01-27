@@ -12,7 +12,7 @@
     "eslint-plugin-ember": "^6.10.0",
     "eslint-plugin-lodash": "^7.1.0",
     "eslint-plugin-node": "^8.0.0",
-    "prettier": "2.1.2"
+    "prettier": "2.2.1"
   },
   "scripts": {
     "test": "eslint --ignore-pattern !.* *.js .*.js"
