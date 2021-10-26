@@ -109,5 +109,6 @@ module.exports = {
         ignoreDeclarationSort: true,
       },
     ],
+    "object-shorthand": ["error", "properties"]
   },
 };
