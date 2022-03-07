@@ -9,8 +9,6 @@ module.exports = {
     browser: true,
     builtin: true,
     es6: true,
-    jasmine: true,
-    mocha: true,
     node: true,
   },
   parserOptions: {
@@ -25,7 +23,6 @@ module.exports = {
     $: true,
     Blob: true,
     define: true,
-    Ember: true,
     File: true,
     moment: true,
     require: true,
@@ -79,6 +76,6 @@ module.exports = {
         ignoreDeclarationSort: true,
       },
     ],
-    "object-shorthand": ["error", "properties"]
+    "object-shorthand": ["error", "properties"],
   },
 };
