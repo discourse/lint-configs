@@ -4,7 +4,7 @@
 
 module.exports = {
   root: true,
-  parser: "babel-eslint",
+  parser: "@babel/eslint-parser",
   env: {
     browser: true,
     builtin: true,
@@ -16,8 +16,9 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module",
-    ecmaFeatures: {
-      legacyDecorators: true,
+    requireConfigFile: false,
+    babelOptions: {
+      plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
     },
   },
   plugins: ["ember", "discourse-ember"],
