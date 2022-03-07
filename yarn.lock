@@ -755,10 +755,10 @@ ember-rfc176-data@^0.3.15:
   resolved "https://registry.yarnpkg.com/ember-rfc176-data/-/ember-rfc176-data-0.3.17.tgz#d4fc6c33abd6ef7b3440c107a28e04417b49860a"
   integrity sha512-EVzTTKqxv9FZbEh6Ktw56YyWRAA0MijKvl7H8C06wVF+8f/cRRz3dXxa4nkwjzyVwx4rzKGuIGq77hxJAQhWWw==
 
-ember-template-lint-plugin-discourse@latest:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/ember-template-lint-plugin-discourse/-/ember-template-lint-plugin-discourse-1.0.1.tgz#518f5a925f4bab2466315865e85cad1fd555ca00"
-  integrity sha512-BMd5QyUCTRFgIYXlzS0yO5nfg3U4oZ/UpFEYw7KuZ/zPbTSP17g22KfbCydi4ByaP5lw3jn3Fu/dIKQ9aCuoJQ==
+ember-template-lint-plugin-discourse@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ember-template-lint-plugin-discourse/-/ember-template-lint-plugin-discourse-2.0.0.tgz#9805dff60763fae68b5df82b92fb431eb739c13e"
+  integrity sha512-2bPz/47OfuYGj4w2RNyDcXCYA/4JtRAXRIsaA6PTm4Uc44exK/GBd4RfT2ywmq0CImvj2kGkqpuUgkAtVf6aZQ==
 
 ember-template-lint@^4.2.0:
   version "4.2.0"

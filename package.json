@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-discourse",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
   "dependencies": {
@@ -8,7 +8,7 @@
     "@babel/eslint-parser": "^7.17.0",
     "@babel/plugin-proposal-decorators": "^7.17.2",
     "ember-template-lint": "^4.2.0",
-    "ember-template-lint-plugin-discourse": "latest",
+    "ember-template-lint-plugin-discourse": "^2.0.0",
     "eslint": "^8.10.0",
     "eslint-plugin-discourse-ember": "latest",
     "eslint-plugin-ember": "^10.5.9",
