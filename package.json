@@ -1,20 +1,20 @@
 {
   "name": "eslint-config-discourse",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "Shareable eslint config for Discourse and plugins",
   "main": "index.js",
   "dependencies": {
-    "@babel/core": "^7.17.5",
-    "@babel/eslint-parser": "^7.17.0",
-    "@babel/plugin-proposal-decorators": "^7.17.2",
-    "ember-template-lint": "^4.4.2",
+    "@babel/core": "^7.18.5",
+    "@babel/eslint-parser": "^7.18.2",
+    "@babel/plugin-proposal-decorators": "^7.18.2",
+    "ember-template-lint": "^4.10.0",
     "ember-template-lint-plugin-discourse": "^2.0.0",
-    "eslint": "^8.10.0",
+    "eslint": "^8.17.0",
     "eslint-plugin-discourse-ember": "latest",
-    "eslint-plugin-ember": "^10.5.9",
+    "eslint-plugin-ember": "^10.6.1",
     "eslint-plugin-lodash": "^7.1.0",
     "eslint-plugin-node": "^11.1.0",
-    "prettier": "2.5.1"
+    "prettier": "2.7.1"
   },
   "scripts": {
     "test": "eslint --ignore-pattern !.* *.js .*.js"
