@@ -25,6 +25,7 @@ module.exports = {
     Blob: true,
     define: true,
     File: true,
+    globalThis: true,
     moment: true,
     require: true,
     requirejs: true,
