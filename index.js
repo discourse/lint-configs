@@ -19,7 +19,7 @@ module.exports = {
       plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
     },
   },
-  plugins: ["ember", "discourse-ember"],
+  plugins: ["ember", "discourse-ember", "sort-class-members"],
   globals: {
     $: true,
     Blob: true,
@@ -79,5 +79,39 @@ module.exports = {
       },
     ],
     "object-shorthand": ["error", "properties"],
+    "no-dupe-class-members": 2,
+    "sort-class-members/sort-class-members": [
+      2,
+      {
+        order: [
+          "[static-properties]",
+          "[static-methods]",
+          "[injected-services]",
+          "[injected-controllers]",
+          "[tracked-properties]",
+          "[properties]",
+          "[private-properties]",
+          "constructor",
+          "[everything-else]",
+        ],
+        groups: {
+          "injected-services": [
+            { groupByDecorator: "service", type: "property" },
+          ],
+          "injected-controllers": [
+            { groupByDecorator: "controller", type: "property" },
+          ],
+          "tracked-properties": [
+            { groupByDecorator: "tracked", type: "property" },
+          ],
+          "private-properties": [
+            { type: "property", private: true },
+            { type: "property", name: "/_.+/" },
+          ],
+        },
+        accessorPairPositioning: "getThenSet",
+        stopAfterFirstProblem: false,
+      },
+    ],
   },
 };
