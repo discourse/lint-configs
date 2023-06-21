@@ -11,7 +11,8 @@
   "homepage": "https://github.com/discourse/eslint-config-discourse#readme",
   "main": "index.js",
   "scripts": {
-    "test": "eslint --ignore-pattern !.* *.js .*.js"
+    "lint:js": "yarn eslint --ignore-pattern !.* *.js .*.js",
+    "lint:prettier": "yarn prettier --list-different ."
   },
   "dependencies": {
     "@babel/core": "^7.22.5",
