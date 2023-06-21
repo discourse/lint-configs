@@ -2,6 +2,8 @@
 
 /* eslint-env node */
 
+const { TEMPLATE_TAG_PLACEHOLDER } = require('ember-template-imports/src/util');
+
 module.exports = {
   root: true,
   parser: "@babel/eslint-parser",
@@ -84,6 +86,7 @@ module.exports = {
       2,
       {
         order: [
+          "[template-tag]",
           "[static-properties]",
           "[static-methods]",
           "[injected-services]",
@@ -95,6 +98,16 @@ module.exports = {
           "[everything-else]",
         ],
         groups: {
+          // https://github.com/ember-cli/eslint-plugin-ember/issues/1896
+          // This only sort of works: in addition to the issues mentioned
+          // above, it doesn't seem to reliably enforce the order, e.g.
+          // [injected-services] -> <template> -> [injected-services]
+          // doesn't seem to trigger the error. That being said, it does
+          // work sometimes and this is needed to avoid emitting errors
+          // in the limited cases where it does work.
+          "template-tag": [
+            { type: "property", name: `/${TEMPLATE_TAG_PLACEHOLDER}/` },
+          ],
           "injected-services": [
             { groupByDecorator: "service", type: "property" },
           ],
@@ -114,4 +127,17 @@ module.exports = {
       },
     ],
   },
+
+  // https://github.com/ember-cli/eslint-plugin-ember/issues/1895
+  // We may eventually be able to drop this by extending the base
+  // config from eslint-plugin-ember. In the meantime, this
+  overrides: [
+    {
+      files: ['**/*.gjs', '**/*.gts'],
+      processor: 'ember/<template>',
+      globals: {
+        [TEMPLATE_TAG_PLACEHOLDER]: 'readonly',
+      },
+    },
+  ],
 };
