@@ -1,8 +1,18 @@
 {
   "name": "eslint-config-discourse",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Shareable eslint config for Discourse and plugins",
+  "author": "Joffrey Jaffeux",
+  "license": "MIT",
+  "keywords": [
+    "discourse"
+  ],
+  "repository": "https://github.com/discourse/eslint-config-discourse",
+  "homepage": "https://github.com/discourse/eslint-config-discourse#readme",
   "main": "index.js",
+  "scripts": {
+    "test": "eslint --ignore-pattern !.* *.js .*.js"
+  },
   "dependencies": {
     "@babel/core": "^7.18.5",
     "@babel/eslint-parser": "^7.18.2",
@@ -17,21 +27,5 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-sort-class-members": "^1.14.1",
     "prettier": "2.8.1"
-  },
-  "scripts": {
-    "test": "eslint --ignore-pattern !.* *.js .*.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/discourse/eslint-config-discourse.git"
-  },
-  "keywords": [
-    "discourse"
-  ],
-  "author": "Joffrey Jaffeux",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/discourse/eslint-config-discourse/issues"
-  },
-  "homepage": "https://github.com/discourse/eslint-config-discourse#readme"
+  }
 }
