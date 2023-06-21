@@ -1,4 +1,4 @@
-name: ESLint Config Tests
+name: CI
 
 on:
   pull_request:
@@ -7,20 +7,37 @@ on:
       - main
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    name: Yarn Test
+    name: Linting
 
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "18"
           cache: "yarn"
 
       - name: Yarn install
         run: yarn install
 
-      - name: Tests
-        run: yarn test
+      - name: ESLint
+        run: yarn lint:js
+
+      - name: Prettier
+        if: ${{ !cancelled() }}
+        run: yarn lint:prettier
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Publish package
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}

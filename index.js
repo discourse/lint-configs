@@ -2,7 +2,7 @@
 
 /* eslint-env node */
 
-const { TEMPLATE_TAG_PLACEHOLDER } = require('ember-template-imports/src/util');
+const { TEMPLATE_TAG_PLACEHOLDER } = require("ember-template-imports/src/util");
 
 module.exports = {
   root: true,
@@ -133,10 +133,10 @@ module.exports = {
   // config from eslint-plugin-ember. In the meantime, this
   overrides: [
     {
-      files: ['**/*.gjs', '**/*.gts'],
-      processor: 'ember/<template>',
+      files: ["**/*.gjs", "**/*.gts"],
+      processor: "ember/<template>",
       globals: {
-        [TEMPLATE_TAG_PLACEHOLDER]: 'readonly',
+        [TEMPLATE_TAG_PLACEHOLDER]: "readonly",
       },
     },
   ],
