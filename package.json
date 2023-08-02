@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-discourse",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Shareable eslint config for Discourse and plugins",
   "author": "Joffrey Jaffeux",
   "license": "MIT",
@@ -22,6 +22,7 @@
     "ember-template-lint": "^5.10.3",
     "ember-template-lint-plugin-discourse": "^3.0.0",
     "eslint": "^8.43.0",
+    "eslint-plugin-decorator-position": "^5.0.2",
     "eslint-plugin-discourse-ember": "latest",
     "eslint-plugin-ember": "^11.8.0",
     "eslint-plugin-lodash": "^7.1.0",
