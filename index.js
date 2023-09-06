@@ -21,7 +21,12 @@ module.exports = {
       plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
     },
   },
-  plugins: ["ember", "discourse-ember", "sort-class-members"],
+  plugins: [
+    "ember",
+    "discourse-ember",
+    "sort-class-members",
+    "decorator-position",
+  ],
   globals: {
     _: "off",
     $: "readonly",
@@ -161,6 +166,7 @@ module.exports = {
         stopAfterFirstProblem: false,
       },
     ],
+    "decorator-position/decorator-position": ["error", { printWidth: 80 }],
   },
 
   // https://github.com/ember-cli/eslint-plugin-ember/issues/1895
