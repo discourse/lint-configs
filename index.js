@@ -162,31 +162,34 @@ module.exports = {
       },
     ],
     "decorator-position/decorator-position": ["error", { printWidth: 80 }],
-    "simple-import-sort/imports": ["error", {
-      "groups": [
-        [
-          // Ember/glimmer
-          "^@ember/",
-          "^@glimmer/",
-          // Any other packages ('longest match wins')
-          "",
-          // Internal
-          "^discourse/",
-          "^discourse-common/",
-          "^admin/",
-          "^wizard/",
-          "^I18n$",
-          "^select-kit/",
-          "^float-kit/",
-          "^truth-helpers/",
-          // Plugins
-          "^discourse/plugins/",
-          // Relative
-          "^\\.\\.\/",
-          "^\\.\/"
-        ]
-      ]
-    }]
+    "simple-import-sort/imports": [
+      "error",
+      {
+        groups: [
+          [
+            // Ember/glimmer
+            "^@ember/",
+            "^@glimmer/",
+            // Any other packages ('longest match wins')
+            "",
+            // Internal
+            "^discourse/",
+            "^discourse-common/",
+            "^admin/",
+            "^wizard/",
+            "^I18n$",
+            "^select-kit/",
+            "^float-kit/",
+            "^truth-helpers/",
+            // Plugins
+            "^discourse/plugins/",
+            // Relative
+            "^\\.\\./",
+            "^\\./",
+          ],
+        ],
+      },
+    ],
   },
 
   // https://github.com/ember-cli/eslint-plugin-ember/issues/1895
