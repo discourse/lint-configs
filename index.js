@@ -26,6 +26,7 @@ module.exports = {
     "discourse-ember",
     "sort-class-members",
     "decorator-position",
+    "simple-import-sort",
   ],
   globals: {
     _: "off",
@@ -114,12 +115,6 @@ module.exports = {
     "wrap-iife": [2, "inside"],
     curly: 2,
     "no-duplicate-imports": 2,
-    "sort-imports": [
-      "error",
-      {
-        ignoreDeclarationSort: true,
-      },
-    ],
     "object-shorthand": ["error", "properties"],
     "no-dupe-class-members": 2,
     "sort-class-members/sort-class-members": [
@@ -167,6 +162,31 @@ module.exports = {
       },
     ],
     "decorator-position/decorator-position": ["error", { printWidth: 80 }],
+    "simple-import-sort/imports": ["error", {
+      "groups": [
+        [
+          // Ember/glimmer
+          "^@ember/",
+          "^@glimmer/",
+          // Any other packages ('longest match wins')
+          "",
+          // Internal
+          "^discourse/",
+          "^discourse-common/",
+          "^admin/",
+          "^wizard/",
+          "^I18n$",
+          "^select-kit/",
+          "^float-kit/",
+          "^truth-helpers/",
+          // Plugins
+          "^discourse/plugins/",
+          // Relative
+          "^\\.\\.\/",
+          "^\\.\/"
+        ]
+      ]
+    }]
   },
 
   // https://github.com/ember-cli/eslint-plugin-ember/issues/1895
