@@ -29,17 +29,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: yarn prettier --check . '!test'
 
-      # - name: ESLint
-      #   if: ${{ !cancelled() }}
-      #   run: yarn lint:js
-
-      # - name: Prettier
-      #   if: ${{ !cancelled() }}
-      #   run: yarn lint:prettier
-
-      # - name: Ember Template Lint
-      #   if: ${{ !cancelled() }}
-      #   run: yarn lint:hbs
+      - name: Test
+        if: ${{ !cancelled() }}
+        working-directory: ./test
+        run: node compare-test.js
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
