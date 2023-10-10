@@ -126,7 +126,6 @@ module.exports = {
       2,
       {
         order: [
-          "[template-tag]",
           "[static-properties]",
           "[static-methods]",
           "[injected-services]",
@@ -136,6 +135,7 @@ module.exports = {
           "[private-properties]",
           "constructor",
           "[everything-else]",
+          "[template-tag]",
         ],
         groups: {
           // https://github.com/ember-cli/eslint-plugin-ember/issues/1896
