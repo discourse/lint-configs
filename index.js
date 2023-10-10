@@ -168,8 +168,8 @@ module.exports = {
         groups: [
           [
             // Ember/glimmer
-            "^@ember/",
             "^@glimmer/",
+            "^@ember/",
             // Any other packages ('longest match wins')
             "",
             // Internal
