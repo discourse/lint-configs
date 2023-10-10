@@ -1334,6 +1334,26 @@ escape-string-regexp@^4.0.0:
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz#14ba83a5d373e3d311e5afca29cf5bfad965bf34"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
 
+"eslint-config-discourse@file:.":
+  version "5.0.0"
+  dependencies:
+    "@babel/core" "^7.23.0"
+    "@babel/eslint-parser" "^7.22.15"
+    "@babel/plugin-proposal-decorators" "^7.23.0"
+    ember-template-imports "^3.4.2"
+    ember-template-lint "^5.11.2"
+    ember-template-lint-plugin-discourse "^3.0.0"
+    eslint "^8.51.0"
+    eslint-plugin-decorator-position "^5.0.2"
+    eslint-plugin-discourse-ember latest
+    eslint-plugin-ember "^11.11.1"
+    eslint-plugin-lodash "^7.1.0"
+    eslint-plugin-node "^11.1.0"
+    eslint-plugin-simple-import-sort "^10.0.0"
+    eslint-plugin-sort-class-members "^1.19.0"
+    prettier "3.0.3"
+    prettier-plugin-ember-template-tag "^1.1.0"
+
 eslint-formatter-kakoune@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/eslint-formatter-kakoune/-/eslint-formatter-kakoune-1.0.0.tgz#a95cc4fe1fbc06b84e0f2397e83f5f0b68340125"
