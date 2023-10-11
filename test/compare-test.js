@@ -4,7 +4,7 @@ import { stdout } from "process";
 
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
-  13:4  error  Expected property currentUser to come before property __GLIMMER_TEMPLATE  sort-class-members/sort-class-members
+  15:4  error  Expected property currentUser to come before property __GLIMMER_TEMPLATE  sort-class-members/sort-class-members
 
 ✖ 1 problem (1 error, 0 warnings)
   1 error and 0 warnings potentially fixable with the \`--fix\` option.
@@ -16,7 +16,7 @@ function eslint() {
 
   let actual;
   try {
-    execSync("yarn --silent eslint my-component.gjs");
+    actual = execSync("yarn --silent eslint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
     actual = actual.replace(/^\/.+\/test\//m, "/path-prefix/");
@@ -35,7 +35,13 @@ function prettier() {
   stdout.write("prettier... ");
 
   const expected = readFileSync("formatted-my-component.gjs", "utf8");
-  const actual = execSync("yarn --silent prettier my-component.gjs").toString();
+  let actual;
+
+  try {
+    actual = execSync("yarn --silent prettier my-component.gjs").toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+  }
 
   if (expected === actual) {
     console.log("ok");

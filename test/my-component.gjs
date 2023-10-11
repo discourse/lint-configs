@@ -6,7 +6,9 @@ import Component from "@glimmer/component";
 export default class MyComponent extends Component{
   <template>
     {{#if (or @foo settings.bar)}}
-      hey {{this.currentUser.username}}!
+       <span class='boop'>
+        hey {{this.currentUser.username}}!
+      </span >
     {{/if}}
   </template>
 

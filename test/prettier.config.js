@@ -1,2 +1,2 @@
-import {prettier} from "eslint-config-discourse";
+import { prettier } from "eslint-config-discourse";
 export default prettier;
