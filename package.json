@@ -17,10 +17,6 @@
     "./prettier": "./prettier.config.js",
     "./template-lint": "./template-lint.config.js"
   },
-  "scripts": {
-    "lint:js": "yarn eslint --ignore-pattern !.* *.js .*.js",
-    "lint:prettier": "yarn prettier --list-different ."
-  },
   "dependencies": {
     "@babel/core": "^7.23.0",
     "@babel/eslint-parser": "^7.22.15",
