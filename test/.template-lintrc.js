@@ -1,2 +1,1 @@
-import { templateLint } from "eslint-config-discourse";
-export default templateLint;
+export { default } from "eslint-config-discourse/template-lint";
