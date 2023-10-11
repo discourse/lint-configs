@@ -10,6 +10,7 @@ export default class MyComponent extends Component{
         hey {{this.currentUser.username}}!
       </span >
     {{/if}}
+    {{log "oops"}}
   </template>
 
    @service currentUser;

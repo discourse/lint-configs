@@ -4,11 +4,17 @@ import { stdout } from "process";
 
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
-  15:4  error  Expected property currentUser to come before property __GLIMMER_TEMPLATE  sort-class-members/sort-class-members
+  16:4  error  Expected property currentUser to come before property __GLIMMER_TEMPLATE  sort-class-members/sort-class-members
 
 ✖ 1 problem (1 error, 0 warnings)
   1 error and 0 warnings potentially fixable with the \`--fix\` option.
+`;
 
+const expectedTemplateLintOutput = `
+my-component.gjs
+  13:4  error  Unexpected {{log}} usage.  no-log
+
+✖ 1 problems (1 errors, 0 warnings)
 `;
 
 function eslint() {
@@ -22,7 +28,7 @@ function eslint() {
     actual = actual.replace(/^\/.+\/test\//m, "/path-prefix/");
   }
 
-  if (expectedEslintOutput === actual) {
+  if (expectedEslintOutput.trim() === actual.trim()) {
     console.log("ok");
   } else {
     console.error(
@@ -43,12 +49,34 @@ function prettier() {
     actual = e.stdout.toString();
   }
 
-  if (expected === actual) {
+  if (expected.trim() === actual.trim()) {
     console.log("ok");
   } else {
     console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
   }
 }
 
+function templateLint() {
+  stdout.write("ember-template-lint... ");
+
+  let actual;
+  try {
+    actual = execSync(
+      "yarn --silent ember-template-lint my-component.gjs",
+    ).toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+  }
+
+  if (expectedTemplateLintOutput.trim() === actual.trim()) {
+    console.log("ok");
+  } else {
+    console.error(
+      `failed\n\nexpected:\n${expectedTemplateLintOutput}\nactual:\n${actual}`,
+    );
+  }
+}
+
 eslint();
 prettier();
+templateLint();
