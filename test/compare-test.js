@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { execSync } from "child_process";
-import { stdout } from "process";
+import process, { stdout } from "process";
 
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
@@ -31,6 +31,7 @@ function eslint() {
   if (expectedEslintOutput.trim() === actual.trim()) {
     console.log("ok");
   } else {
+    process.exitCode = 1;
     console.error(
       `failed\n\nexpected:\n${expectedEslintOutput}\nactual:\n${actual}`,
     );
@@ -52,6 +53,7 @@ function prettier() {
   if (expected.trim() === actual.trim()) {
     console.log("ok");
   } else {
+    process.exitCode = 1;
     console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
   }
 }
@@ -71,6 +73,7 @@ function templateLint() {
   if (expectedTemplateLintOutput.trim() === actual.trim()) {
     console.log("ok");
   } else {
+    process.exitCode = 1;
     console.error(
       `failed\n\nexpected:\n${expectedTemplateLintOutput}\nactual:\n${actual}`,
     );
