@@ -175,6 +175,7 @@ export default [
       //         // Internal
       //         "^discourse/",
       //         "^discourse-common/",
+      //         "^discourse-.+",
       //         "^admin/",
       //         "^wizard/",
       //         "^I18n$",
