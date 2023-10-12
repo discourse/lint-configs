@@ -175,7 +175,7 @@ module.exports = {
             // Internal
             "^discourse/",
             "^discourse-common/",
-            "^discourse-[^/]+/",
+            "^discourse-.+",
             "^admin/",
             "^wizard/",
             "^I18n$",
