@@ -175,9 +175,11 @@ module.exports = {
             // Internal
             "^discourse/",
             "^discourse-common/",
+            "^discourse-[^/]+/",
             "^admin/",
             "^wizard/",
             "^I18n$",
+            "^pretty-text/",
             "^select-kit/",
             "^float-kit/",
             "^truth-helpers/",
