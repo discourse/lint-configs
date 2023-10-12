@@ -3,6 +3,9 @@
   "private": "true",
   "type": "module",
   "devDependencies": {
-    "eslint-config-discourse": "file:.."
+    "ember-template-lint": "^5.11.2",
+    "eslint": "^8.51.0",
+    "eslint-config-discourse": "workspace:*",
+    "prettier": "3.0.3"
   }
 }

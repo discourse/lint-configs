@@ -2,6 +2,9 @@ import { readFileSync } from "fs";
 import { execSync } from "child_process";
 import process, { stdout } from "process";
 
+// TODO:
+// add a --save flag that updates the expected values in this file
+
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
   16:4  error  Expected property currentUser to come before property __GLIMMER_TEMPLATE  sort-class-members/sort-class-members
@@ -22,7 +25,7 @@ function eslint() {
 
   let actual;
   try {
-    actual = execSync("yarn --silent eslint my-component.gjs").toString();
+    actual = execSync("pnpm eslint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
     actual = actual.replace(/^\/.+\/test\//m, "/path-prefix/");
@@ -45,7 +48,7 @@ function prettier() {
   let actual;
 
   try {
-    actual = execSync("yarn --silent prettier my-component.gjs").toString();
+    actual = execSync("pnpm prettier my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
   }
@@ -63,9 +66,7 @@ function templateLint() {
 
   let actual;
   try {
-    actual = execSync(
-      "yarn --silent ember-template-lint my-component.gjs",
-    ).toString();
+    actual = execSync("pnpm ember-template-lint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
   }
