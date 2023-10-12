@@ -12,10 +12,22 @@
   "module": "index.js",
   "type": "module",
   "exports": {
-    ".": "./index.js",
-    "./eslint": "./eslint.config.js",
-    "./prettier": "./prettier.config.js",
-    "./template-lint": "./template-lint.config.js"
+    ".": {
+      "import": "./index.cj",
+      "require": "./index.cjs"
+    },
+    "./eslint": {
+      "import": "./eslint.config.js",
+      "require": "./eslint.config.cjs"
+    },
+    "./prettier": {
+      "import": "./prettier.config.js",
+      "require": "./prettier.config.cjs"
+    },
+    "./template-lint": {
+      "import": "./template-lint.config.js",
+      "require": "./template-lint.config.cjs"
+    }
   },
   "dependencies": {
     "@babel/core": "^7.23.2",
@@ -33,5 +45,8 @@
     "eslint-plugin-sort-class-members": "^1.19.0",
     "prettier": "3.0.3",
     "prettier-plugin-ember-template-tag": "^1.1.0"
+  },
+  "devDependencies": {
+    "rollup": "^4.0.2"
   }
 }

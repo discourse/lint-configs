@@ -16,8 +16,8 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Pnpm install
         run: pnpm install
@@ -44,7 +44,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Make cjs version
+        working-directory: ./lint
+        run: pnpm rollup index.js --file index.cjs --format cjs
+
       - name: Publish package
         uses: JS-DevTools/npm-publish@v2
         with:
+          package: ./lint
           token: ${{ secrets.NPM_TOKEN }}
