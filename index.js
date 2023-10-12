@@ -179,7 +179,6 @@ module.exports = {
             "^admin/",
             "^wizard/",
             "^I18n$",
-            "^pretty-text/",
             "^select-kit/",
             "^float-kit/",
             "^truth-helpers/",
