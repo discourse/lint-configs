@@ -1,4 +1,4 @@
 packages:
   - "lint"
-  - "test"
   - "test-cjs"
+  - "test-esm"

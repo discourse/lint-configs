@@ -1,5 +1,5 @@
 {
-  "name": "linting-test",
+  "name": "test-esm",
   "private": "true",
   "type": "module",
   "devDependencies": {

@@ -58,7 +58,7 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
 
-  test:
+  test-cjs:
     devDependencies:
       ember-template-lint:
         specifier: ^5.11.2
@@ -73,7 +73,7 @@ importers:
         specifier: 3.0.3
         version: 3.0.3
 
-  test-cjs:
+  test-esm:
     devDependencies:
       ember-template-lint:
         specifier: ^5.11.2
