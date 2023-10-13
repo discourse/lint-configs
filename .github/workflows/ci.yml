@@ -23,13 +23,15 @@ jobs:
         run: pnpm install
 
       - name: ESLint
-        working-directory: ./lint
-        run: pnpm eslint .
+        run: |
+          cd lint && pnpm eslint .
+          cd test && pnpm eslint compare-test.js
 
       - name: Prettier
-        working-directory: ./lint
         if: ${{ !cancelled() }}
-        run: pnpm prettier --check .
+        run: |
+          cd lint && pnpm prettier --check .
+          cd test && pnpm prettier --check compare-test.js
 
       - name: Test
         if: ${{ !cancelled() }}

@@ -58,6 +58,18 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
 
+  test:
+    devDependencies:
+      eslint:
+        specifier: ^8.51.0
+        version: 8.51.0
+      eslint-config-discourse:
+        specifier: workspace:*
+        version: link:../lint
+      prettier:
+        specifier: 3.0.3
+        version: 3.0.3
+
   test-cjs:
     devDependencies:
       ember-template-lint:

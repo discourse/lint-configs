@@ -1,9 +1,7 @@
-import { readFileSync } from "fs";
-import { execSync } from "child_process";
-import process, { stdout } from "process";
-
-// TODO:
-// add a --save flag that updates the expected values in this file
+import { execSync } from "node:child_process";
+import console, { log } from "node:console";
+import { readFileSync } from "node:fs";
+import process, { chdir, stdout } from "node:process";
 
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
@@ -28,7 +26,7 @@ function eslint() {
     actual = execSync("pnpm eslint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
-    actual = actual.replace(/^\/.+\/test\//m, "/path-prefix/");
+    actual = actual.replace(/^\/.+\/test-(esm|cjs)\//m, "/path-prefix/");
   }
 
   if (expectedEslintOutput.trim() === actual.trim()) {
@@ -48,7 +46,9 @@ function prettier() {
   let actual;
 
   try {
-    actual = execSync("pnpm prettier my-component.gjs").toString();
+    actual = execSync(
+      "cat my-component.gjs | pnpm prettier --stdin-filepath=my-component.gjs",
+    ).toString();
   } catch (e) {
     actual = e.stdout.toString();
   }
@@ -81,6 +81,14 @@ function templateLint() {
   }
 }
 
+log("esm:");
+chdir("../test-esm");
+eslint();
+prettier();
+templateLint();
+
+log("cjs:");
+chdir("../test-cjs");
 eslint();
 prettier();
 templateLint();
