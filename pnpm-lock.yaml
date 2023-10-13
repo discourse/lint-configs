@@ -38,6 +38,9 @@ importers:
       eslint-plugin-sort-class-members:
         specifier: ^1.19.0
         version: 1.19.0(eslint@8.51.0)
+      globals:
+        specifier: ^13.23.0
+        version: 13.23.0
       prettier:
         specifier: 3.0.3
         version: 3.0.3

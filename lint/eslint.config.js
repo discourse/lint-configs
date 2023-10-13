@@ -4,6 +4,7 @@ import discourseEmberPlugin from "eslint-plugin-discourse-ember";
 import sortClassMembersPlugin from "eslint-plugin-sort-class-members";
 import decoratorPositionPlugin from "eslint-plugin-decorator-position";
 import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
+import globals from "globals";
 
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
@@ -28,6 +29,7 @@ export default [
         },
       },
       globals: {
+        ...globals.browser,
         _: "off",
         $: "readonly",
         acceptance: "off",
