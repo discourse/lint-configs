@@ -29,6 +29,12 @@
       "require": "./template-lint.config.cjs"
     }
   },
+  "scripts": {
+    "build": "pnpm build:eslint && pnpm build:prettier && pnpm build:template-lint",
+    "build:eslint": "rollup eslint.config.js --file eslint.config.cjs --format cjs",
+    "build:prettier": "rollup prettier.config.js --file prettier.config.cjs --format cjs",
+    "build:template-lint": "rollup template-lint.config.js --file template-lint.config.cjs --format cjs"
+  },
   "dependencies": {
     "@babel/core": "^7.23.2",
     "@babel/eslint-parser": "^7.22.15",

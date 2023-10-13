@@ -48,10 +48,7 @@ jobs:
 
       - name: Make cjs version
         working-directory: ./lint
-        run: |
-          pnpm rollup eslint.config.js --file eslint.config.cjs --format cjs
-          pnpm rollup prettier.config.js --file prettier.config.cjs --format cjs
-          pnpm rollup template-lint.config.js --file template-lint.config.cjs --format cjs
+        run: pnpm build
 
       - name: Publish package
         uses: JS-DevTools/npm-publish@v2
