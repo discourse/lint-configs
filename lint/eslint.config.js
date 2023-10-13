@@ -8,10 +8,6 @@ import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
-// Expose the template-tag processor under a name that's compatible with
-// eslint's flat-config
-emberPlugin.processors["glimmer"] = emberPlugin.processors["<template>"];
-
 export default [
   {
     plugins: {
@@ -202,7 +198,7 @@ export default [
     // We may eventually be able to drop this by extending the base
     // config from eslint-plugin-ember. In the meantime, this
     files: ["**/*.gjs", "**/*.gts"],
-    processor: "ember/glimmer",
+    processor: emberPlugin.processors["<template>"],
     languageOptions: {
       globals: {
         [TEMPLATE_TAG_PLACEHOLDER]: "readonly",
