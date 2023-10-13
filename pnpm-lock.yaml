@@ -17,9 +17,6 @@ importers:
       '@babel/plugin-proposal-decorators':
         specifier: ^7.23.2
         version: 7.23.2(@babel/core@7.23.2)
-      ember-template-imports:
-        specifier: ^3.4.2
-        version: 3.4.2
       ember-template-lint:
         specifier: ^5.11.2
         version: 5.11.2

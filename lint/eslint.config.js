@@ -5,7 +5,7 @@ import sortClassMembersPlugin from "eslint-plugin-sort-class-members";
 import decoratorPositionPlugin from "eslint-plugin-decorator-position";
 import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
 
-// from "ember-template-imports/lib/utils"
+// Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
 // Expose the template-tag processor under a name that's compatible with
