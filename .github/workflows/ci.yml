@@ -35,8 +35,8 @@ jobs:
 
       - name: Test
         if: ${{ !cancelled() }}
-        working-directory: ./test
-        run: node compare-test.js
+        working-directory: ./lint
+        run: pnpm test
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
