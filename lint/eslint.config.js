@@ -3,7 +3,7 @@ import emberPlugin from "eslint-plugin-ember";
 import discourseEmberPlugin from "eslint-plugin-discourse-ember";
 import sortClassMembersPlugin from "eslint-plugin-sort-class-members";
 import decoratorPositionPlugin from "eslint-plugin-decorator-position";
-// import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
+import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
 
 // from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
@@ -15,7 +15,7 @@ export default [
       "discourse-ember": discourseEmberPlugin,
       "sort-class-members": sortClassMembersPlugin,
       "decorator-position": decoratorPositionPlugin,
-      // "simple-import-sort": simpleImportSortPlugin,
+      "simple-import-sort": simpleImportSortPlugin,
     },
     languageOptions: {
       parser: babelParser,
@@ -162,35 +162,35 @@ export default [
         },
       ],
       "decorator-position/decorator-position": ["error", { printWidth: 80 }],
-      // "simple-import-sort/imports": [
-      //   "error",
-      //   {
-      //     groups: [
-      //       [
-      //         // Ember/glimmer
-      //         "^@glimmer/",
-      //         "^@ember/",
-      //         // Any other packages ('longest match wins')
-      //         "",
-      //         // Internal
-      //         "^discourse/",
-      //         "^discourse-common/",
-      //         "^discourse-.+",
-      //         "^admin/",
-      //         "^wizard/",
-      //         "^I18n$",
-      //         "^select-kit/",
-      //         "^float-kit/",
-      //         "^truth-helpers/",
-      //         // Plugins
-      //         "^discourse/plugins/",
-      //         // Relative
-      //         "^\\.\\./",
-      //         "^\\./",
-      //       ],
-      //     ],
-      //   },
-      // ],
+      "simple-import-sort/imports": [
+        "error",
+        {
+          groups: [
+            [
+              // Ember/glimmer
+              "^@glimmer/",
+              "^@ember/",
+              // Any other packages ('longest match wins')
+              "",
+              // Internal
+              "^discourse/",
+              "^discourse-common/",
+              "^discourse-.+",
+              "^admin/",
+              "^wizard/",
+              "^I18n$",
+              "^select-kit/",
+              "^float-kit/",
+              "^truth-helpers/",
+              // Plugins
+              "^discourse/plugins/",
+              // Relative
+              "^\\.\\./",
+              "^\\./",
+            ],
+          ],
+        },
+      ],
     },
   },
   {
