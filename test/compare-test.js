@@ -40,6 +40,18 @@ function eslint() {
   }
 }
 
+function eslintAutofix() {
+  stdout.write("eslint autofix... ");
+
+  try {
+    execSync("pnpm eslint my-component.gjs --fix-dry-run").toString();
+  } catch (e) {
+    process.exitCode = 1;
+    console.error(`failed\n${e.stdout}`);
+    return;
+  }
+}
+
 function prettier() {
   stdout.write("prettier... ");
 
@@ -85,11 +97,13 @@ function templateLint() {
 log("esm:");
 chdir("../test-esm");
 eslint();
+eslintAutofix();
 prettier();
 templateLint();
 
 log("cjs:");
 chdir("../test-cjs");
 eslint();
+eslintAutofix();
 prettier();
 templateLint();
