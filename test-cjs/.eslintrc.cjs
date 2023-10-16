@@ -1,10 +1,12 @@
 const eslint = require("eslint-config-discourse/eslint");
 
-module.exports = {
-  ...eslint,
-  ignorePatterns: ["javascripts/vendor/*"],
+const config = { ...eslint };
+config.ignorePatterns = ["javascripts/vendor/*"];
+config.config.overrides.push({
   globals: {
     settings: "readonly",
     themePrefix: "readonly",
   },
-};
+});
+
+module.exports = config;

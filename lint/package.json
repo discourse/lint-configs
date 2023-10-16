@@ -20,6 +20,10 @@
       "import": "./eslint.config.js",
       "require": "./.eslintrc.cjs"
     },
+    "./eslint-theme": {
+      "import": "./eslint-theme.js",
+      "require": "./eslint-theme.cjs"
+    },
     "./prettier": {
       "import": "./prettier.config.js",
       "require": "./prettier.config.cjs"
