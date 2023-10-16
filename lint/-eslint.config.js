@@ -2,7 +2,6 @@ import babelParser from "@babel/eslint-parser";
 import decoratorPositionPlugin from "eslint-plugin-decorator-position";
 import discourseEmberPlugin from "eslint-plugin-discourse-ember";
 import emberPlugin from "eslint-plugin-ember";
-import gjsParser from "eslint-plugin-ember/gjs-gts-parser";
 import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
 import sortClassMembersPlugin from "eslint-plugin-sort-class-members";
 import globals from "globals";
@@ -201,9 +200,8 @@ export default [
     // We may eventually be able to drop this by extending the base
     // config from eslint-plugin-ember. In the meantime, this
     files: ["**/*.gjs", "**/*.gts"],
-    processor: emberPlugin.processors["<noop>"],
+    processor: emberPlugin.processors["<template>"],
     languageOptions: {
-      parser: gjsParser,
       globals: {
         [TEMPLATE_TAG_PLACEHOLDER]: "readonly",
       },

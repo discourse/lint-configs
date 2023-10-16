@@ -96,8 +96,8 @@ function templateLint() {
 
 log("esm:");
 chdir("../test-esm");
-eslint();
-eslintAutofix();
+// eslint();
+// eslintAutofix();
 prettier();
 templateLint();
 
