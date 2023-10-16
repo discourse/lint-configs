@@ -1,10 +1,10 @@
 import babelParser from "@babel/eslint-parser";
+import decoratorPositionPlugin from "eslint-plugin-decorator-position";
+import discourseEmberPlugin from "eslint-plugin-discourse-ember";
 import emberPlugin from "eslint-plugin-ember";
 import gjsParser from "eslint-plugin-ember/gjs-gts-parser";
-import discourseEmberPlugin from "eslint-plugin-discourse-ember";
-import sortClassMembersPlugin from "eslint-plugin-sort-class-members";
-import decoratorPositionPlugin from "eslint-plugin-decorator-position";
 import simpleImportSortPlugin from "eslint-plugin-simple-import-sort";
+import sortClassMembersPlugin from "eslint-plugin-sort-class-members";
 import globals from "globals";
 
 // Copied from "ember-template-imports/lib/utils"
