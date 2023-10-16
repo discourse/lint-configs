@@ -44,7 +44,7 @@
     "eslint": "^8.51.0",
     "eslint-plugin-decorator-position": "^5.0.2",
     "eslint-plugin-discourse-ember": "latest",
-    "eslint-plugin-ember": "cvx/eslint-plugin-ember#gjs",
+    "eslint-plugin-ember": "^11.11.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-sort-class-members": "^1.19.0",
     "globals": "^13.23.0",
@@ -52,6 +52,6 @@
     "prettier-plugin-ember-template-tag": "^1.1.0"
   },
   "devDependencies": {
-    "rollup": "^4.0.2"
+    "rollup": "^4.1.4"
   }
 }
