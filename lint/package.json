@@ -13,7 +13,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./index.cj",
+      "import": "./index.js",
       "require": "./index.cjs"
     },
     "./eslint": {
