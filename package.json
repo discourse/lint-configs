@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-discourse",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Shareable eslint config for Discourse and plugins",
   "author": "Joffrey Jaffeux",
   "license": "MIT",
