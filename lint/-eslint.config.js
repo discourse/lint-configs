@@ -1,3 +1,4 @@
+// NOTE: This is currently unused
 import babelParser from "@babel/eslint-parser";
 import decoratorPositionPlugin from "eslint-plugin-decorator-position";
 import discourseEmberPlugin from "eslint-plugin-discourse-ember";

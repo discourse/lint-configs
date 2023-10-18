@@ -12,11 +12,9 @@
   "type": "module",
   "exports": {
     "./eslint": {
-      "import": "./eslint.config.js",
       "require": "./eslintrc.cjs"
     },
     "./eslint-theme": {
-      "import": "./eslint-theme.js",
       "require": "./eslint-theme.cjs"
     },
     "./prettier": {
