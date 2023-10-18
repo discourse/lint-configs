@@ -42,7 +42,10 @@
   "dependencies": {
     "@babel/core": "^7.23.2",
     "@babel/eslint-parser": "^7.22.15",
+    "@babel/parser": "^7.23.0",
     "@babel/plugin-proposal-decorators": "^7.23.2",
+    "@babel/types": "^7.23.0",
+    "@typescript-eslint/visitor-keys": "^6.8.0",
     "ember-template-lint": "^5.11.2",
     "eslint": "^8.51.0",
     "eslint-plugin-decorator-position": "^5.0.2",
@@ -51,8 +54,10 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-sort-class-members": "^1.19.0",
     "globals": "^13.23.0",
+    "hermes-parser": "^0.17.0",
     "prettier": "3.0.3",
-    "prettier-plugin-ember-template-tag": "^1.1.0"
+    "prettier-plugin-ember-template-tag": "^1.1.0",
+    "to-fast-properties": "^3.0.1"
   },
   "devDependencies": {
     "rollup": "^4.1.4"
