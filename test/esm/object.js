@@ -1,1 +1,1 @@
-../object.js
+../shared/object.js

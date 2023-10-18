@@ -1,1 +1,1 @@
-../formatted-my-component.gjs
+../shared/formatted-my-component.gjs
