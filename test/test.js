@@ -26,7 +26,10 @@ function eslint() {
     actual = execSync("pnpm eslint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
-    actual = actual.replace(/^\/.+\/test-(esm|cjs|cjs-theme)\//m, "/path-prefix/");
+    actual = actual.replace(
+      /^\/.+\/test-(esm|cjs|cjs-theme)\//m,
+      "/path-prefix/"
+    );
   }
 
   if (expectedEslintOutput.trim() === actual.trim()) {
@@ -34,7 +37,7 @@ function eslint() {
   } else {
     process.exitCode = 1;
     console.error(
-      `failed\n\nexpected:\n${expectedEslintOutput}\nactual:\n${actual}`,
+      `failed\n\nexpected:\n${expectedEslintOutput}\nactual:\n${actual}`
     );
   }
 }
@@ -60,7 +63,7 @@ function prettier() {
 
   try {
     actual = execSync(
-      "cat my-component.gjs | pnpm prettier --stdin-filepath=my-component.gjs",
+      "cat my-component.gjs | pnpm prettier --stdin-filepath=my-component.gjs"
     ).toString();
   } catch (e) {
     actual = e.stdout.toString();
@@ -82,7 +85,7 @@ function prettierDecorators() {
 
   try {
     actual = execSync(
-      "cat object.js | pnpm prettier --stdin-filepath=object.js",
+      "cat object.js | pnpm prettier --stdin-filepath=object.js"
     ).toString();
   } catch (e) {
     actual = e.stdout.toString();
@@ -104,7 +107,7 @@ function prettierScss() {
 
   try {
     actual = execSync(
-      "cat style.scss | pnpm prettier --stdin-filepath=style.scss",
+      "cat style.scss | pnpm prettier --stdin-filepath=style.scss"
     ).toString();
   } catch (e) {
     actual = e.stdout.toString();
@@ -133,7 +136,7 @@ function templateLint() {
   } else {
     process.exitCode = 1;
     console.error(
-      `failed\n\nexpected:\n${expectedTemplateLintOutput}\nactual:\n${actual}`,
+      `failed\n\nexpected:\n${expectedTemplateLintOutput}\nactual:\n${actual}`
     );
   }
 }
