@@ -4,6 +4,8 @@ import Component from "@glimmer/component";
 
 
 export default class MyComponent extends Component{
+   @service currentUser;
+
   <template>
     {{#if (or @foo settings.bar)}}
        <span class='boop'>
@@ -12,6 +14,4 @@ export default class MyComponent extends Component{
     {{/if}}
     {{log "oops"}}
   </template>
-
-   @service currentUser;
 }
