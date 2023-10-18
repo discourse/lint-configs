@@ -25,13 +25,13 @@ jobs:
       - name: ESLint
         run: |
           cd lint && pnpm eslint .
-          cd test && pnpm eslint compare-test.js
+          cd test && pnpm eslint test.js
 
       - name: Prettier
         if: ${{ !cancelled() }}
         run: |
           cd lint && pnpm prettier --check .
-          cd test && pnpm prettier --check compare-test.js
+          cd test && pnpm prettier --check test.js
 
       - name: Test
         if: ${{ !cancelled() }}

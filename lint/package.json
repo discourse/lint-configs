@@ -37,7 +37,7 @@
     "build": "pnpm build:prettier && pnpm build:template-lint",
     "build:prettier": "rollup prettier.config.js --file prettier.config.cjs --config rollup.config.js",
     "build:template-lint": "rollup template-lint.config.js --file template-lint.config.cjs --config rollup.config.js",
-    "test": "pnpm build && cd ../test && node compare-test.js"
+    "test": "pnpm build && cd ../test && node test.js"
   },
   "dependencies": {
     "@babel/core": "^7.23.2",
