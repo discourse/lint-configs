@@ -1,4 +1,4 @@
-const eslint = require("eslint-config-discourse/eslint");
+const eslint = require("@discourse/lint-configs/eslint");
 
 const config = { ...eslint };
 config.ignorePatterns = ["javascripts/vendor/*"];

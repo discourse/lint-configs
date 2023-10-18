@@ -1,4 +1,4 @@
-import eslint from "eslint-config-discourse/eslint";
+import eslint from "@discourse/lint-configs/eslint";
 
 export default [
   ...eslint,

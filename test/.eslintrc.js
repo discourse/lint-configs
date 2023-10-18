@@ -1,1 +1,1 @@
-module.exports = require("eslint-config-discourse/eslint");
+module.exports = require("@discourse/lint-configs/eslint");

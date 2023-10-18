@@ -1,1 +1,1 @@
-export { default } from "eslint-config-discourse/template-lint";
+export { default } from "@discourse/lint-configs/template-lint";
