@@ -94,6 +94,21 @@ importers:
         specifier: 3.0.3
         version: 3.0.3
 
+  test-cjs-theme:
+    devDependencies:
+      ember-template-lint:
+        specifier: ^5.11.2
+        version: 5.11.2
+      eslint:
+        specifier: ^8.51.0
+        version: 8.51.0
+      eslint-config-discourse:
+        specifier: workspace:*
+        version: link:../lint
+      prettier:
+        specifier: 3.0.3
+        version: 3.0.3
+
   test-esm:
     devDependencies:
       ember-template-lint:

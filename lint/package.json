@@ -18,7 +18,7 @@
     },
     "./eslint": {
       "import": "./eslint.config.js",
-      "require": "./.eslintrc.cjs"
+      "require": "./eslintrc.cjs"
     },
     "./eslint-theme": {
       "import": "./eslint-theme.js",
