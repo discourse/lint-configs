@@ -30,7 +30,7 @@ function eslint() {
   }
 
   if (expectedEslintOutput.trim() === actual.trim()) {
-    console.log("ok");
+    console.log("✅");
   } else {
     process.exitCode = 1;
     console.error(
@@ -44,7 +44,7 @@ function eslintAutofix() {
 
   try {
     execSync("pnpm eslint my-component.gjs --fix-dry-run").toString();
-    console.log("ok");
+    console.log("✅");
   } catch (e) {
     process.exitCode = 1;
     console.error(`failed\n${e.stdout}`);
@@ -67,7 +67,7 @@ function prettier() {
   }
 
   if (expected.trim() === actual.trim()) {
-    console.log("ok");
+    console.log("✅");
   } else {
     process.exitCode = 1;
     console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
@@ -89,7 +89,7 @@ function prettierDecorators() {
   }
 
   if (expected.trim() === actual.trim()) {
-    console.log("ok");
+    console.log("✅");
   } else {
     process.exitCode = 1;
     console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
@@ -107,7 +107,7 @@ function templateLint() {
   }
 
   if (expectedTemplateLintOutput.trim() === actual.trim()) {
-    console.log("ok");
+    console.log("✅");
   } else {
     process.exitCode = 1;
     console.error(
