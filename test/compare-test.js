@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import console, { log } from "node:console";
+import console from "node:console";
 import { readFileSync } from "node:fs";
 import process, { chdir, stdout } from "node:process";
 
@@ -74,6 +74,28 @@ function prettier() {
   }
 }
 
+function prettierDecorators() {
+  stdout.write("prettier - decorators in object literals... ");
+
+  const expected = readFileSync("object.js", "utf8");
+  let actual;
+
+  try {
+    actual = execSync(
+      "cat object.js | pnpm prettier --stdin-filepath=object.js",
+    ).toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+  }
+
+  if (expected.trim() === actual.trim()) {
+    console.log("ok");
+  } else {
+    process.exitCode = 1;
+    console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
+  }
+}
+
 function templateLint() {
   stdout.write("ember-template-lint... ");
 
@@ -94,16 +116,18 @@ function templateLint() {
   }
 }
 
-log("esm:");
+console.log("esm:");
 chdir("../test-esm");
 // eslint();
 // eslintAutofix();
 prettier();
+prettierDecorators();
 templateLint();
 
-log("cjs:");
+console.log("\ncjs:");
 chdir("../test-cjs");
 eslint();
 eslintAutofix();
 prettier();
+prettierDecorators();
 templateLint();
