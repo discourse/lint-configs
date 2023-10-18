@@ -1,5 +1,5 @@
 {
-  "name": "test-cjs",
+  "name": "test-cjs-theme",
   "private": "true",
   "devDependencies": {
     "ember-template-lint": "^5.11.2",

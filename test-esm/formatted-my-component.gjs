@@ -1,1 +1,0 @@
-../test/formatted-my-component.gjs

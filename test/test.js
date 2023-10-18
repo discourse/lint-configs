@@ -27,7 +27,7 @@ function eslint() {
   } catch (e) {
     actual = e.stdout.toString();
     actual = actual.replace(
-      /^\/.+\/test-(esm|cjs|cjs-theme)\//m,
+      /^\/.+\/test\/(esm|cjs|cjs-theme)\//m,
       "/path-prefix/"
     );
   }
@@ -142,28 +142,31 @@ function templateLint() {
 }
 
 console.log("esm:");
-chdir("../test-esm");
+chdir("esm");
 // eslint();
 // eslintAutofix();
 prettier();
 prettierDecorators();
 prettierScss();
 templateLint();
+chdir("..");
 
 console.log("\ncjs:");
-chdir("../test-cjs");
+chdir("cjs");
 eslint();
 eslintAutofix();
 prettier();
 prettierDecorators();
 prettierScss();
 templateLint();
+chdir("..");
 
 console.log("\ncjs theme:");
-chdir("../test-cjs-theme");
+chdir("cjs-theme");
 eslint();
 eslintAutofix();
 prettier();
 prettierDecorators();
 prettierScss();
 templateLint();
+chdir("..");

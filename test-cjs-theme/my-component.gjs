@@ -1,1 +1,0 @@
-../test/my-component.gjs
