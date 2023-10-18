@@ -2,8 +2,13 @@ import customBabelPlugin from "./prettier-custom-babel-plugin.js";
 
 export default {
   plugins: [customBabelPlugin, "prettier-plugin-ember-template-tag"],
-  parser: "custom-babel-parser",
   overrides: [
+    {
+      files: ["*.js"],
+      options: {
+        parser: "custom-babel-parser",
+      },
+    },
     {
       files: "*.gjs",
       options: {

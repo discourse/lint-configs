@@ -96,6 +96,28 @@ function prettierDecorators() {
   }
 }
 
+function prettierScss() {
+  stdout.write("prettier - SCSS... ");
+
+  const expected = readFileSync("style.scss", "utf8");
+  let actual;
+
+  try {
+    actual = execSync(
+      "cat style.scss | pnpm prettier --stdin-filepath=style.scss",
+    ).toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+  }
+
+  if (expected.trim() === actual.trim()) {
+    console.log("✅");
+  } else {
+    process.exitCode = 1;
+    console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
+  }
+}
+
 function templateLint() {
   stdout.write("ember-template-lint... ");
 
@@ -122,6 +144,7 @@ chdir("../test-esm");
 // eslintAutofix();
 prettier();
 prettierDecorators();
+prettierScss();
 templateLint();
 
 console.log("\ncjs:");
@@ -130,4 +153,14 @@ eslint();
 eslintAutofix();
 prettier();
 prettierDecorators();
+prettierScss();
+templateLint();
+
+console.log("\ncjs theme:");
+chdir("../test-cjs-theme");
+eslint();
+eslintAutofix();
+prettier();
+prettierDecorators();
+prettierScss();
 templateLint();
