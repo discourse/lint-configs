@@ -44,6 +44,7 @@ function eslintAutofix() {
 
   try {
     execSync("pnpm eslint my-component.gjs --fix-dry-run").toString();
+    console.log("ok");
   } catch (e) {
     process.exitCode = 1;
     console.error(`failed\n${e.stdout}`);
