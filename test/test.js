@@ -26,7 +26,7 @@ function eslint() {
     actual = execSync("pnpm eslint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
-    actual = actual.replace(/^\/.+\/test-(esm|cjs)\//m, "/path-prefix/");
+    actual = actual.replace(/^\/.+\/test-(esm|cjs|cjs-theme)\//m, "/path-prefix/");
   }
 
   if (expectedEslintOutput.trim() === actual.trim()) {

@@ -7,6 +7,7 @@ export default [
     ignores: ["javascripts/vendor/*"],
   },
   {
+    files: ["*.js", "*.gjs"],
     languageOptions: {
       globals: {
         settings: "readonly",
