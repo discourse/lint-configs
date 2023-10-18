@@ -1,4 +1,2 @@
 node_modules/
-/lint/eslintrc.cjs
-/lint/prettier.config.cjs
 /lint/template-lint.config.cjs
