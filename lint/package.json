@@ -9,13 +9,8 @@
   ],
   "repository": "https://github.com/discourse/eslint-config-discourse",
   "homepage": "https://github.com/discourse/eslint-config-discourse#readme",
-  "module": "index.js",
   "type": "module",
   "exports": {
-    ".": {
-      "import": "./index.js",
-      "require": "./index.cjs"
-    },
     "./eslint": {
       "import": "./eslint.config.js",
       "require": "./eslintrc.cjs"
