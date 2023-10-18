@@ -2,7 +2,8 @@ const eslint = require("eslint-config-discourse/eslint");
 
 const config = { ...eslint };
 config.ignorePatterns = ["javascripts/vendor/*"];
-config.config.overrides.push({
+config.overrides.push({
+  files: "*",
   globals: {
     settings: "readonly",
     themePrefix: "readonly",
