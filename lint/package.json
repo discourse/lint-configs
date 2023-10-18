@@ -25,8 +25,7 @@
       "require": "./eslint-theme.cjs"
     },
     "./prettier": {
-      "import": "./prettier.config.js",
-      "require": "./prettier.config.cjs"
+      "require": "./.prettierrc.cjs"
     },
     "./template-lint": {
       "import": "./template-lint.config.js",
@@ -34,8 +33,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm build:prettier && pnpm build:template-lint",
-    "build:prettier": "rollup prettier.config.js --file prettier.config.cjs --config rollup.config.js",
+    "build": "pnpm build:template-lint",
     "build:template-lint": "rollup template-lint.config.js --file template-lint.config.cjs --config rollup.config.js",
     "test": "pnpm build && cd ../test && node test.js"
   },
@@ -55,8 +53,8 @@
     "eslint-plugin-sort-class-members": "^1.19.0",
     "globals": "^13.23.0",
     "hermes-parser": "^0.17.0",
-    "prettier": "3.0.3",
-    "prettier-plugin-ember-template-tag": "^1.1.0",
+    "prettier": "2.8.8",
+    "prettier-plugin-ember-template-tag": "^0.3.2",
     "to-fast-properties": "^3.0.1"
   },
   "devDependencies": {
