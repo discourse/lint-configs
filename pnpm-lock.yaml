@@ -14,18 +14,9 @@ importers:
       '@babel/eslint-parser':
         specifier: ^7.22.15
         version: 7.22.15(@babel/core@7.23.2)(eslint@8.51.0)
-      '@babel/parser':
-        specifier: ^7.23.0
-        version: 7.23.0
       '@babel/plugin-proposal-decorators':
         specifier: ^7.23.2
         version: 7.23.2(@babel/core@7.23.2)
-      '@babel/types':
-        specifier: ^7.23.0
-        version: 7.23.0
-      '@typescript-eslint/visitor-keys':
-        specifier: ^6.8.0
-        version: 6.8.0
       ember-template-lint:
         specifier: ^5.11.2
         version: 5.11.2
@@ -50,18 +41,12 @@ importers:
       globals:
         specifier: ^13.23.0
         version: 13.23.0
-      hermes-parser:
-        specifier: ^0.17.0
-        version: 0.17.0
       prettier:
         specifier: 2.8.8
         version: 2.8.8
       prettier-plugin-ember-template-tag:
         specifier: ^0.3.2
         version: 0.3.2
-      to-fast-properties:
-        specifier: ^3.0.1
-        version: 3.0.1
     devDependencies:
       rollup:
         specifier: ^4.1.4
@@ -722,19 +707,6 @@ packages:
 
   /@types/symlink-or-copy@1.2.0:
     resolution: {integrity: sha512-Lja2xYuuf2B3knEsga8ShbOdsfNOtzT73GyJmZyY7eGl2+ajOqrs8yM5ze0fsSoYwvA6bw7/Qr7OZ7PEEmYwWg==}
-
-  /@typescript-eslint/types@6.8.0:
-    resolution: {integrity: sha512-p5qOxSum7W3k+llc7owEStXlGmSl8FcGvhYt8Vjy7FqEnmkCVlM3P57XQEGj58oqaBWDQXbJDZxwUWMS/EAPNQ==}
-    engines: {node: ^16.0.0 || >=18.0.0}
-    dev: false
-
-  /@typescript-eslint/visitor-keys@6.8.0:
-    resolution: {integrity: sha512-oqAnbA7c+pgOhW2OhGvxm0t1BULX5peQI/rLsNDpGM78EebV3C9IGbX5HNZabuZ6UQrYveCLjKo8Iy/lLlBkkg==}
-    engines: {node: ^16.0.0 || >=18.0.0}
-    dependencies:
-      '@typescript-eslint/types': 6.8.0
-      eslint-visitor-keys: 3.4.3
-    dev: false
 
   /acorn-jsx@5.3.2(acorn@8.10.0):
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2008,16 +1980,6 @@ packages:
     dependencies:
       rsvp: 3.2.1
 
-  /hermes-estree@0.17.0:
-    resolution: {integrity: sha512-bW9+bMZqnro+0+l6dUqTJW0VaNUvs4HRHh/J7VotTGnMmhBFRIcJz6ZxrRE7xIXmK7S5bJE9qrEooSiig4N70g==}
-    dev: false
-
-  /hermes-parser@0.17.0:
-    resolution: {integrity: sha512-2fmppmZheY1UU071EMKAzXfuUCiDXF3fmzKLuN1XmE3+njIFs3CAeKP88+FtNBUpS6pEMJv6lPXCaJGqGsrURQ==}
-    dependencies:
-      hermes-estree: 0.17.0
-    dev: false
-
   /ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
@@ -2941,11 +2903,6 @@ packages:
   /to-fast-properties@2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
     engines: {node: '>=4'}
-    dev: false
-
-  /to-fast-properties@3.0.1:
-    resolution: {integrity: sha512-/wtNi1tW1F3nf0OL6AqVxGw9Tr1ET70InMhJuVxPwFdGqparF0nQ4UWGLf2DsoI2bFDtthlBnALncZpUzOnsUw==}
-    engines: {node: '>=8'}
     dev: false
 
   /to-regex-range@5.0.1:
