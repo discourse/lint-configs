@@ -6,7 +6,7 @@ settings:
 
 importers:
 
-  lint:
+  lint-configs:
     dependencies:
       '@babel/core':
         specifier: ^7.23.2
@@ -52,7 +52,7 @@ importers:
     devDependencies:
       '@discourse/lint-configs':
         specifier: workspace:*
-        version: link:../lint
+        version: link:../lint-configs
       eslint:
         specifier: ^8.51.0
         version: 8.51.0
@@ -64,7 +64,7 @@ importers:
     devDependencies:
       '@discourse/lint-configs':
         specifier: workspace:*
-        version: link:../../lint
+        version: link:../../lint-configs
       ember-template-lint:
         specifier: ^5.11.2
         version: 5.11.2
@@ -79,7 +79,7 @@ importers:
     devDependencies:
       '@discourse/lint-configs':
         specifier: workspace:*
-        version: link:../../lint
+        version: link:../../lint-configs
       ember-template-lint:
         specifier: ^5.11.2
         version: 5.11.2

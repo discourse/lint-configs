@@ -28,12 +28,12 @@ jobs:
 
       - name: Lint
         run: |
-          cd lint && pnpm lint
+          cd lint-configs && pnpm lint
           cd ../test && pnpm lint
 
       - name: Test
         if: ${{ !cancelled() }}
-        working-directory: ./lint
+        working-directory: ./lint-configs
         run: pnpm test
 
   publish:
@@ -51,5 +51,5 @@ jobs:
       - name: Publish package
         uses: JS-DevTools/npm-publish@v2
         with:
-          package: ./lint
+          package: ./lint-configs
           token: ${{ secrets.NPM_TOKEN }}
