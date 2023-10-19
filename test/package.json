@@ -6,8 +6,8 @@
     "lint": "eslint --no-error-on-unmatched-pattern *.cjs *.js && pnpm prettier --check ."
   },
   "devDependencies": {
-    "eslint": "^8.51.0",
     "@discourse/lint-configs": "workspace:*",
+    "eslint": "^8.51.0",
     "prettier": "^2.8.8"
   }
 }

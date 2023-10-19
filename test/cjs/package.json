@@ -2,9 +2,9 @@
   "name": "test-cjs",
   "private": "true",
   "devDependencies": {
+    "@discourse/lint-configs": "workspace:*",
     "ember-template-lint": "^5.11.2",
     "eslint": "^8.51.0",
-    "@discourse/lint-configs": "workspace:*",
     "prettier": "^2.8.8"
   }
 }
