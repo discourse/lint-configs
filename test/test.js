@@ -13,7 +13,7 @@ const expectedEslintOutput = `
 
 const expectedTemplateLintOutput = `
 my-component.gjs
-  15:4  error  Unexpected {{log}} usage.  no-log
+  18:4  error  Unexpected {{log}} usage.  no-log
 
 ✖ 1 problems (1 errors, 0 warnings)
 `;

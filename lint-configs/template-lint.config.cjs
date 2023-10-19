@@ -4,6 +4,9 @@ module.exports = {
     "no-positive-tabindex": false,
     "no-autofocus-attribute": false,
 
+    // GJS compatibility
+    "modifier-name-case": false,
+
     // Pending
     "require-presentational-children": false,
     "no-duplicate-landmark-elements": false,
