@@ -20,8 +20,8 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"
-          cache: "pnpm"
+          node-version: '18'
+          cache: 'pnpm'
 
       - name: Pnpm install
         run: pnpm install
@@ -29,13 +29,13 @@ jobs:
       - name: ESLint
         run: |
           cd lint && pnpm eslint .
-          cd test && pnpm eslint test.js
+          cd ../test && pnpm eslint test.js
 
       - name: Prettier
         if: ${{ !cancelled() }}
         run: |
           cd lint && pnpm prettier --check .
-          cd test && pnpm prettier --check test.js
+          cd ../test && pnpm prettier --check test.js
 
       - name: Test
         if: ${{ !cancelled() }}
