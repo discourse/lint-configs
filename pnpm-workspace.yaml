@@ -1,5 +1,5 @@
 packages:
-  - 'lint'
-  - 'test'
-  - 'test/cjs'
-  - 'test/cjs-theme'
+  - "lint"
+  - "test"
+  - "test/cjs"
+  - "test/cjs-theme"
