@@ -3,6 +3,8 @@ module.exports = {
   rules: {
     "no-positive-tabindex": false,
     "no-autofocus-attribute": false,
+    "require-mandatory-role-attributes": false,
+    "require-media-caption": false,
 
     // GJS compatibility
     "modifier-name-case": false,
