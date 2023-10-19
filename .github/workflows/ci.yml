@@ -49,7 +49,7 @@ jobs:
         run: pnpm build
 
       - name: Publish package
-        uses: JS-DevTools/npm-publish@v2
+        uses: JS-DevTools/npm-publish@v3
         with:
           package: ./lint-configs
           token: ${{ secrets.NPM_TOKEN }}
