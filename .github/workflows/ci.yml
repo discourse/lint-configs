@@ -26,16 +26,10 @@ jobs:
       - name: Pnpm install
         run: pnpm install
 
-      - name: ESLint
+      - name: Lint
         run: |
           cd lint && pnpm lint
-          cd ../test && pnpm eslint test.js
-
-      - name: Prettier
-        if: ${{ !cancelled() }}
-        run: |
-          cd lint && pnpm prettier --check .
-          cd ../test && pnpm prettier --check test.js
+          cd ../test && pnpm lint
 
       - name: Test
         if: ${{ !cancelled() }}

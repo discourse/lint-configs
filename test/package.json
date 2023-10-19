@@ -2,6 +2,9 @@
   "name": "test",
   "private": "true",
   "type": "module",
+  "scripts": {
+    "lint": "eslint --no-error-on-unmatched-pattern *.cjs *.js && pnpm prettier --check ."
+  },
   "devDependencies": {
     "eslint": "^8.51.0",
     "@discourse/lint-configs": "workspace:*",
