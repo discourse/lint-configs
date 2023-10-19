@@ -28,7 +28,7 @@ jobs:
 
       - name: ESLint
         run: |
-          cd lint && pnpm eslint .
+          cd lint && pnpm lint
           cd ../test && pnpm eslint test.js
 
       - name: Prettier

@@ -25,6 +25,7 @@
     }
   },
   "scripts": {
+    "lint": "eslint --no-error-on-unmatched-pattern **/*.cjs **/*.js",
     "test": "cd ../test && node test.js"
   },
   "dependencies": {
