@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   extends: ["recommended", "stylistic"],
   rules: {
     "no-positive-tabindex": false,

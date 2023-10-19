@@ -21,14 +21,11 @@
       "require": "./.prettierrc.cjs"
     },
     "./template-lint": {
-      "import": "./template-lint.config.js",
       "require": "./template-lint.config.cjs"
     }
   },
   "scripts": {
-    "build": "pnpm build:template-lint",
-    "build:template-lint": "rollup template-lint.config.js --file template-lint.config.cjs --config rollup.config.js",
-    "test": "pnpm build && cd ../test && node test.js"
+    "test": "cd ../test && node test.js"
   },
   "dependencies": {
     "@babel/core": "^7.23.2",
@@ -44,8 +41,5 @@
     "globals": "^13.23.0",
     "prettier": "2.8.8",
     "prettier-plugin-ember-template-tag": "^0.3.2"
-  },
-  "devDependencies": {
-    "rollup": "^4.1.4"
   }
 }

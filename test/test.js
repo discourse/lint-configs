@@ -26,10 +26,7 @@ function eslint() {
     actual = execSync("pnpm eslint my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
-    actual = actual.replace(
-      /^\/.+\/test\/(esm|cjs|cjs-theme)\//m,
-      "/path-prefix/"
-    );
+    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
   }
 
   if (expectedEslintOutput.trim() === actual.trim()) {
@@ -140,16 +137,6 @@ function templateLint() {
     );
   }
 }
-
-console.log("esm:");
-chdir("esm");
-// eslint();
-// eslintAutofix();
-prettier();
-prettierDecorators();
-prettierScss();
-templateLint();
-chdir("..");
 
 console.log("\ncjs:");
 chdir("cjs");

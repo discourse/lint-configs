@@ -1,6 +1,5 @@
 packages:
-  - "lint"
-  - "test"
-  - "test/cjs"
-  - "test/cjs-theme"
-  - "test/esm"
+  - 'lint'
+  - 'test'
+  - 'test/cjs'
+  - 'test/cjs-theme'
