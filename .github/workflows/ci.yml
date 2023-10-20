@@ -44,10 +44,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Make cjs version
-        working-directory: ./lint
-        run: pnpm build
-
       - name: Publish package
         uses: JS-DevTools/npm-publish@v3
         with:
