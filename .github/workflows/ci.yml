@@ -49,6 +49,6 @@ jobs:
         with:
           package: ./lint-configs
           token: ${{ secrets.NPM_TOKEN }}
+          provenance: true
           # access: public
-          # provenance: true
           # dry-run: true
