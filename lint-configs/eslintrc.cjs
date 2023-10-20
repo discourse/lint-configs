@@ -2,7 +2,8 @@
 
 /* eslint-env node */
 
-const { TEMPLATE_TAG_PLACEHOLDER } = require("ember-template-imports/src/util");
+// Copied from "ember-template-imports/lib/utils"
+const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
 module.exports = {
   root: true,
@@ -23,7 +24,6 @@ module.exports = {
   },
   plugins: [
     "ember",
-    "discourse-ember",
     "sort-class-members",
     "decorator-position",
     "simple-import-sort",

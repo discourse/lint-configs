@@ -1,0 +1,18 @@
+// Global
+
+$primary: #22eaca;
+
+:root {
+  --highlight: #d38f42;
+  --special-rgb: #{hexToRGB($primary)};
+}
+
+::placeholder {
+  color: var(--special-rgb);
+}
+
+html.foo {
+  .bar:not(.baz) {
+    color: var(--highlight);
+  }
+}

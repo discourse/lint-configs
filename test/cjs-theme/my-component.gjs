@@ -1,0 +1,1 @@
+../shared/my-component.gjs

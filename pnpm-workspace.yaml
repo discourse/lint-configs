@@ -1,0 +1,5 @@
+packages:
+  - "lint-configs"
+  - "test"
+  - "test/cjs"
+  - "test/cjs-theme"

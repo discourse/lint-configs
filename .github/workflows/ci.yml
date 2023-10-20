@@ -14,20 +14,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
       - uses: actions/setup-node@v3
         with:
           node-version: "18"
-          cache: "yarn"
+          cache: "pnpm"
 
-      - name: Yarn install
-        run: yarn install
+      - name: Pnpm install
+        run: pnpm install
 
-      - name: ESLint
-        run: yarn lint:js
+      - name: Lint
+        run: |
+          cd lint-configs && pnpm lint
+          cd ../test && pnpm lint
 
-      - name: Prettier
+      - name: Test
         if: ${{ !cancelled() }}
-        run: yarn lint:prettier
+        working-directory: ./lint-configs
+        run: pnpm test
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -37,7 +44,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Make cjs version
+        working-directory: ./lint
+        run: pnpm build
+
       - name: Publish package
-        uses: JS-DevTools/npm-publish@v2
+        uses: JS-DevTools/npm-publish@v3
         with:
+          package: ./lint-configs
           token: ${{ secrets.NPM_TOKEN }}
