@@ -37,7 +37,7 @@ jobs:
         run: pnpm test
 
   publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: lint
     runs-on: ubuntu-latest
 
@@ -49,3 +49,6 @@ jobs:
         with:
           package: ./lint-configs
           token: ${{ secrets.NPM_TOKEN }}
+          # access: public
+          # provenance: true
+          dry-run: true
