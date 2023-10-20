@@ -24,7 +24,6 @@ module.exports = {
   },
   plugins: [
     "ember",
-    "discourse-ember",
     "sort-class-members",
     "decorator-position",
     "simple-import-sort",
