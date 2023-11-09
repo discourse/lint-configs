@@ -32,11 +32,11 @@
     "test": "cd ../test && node test.js"
   },
   "dependencies": {
-    "@babel/core": "^7.23.2",
-    "@babel/eslint-parser": "^7.22.15",
-    "@babel/plugin-proposal-decorators": "^7.23.2",
-    "ember-template-lint": "^5.11.2",
-    "eslint": "^8.51.0",
+    "@babel/core": "^7.23.3",
+    "@babel/eslint-parser": "^7.23.3",
+    "@babel/plugin-proposal-decorators": "^7.23.3",
+    "ember-template-lint": "^5.12.0",
+    "eslint": "^8.53.0",
     "eslint-plugin-decorator-position": "^5.0.2",
     "eslint-plugin-ember": "^11.11.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
