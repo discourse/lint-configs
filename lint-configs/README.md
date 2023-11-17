@@ -24,7 +24,7 @@ module.exports = require("@discourse/lint-configs/eslint-theme");
 module.exports = require("@discourse/lint-configs/prettier");
 ```
 
-### .template-lintrc.js
+### .template-lintrc.cjs
 
 ```js
 module.exports = require("@discourse/lint-configs/template-lint");
