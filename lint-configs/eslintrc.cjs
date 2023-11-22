@@ -2,9 +2,6 @@
 
 /* eslint-env node */
 
-// Copied from "ember-template-imports/lib/utils"
-const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
-
 module.exports = {
   root: true,
   parser: "@babel/eslint-parser",
@@ -140,9 +137,7 @@ module.exports = {
           // doesn't seem to trigger the error. That being said, it does
           // work sometimes and this is needed to avoid emitting errors
           // in the limited cases where it does work.
-          "template-tag": [
-            { type: "property", name: `/${TEMPLATE_TAG_PLACEHOLDER}/` },
-          ],
+          "template-tag": [{ type: "property", name: `/__GLIMMER_TEMPLATE/` }],
           "injected-services": [
             { groupByDecorator: "service", type: "property" },
           ],
