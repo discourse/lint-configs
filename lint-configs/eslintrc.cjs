@@ -7,6 +7,7 @@ const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
 module.exports = {
   root: true,
+  extends: "eslint:recommended",
   parser: "@babel/eslint-parser",
   env: {
     browser: true,
