@@ -234,11 +234,16 @@ module.exports = {
     ],
   },
 
+  // https://github.com/ember-cli/eslint-plugin-ember/issues/1895
+  // We may eventually be able to drop this by extending the base
+  // config from eslint-plugin-ember. In the meantime, this
   overrides: [
     {
-      files: ["**/*.gjs"],
-      parser: "eslint-plugin-ember/gjs-gts-parser",
-      extends: ["plugin:ember/recommended-gjs"],
+      files: ["**/*.gjs", "**/*.gts"],
+      processor: "ember/<template>",
+      globals: {
+        [TEMPLATE_TAG_PLACEHOLDER]: "readonly",
+      },
     },
   ],
 };
