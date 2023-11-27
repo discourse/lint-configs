@@ -143,7 +143,6 @@ module.exports = {
     "ember/no-new-mixins": "off",
     "ember/no-implicit-injections": "off",
     "ember/no-array-prototype-extensions": "off",
-    "ember/no-array-prototype-extensions": "off",
     "ember/no-try-invoke": "error",
     "ember/require-super-in-lifecycle-hooks": "error",
     "ember/classic-decorator-hooks": "off",
