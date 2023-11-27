@@ -100,6 +100,7 @@ module.exports = {
     "no-new": "error",
     "no-proto": "error",
     "no-prototype-builtins": "off",
+    "no-regex-spaces": "off",
     "no-script-url": "error",
     "no-sequences": "error",
     "no-shadow": "error",
