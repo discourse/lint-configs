@@ -109,6 +109,7 @@ module.exports = {
     "no-this-before-super": "error",
     "no-trailing-spaces": "error",
     "no-undef": "error",
+    "no-unexpected-multiline": "off",
     "no-unused-vars": "error",
     "no-useless-escape": "off",
     "no-var": "error",
