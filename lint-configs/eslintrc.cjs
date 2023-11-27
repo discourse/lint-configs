@@ -87,6 +87,7 @@ module.exports = {
     "no-case-declarations": "off",
     "no-cond-assign": "off",
     "no-console": "error",
+    "no-control-regex": "off",
     "no-debugger": "error",
     "no-empty": ["error", { allowEmptyCatch: true }],
     "no-eval": "error",
