@@ -114,7 +114,7 @@ module.exports = {
     "no-duplicate-imports": 2,
     "object-shorthand": ["error", "properties"],
     "no-dupe-class-members": 2,
-    "ember/no-attrs-in-components": "off",
+    "ember/no-attrs-in-components": "error",
     "ember/no-attrs-snapshot": "error",
     "ember/no-arrow-function-computed-properties": "off",
     "ember/no-assignment-of-untracked-properties-used-in-tracking-contexts":
