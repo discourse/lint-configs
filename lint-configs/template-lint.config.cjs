@@ -23,7 +23,6 @@ module.exports = {
     "require-valid-alt-text": false,
 
     // Non-default rules
-    "no-this-in-template-only-components": true,
     "no-unnecessary-curly-parens": true,
     "no-unnecessary-curly-strings": true,
     "simple-modifiers": true,
@@ -33,6 +32,7 @@ module.exports = {
     "inline-link-to": false,
     "no-action-modifiers": false,
     "no-builtin-form-components": false,
+    "no-this-in-template-only-components": false, // emits false-positives in gjs
 
     // GJS compatibility
     "modifier-name-case": false,
