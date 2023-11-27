@@ -88,6 +88,7 @@ module.exports = {
     "no-cond-assign": "off",
     "no-console": "error",
     "no-debugger": "error",
+    "no-empty": ["error", { allowEmptyCatch: true }],
     "no-eval": "error",
     "no-extend-native": "error",
     "no-inner-declarations": "error",
