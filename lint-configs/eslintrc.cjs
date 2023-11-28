@@ -162,7 +162,7 @@ module.exports = {
     "ember/no-unnecessary-index-route": "off",
     "ember/no-unnecessary-route-path-option": "error",
     "ember/route-path-style": "off",
-    "ember/routes-segments-snake-case": "off",
+    "ember/routes-segments-snake-case": "error",
     "ember/no-pause-test": "error",
     "ember/no-replace-test-comments": "error",
     "ember/no-settled-after-test-helper": "error",
