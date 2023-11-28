@@ -57,7 +57,7 @@ module.exports = {
     keyboardHelper: "off",
     keyEvent: "off",
     moduleFor: "off",
-    moment: "off",
+    moment: "readonly",
     pauseTest: "off",
     Pretender: "off",
     Promise: "readonly",
