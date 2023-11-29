@@ -31,7 +31,7 @@ module.exports = {
   ],
   globals: {
     _: "off",
-    $: "off",
+    $: "readonly", // covered by ember/no-global-jquery
     acceptance: "off",
     asyncRender: "off",
     Blob: "readonly",
@@ -53,7 +53,7 @@ module.exports = {
     globalThis: "readonly",
     hasModule: "off",
     invisible: "off",
-    jQuery: "off",
+    jQuery: "readonly", // covered by ember/no-global-jquery
     keyboardHelper: "off",
     keyEvent: "off",
     moduleFor: "off",
