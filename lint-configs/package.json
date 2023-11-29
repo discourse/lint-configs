@@ -9,9 +9,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/discourse/eslint-config-discourse.git"
+    "url": "git+https://github.com/discourse/lint-configs.git"
   },
-  "homepage": "https://github.com/discourse/eslint-config-discourse#readme",
+  "homepage": "https://github.com/discourse/lint-configs#readme",
   "type": "module",
   "exports": {
     "./eslint": {
