@@ -1,6 +1,6 @@
 {
   "name": "@discourse/lint-configs",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Shareable lint configs for Discourse core, plugins, and themes",
   "author": "Discourse",
   "license": "MIT",
@@ -32,11 +32,11 @@
     "test": "cd ../test && node test.js"
   },
   "dependencies": {
-    "@babel/core": "^7.23.2",
-    "@babel/eslint-parser": "^7.22.15",
-    "@babel/plugin-proposal-decorators": "^7.23.2",
-    "ember-template-lint": "^5.11.2",
-    "eslint": "^8.51.0",
+    "@babel/core": "^7.23.5",
+    "@babel/eslint-parser": "^7.23.3",
+    "@babel/plugin-proposal-decorators": "^7.23.5",
+    "ember-template-lint": "^5.13.0",
+    "eslint": "^8.54.0",
     "eslint-plugin-decorator-position": "^5.0.2",
     "eslint-plugin-ember": "^11.11.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
@@ -46,8 +46,8 @@
     "prettier-plugin-ember-template-tag": "^0.3.2"
   },
   "peerDependencies": {
-    "ember-template-lint": "^5.11.2",
-    "eslint": "^8.51.0",
+    "ember-template-lint": "^5.13.0",
+    "eslint": "^8.54.0",
     "prettier": "^2.8.8"
   }
 }
