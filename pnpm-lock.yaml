@@ -29,6 +29,9 @@ importers:
       eslint-plugin-ember:
         specifier: ^11.11.1
         version: 11.11.1(eslint@8.55.0)
+      eslint-plugin-qunit:
+        specifier: ^8.0.1
+        version: 8.0.1(eslint@8.55.0)
       eslint-plugin-simple-import-sort:
         specifier: ^10.0.0
         version: 10.0.0(eslint@8.55.0)
@@ -1411,6 +1414,16 @@ packages:
       snake-case: 3.0.4
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /eslint-plugin-qunit@8.0.1(eslint@8.55.0):
+    resolution: {integrity: sha512-3bFOPryXoQOez95oP/JfWTxHBc/bgDQQZqTuv9uYTwH5sdIvSM2TES1iHDcy/F/LvqiqIpscDAOPAjlqSCnNPg==}
+    engines: {node: ^16.0.0 || ^18.0.0 || >=20.0.0}
+    dependencies:
+      eslint-utils: 3.0.0(eslint@8.55.0)
+      requireindex: 1.2.0
+    transitivePeerDependencies:
+      - eslint
     dev: false
 
   /eslint-plugin-simple-import-sort@10.0.0(eslint@8.55.0):

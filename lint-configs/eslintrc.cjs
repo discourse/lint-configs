@@ -7,7 +7,7 @@ const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
 module.exports = {
   root: true,
-  extends: "eslint:recommended",
+  extends: ["eslint:recommended", "plugin:qunit/recommended"],
   parser: "@babel/eslint-parser",
   env: {
     browser: true,
@@ -28,6 +28,7 @@ module.exports = {
     "sort-class-members",
     "decorator-position",
     "simple-import-sort",
+    "qunit",
   ],
   globals: {
     _: "off",
@@ -123,6 +124,7 @@ module.exports = {
     "no-duplicate-imports": "error",
     "object-shorthand": ["error", "properties"],
     "no-dupe-class-members": "error",
+
     "ember/no-attrs-in-components": "error",
     "ember/no-attrs-snapshot": "error",
     "ember/no-arrow-function-computed-properties": "off",
@@ -168,6 +170,12 @@ module.exports = {
     "ember/no-settled-after-test-helper": "error",
     "ember/prefer-ember-test-helpers": "error",
     "ember/require-valid-css-selector-in-test-helpers": "error",
+
+    "qunit/no-assert-equal-boolean": "off",
+    "qunit/no-assert-equal": "off",
+    "qunit/no-negated-ok": "off",
+    "qunit/no-identical-names": "off",
+
     "sort-class-members/sort-class-members": [
       "error",
       {
