@@ -14,7 +14,6 @@ module.exports = {
     "no-duplicate-landmark-elements": false,
     "no-implicit-this": false,
     "no-inline-styles": false,
-    "no-link-to-positional-params": false,
     "no-link-to-tagname": false,
     "no-passed-in-event-handlers": false,
     "no-route-action": false,
