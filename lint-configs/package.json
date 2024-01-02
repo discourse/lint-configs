@@ -1,6 +1,6 @@
 {
   "name": "@discourse/lint-configs",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Shareable lint configs for Discourse core, plugins, and themes",
   "author": "Discourse",
   "license": "MIT",
