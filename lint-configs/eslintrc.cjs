@@ -207,6 +207,7 @@ module.exports = {
           ],
           "injected-services": [
             { groupByDecorator: "service", type: "property" },
+            { groupByDecorator: "optionalService", type: "property" },
           ],
           "injected-controllers": [
             { groupByDecorator: "controller", type: "property" },
