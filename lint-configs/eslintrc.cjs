@@ -136,7 +136,7 @@ module.exports = {
     "ember/require-return-from-computed": "off",
     "ember/avoid-using-needs-in-controllers": "error",
     "ember/new-module-imports": "error",
-    "ember/no-deprecated-router-transition-methods": "error",
+    "ember/no-deprecated-router-transition-methods": "off", // this rule is broken
     "ember/no-function-prototype-extensions": "error",
     "ember/no-string-prototype-extensions": "error",
     "ember/avoid-leaking-state-in-ember-objects": "off",
@@ -144,7 +144,7 @@ module.exports = {
     "ember/no-observers": "off",
     "ember/no-mixins": "off",
     "ember/no-new-mixins": "off",
-    "ember/no-implicit-injections": "off",
+    "ember/no-implicit-injections": "off", // this rule is broken
     "ember/no-array-prototype-extensions": "off",
     "ember/no-try-invoke": "error",
     "ember/require-super-in-lifecycle-hooks": "error",
@@ -163,6 +163,7 @@ module.exports = {
     "ember/no-shadow-route-definition": "off",
     "ember/no-unnecessary-index-route": "off",
     "ember/no-unnecessary-route-path-option": "error",
+    "ember/no-unnecessary-service-injection-argument": "error",
     "ember/route-path-style": "off",
     "ember/routes-segments-snake-case": "off",
     "ember/no-pause-test": "error",
