@@ -10,6 +10,7 @@ module.exports = {
     // Pending default rules
     "link-href-attributes": false,
     "no-action": false,
+    "no-at-ember-render-modifiers": false,
     "no-curly-component-invocation": false,
     "no-duplicate-landmark-elements": false,
     "no-implicit-this": false,
