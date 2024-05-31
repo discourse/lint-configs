@@ -255,6 +255,7 @@ module.exports = {
         ],
       },
     ],
+    "no-i18n-import": require('./eslint-rules/no-i18n-import')
   },
 
   overrides: [
