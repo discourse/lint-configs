@@ -26,8 +26,8 @@
     "./template-lint": {
       "require": "./template-lint.config.cjs"
     },
-    "./eslint-rules/*": {
-      "require": "./eslint-rules/*.cjs"
+    "./eslint-discourse/*": {
+      "require": "./eslint-discourse/*.cjs"
     }
   },
   "scripts": {
