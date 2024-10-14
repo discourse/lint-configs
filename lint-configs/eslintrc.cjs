@@ -251,8 +251,9 @@ module.exports = {
 
   overrides: [
     {
-      files: ["**/*.gjs", "**/*.gts"],
+      files: ["**/*.gjs"],
       parser: "ember-eslint-parser",
+      extends: ["plugin:ember/recommended-gjs"],
     },
   ],
 };
