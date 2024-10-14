@@ -163,6 +163,7 @@ module.exports = {
     "ember/route-path-style": "off",
     "ember/routes-segments-snake-case": "off",
     "ember/no-replace-test-comments": "error",
+    "ember/template-no-let-reference": "off", // we have valid cases of using let variables in templates
 
     "qunit/no-assert-equal-boolean": "off",
     "qunit/no-assert-equal": "off",
