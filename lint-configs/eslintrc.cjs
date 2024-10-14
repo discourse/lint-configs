@@ -7,7 +7,11 @@ const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
 module.exports = {
   root: true,
-  extends: ["eslint:recommended", "plugin:qunit/recommended"],
+  extends: [
+    "eslint:recommended",
+    "plugin:qunit/recommended",
+    "plugin:ember/recommended",
+  ],
   parser: "@babel/eslint-parser",
   env: {
     browser: true,
@@ -125,20 +129,17 @@ module.exports = {
     "object-shorthand": ["error", "properties"],
     "no-dupe-class-members": "error",
 
-    "ember/no-attrs-in-components": "error",
-    "ember/no-attrs-snapshot": "error",
-    "ember/no-arrow-function-computed-properties": "off",
+    "ember/no-classic-components": "off",
+    "ember/no-component-lifecycle-hooks": "off",
+    "ember/require-tagless-components": "off",
     "ember/no-assignment-of-untracked-properties-used-in-tracking-contexts":
       "off",
-    "ember/no-duplicate-dependent-keys": "error",
+    "ember/no-computed-properties-in-native-classes": "off",
     "ember/no-side-effects": "off",
-    "ember/no-volatile-computed-properties": "error",
+    "ember/require-computed-property-dependencies": "off",
     "ember/require-return-from-computed": "off",
-    "ember/avoid-using-needs-in-controllers": "error",
-    "ember/new-module-imports": "error",
+    "ember/use-brace-expansion": "off", // we no longer recommend using @computed
     "ember/no-deprecated-router-transition-methods": "off", // this rule is broken
-    "ember/no-function-prototype-extensions": "error",
-    "ember/no-string-prototype-extensions": "error",
     "ember/avoid-leaking-state-in-ember-objects": "off",
     "ember/no-get": "off",
     "ember/no-observers": "off",
@@ -146,31 +147,22 @@ module.exports = {
     "ember/no-new-mixins": "off",
     "ember/no-implicit-injections": "off", // this rule is broken
     "ember/no-array-prototype-extensions": "off",
-    "ember/no-try-invoke": "error",
-    "ember/require-super-in-lifecycle-hooks": "error",
+    "ember/no-at-ember-render-modifiers": "off",
     "ember/classic-decorator-hooks": "off",
+    "ember/classic-decorator-no-classic-methods": "off",
     "ember/no-actions-hash": "off",
     "ember/no-classic-classes": "off",
-    "ember/no-ember-super-in-es-classes": "error",
-    "ember/no-empty-glimmer-component-classes": "error",
-    "ember/no-global-jquery": "error",
+    "ember/no-tracked-properties-from-args": "off",
     "ember/no-jquery": "off",
-    "ember/no-incorrect-calls-with-inline-anonymous-functions": "error",
-    "ember/no-invalid-debug-function-arguments": "error",
+    "ember/no-runloop": "off",
     "ember/no-capital-letters-in-routes": "off",
     "ember/no-controller-access-in-routes": "off",
-    "ember/no-private-routing-service": "error",
     "ember/no-shadow-route-definition": "off",
     "ember/no-unnecessary-index-route": "off",
-    "ember/no-unnecessary-route-path-option": "error",
     "ember/no-unnecessary-service-injection-argument": "error",
     "ember/route-path-style": "off",
     "ember/routes-segments-snake-case": "off",
-    "ember/no-pause-test": "error",
     "ember/no-replace-test-comments": "error",
-    "ember/no-settled-after-test-helper": "error",
-    "ember/prefer-ember-test-helpers": "error",
-    "ember/require-valid-css-selector-in-test-helpers": "error",
 
     "qunit/no-assert-equal-boolean": "off",
     "qunit/no-assert-equal": "off",
@@ -259,8 +251,9 @@ module.exports = {
 
   overrides: [
     {
-      files: ["**/*.gjs", "**/*.gts"],
+      files: ["**/*.gjs"],
       parser: "ember-eslint-parser",
+      extends: ["plugin:ember/recommended-gjs"],
     },
   ],
 };
