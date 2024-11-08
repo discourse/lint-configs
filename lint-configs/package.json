@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "lint": "eslint --no-error-on-unmatched-pattern **/*.cjs */**.mjs **/*.js && pnpm prettier --check .",
+    "lint": "eslint --no-error-on-unmatched-pattern **/*.cjs **/*.mjs **/*.js && pnpm prettier --check .",
     "test": "cd ../test && node test.js"
   },
   "dependencies": {
