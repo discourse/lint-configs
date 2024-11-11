@@ -24,8 +24,8 @@ importers:
         specifier: ^9.14.0
         version: 9.14.0
       eslint-plugin-decorator-position:
-        specifier: ^5.0.2
-        version: 5.0.2(@babel/eslint-parser@7.25.9(@babel/core@7.26.0)(eslint@9.14.0))(eslint@9.14.0)
+        specifier: ^6.0.0
+        version: 6.0.0(@babel/eslint-parser@7.25.9(@babel/core@7.26.0)(eslint@9.14.0))(eslint@9.14.0)
       eslint-plugin-ember:
         specifier: ^12.3.1
         version: 12.3.1(@babel/core@7.26.0)(@typescript-eslint/parser@8.13.0(eslint@9.14.0)(typescript@5.6.3))(eslint@9.14.0)
@@ -812,12 +812,12 @@ packages:
   eslint-formatter-kakoune@1.0.0:
     resolution: {integrity: sha512-Uk/TVLt6Nf6Xoz7C1iYuZjOSdJxe5aaauGRke8JhKeJwD66Y61/pY2FjtLP04Ooq9PwV34bzrkKkU2UZ5FtDRA==}
 
-  eslint-plugin-decorator-position@5.0.2:
-    resolution: {integrity: sha512-wFcRfrB9zljOP1n5udg16h6ITX1jG8cnUvuFVtIqVxw5O9BTOXFHB9hvsTaqpb8JFX2dq19fH3i/ipUeFSF87w==}
+  eslint-plugin-decorator-position@6.0.0:
+    resolution: {integrity: sha512-AUbZbt3JXnmP7Typfba4BIEFkSCc2rA6BkutsYiywIcEoX/yRL7jzqAp4UMpSDNhCMUUAfGt48k3141PhKC07w==}
     engines: {node: '>=14'}
     peerDependencies:
       '@babel/eslint-parser': ^7.18.2
-      eslint: ^6.0.0 || ^7.31.0 || ^8.0.0
+      eslint: ^7.31.0 || ^8.0.0 || ^9.0.0
     peerDependenciesMeta:
       '@babel/eslint-parser':
         optional: true
@@ -2875,7 +2875,7 @@ snapshots:
 
   eslint-formatter-kakoune@1.0.0: {}
 
-  eslint-plugin-decorator-position@5.0.2(@babel/eslint-parser@7.25.9(@babel/core@7.26.0)(eslint@9.14.0))(eslint@9.14.0):
+  eslint-plugin-decorator-position@6.0.0(@babel/eslint-parser@7.25.9(@babel/core@7.26.0)(eslint@9.14.0))(eslint@9.14.0):
     dependencies:
       '@babel/core': 7.26.0
       '@babel/plugin-proposal-decorators': 7.25.9(@babel/core@7.26.0)
