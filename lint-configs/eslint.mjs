@@ -212,6 +212,8 @@ export default [
             "[properties]",
             "[private-properties]",
             "constructor",
+            "init",
+            "willDestroy",
             "[everything-else]",
             "[template-tag]",
           ],
