@@ -1,5 +1,5 @@
 import or from "truth-helpers/helpers/or";
-import { inject as service } from "@ember/service";
+import { service } from "@ember/service";
 import Component from "@glimmer/component";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 
