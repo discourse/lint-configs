@@ -11,6 +11,7 @@ import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
+import noSimpleQueryselector from "./eslint-rules/no-simple-queryselector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 
 // Copied from "ember-template-imports/lib/utils"
@@ -93,6 +94,7 @@ export default [
           "i18n-import-location": i18nImport,
           "i18n-t": i18nT,
           "service-inject-import": serviceInjectImport,
+          "no-simple-queryselector": noSimpleQueryselector,
         },
       },
     },
@@ -264,6 +266,7 @@ export default [
       // "discourse/i18n-import-location": ["error"],
       // "discourse/i18n-t": ["error"],
       "discourse/service-inject-import": ["error"],
+      "discourse/no-simple-queryselector": ["error"],
     },
   },
   {
