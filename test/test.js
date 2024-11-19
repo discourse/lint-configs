@@ -193,4 +193,9 @@ chdir("eslint-rules");
 execSync("pnpm test", { stdio: "inherit" });
 chdir("..");
 
+console.log("template-lint-rules");
+chdir("template-lint-rules");
+execSync("pnpm test", { stdio: "inherit" });
+chdir("..");
+
 console.log("All tests done!");
