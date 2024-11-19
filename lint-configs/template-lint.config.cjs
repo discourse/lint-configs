@@ -1,5 +1,6 @@
 module.exports = {
   extends: ["recommended", "stylistic"],
+  plugins: ["@discourse/lint-configs/template-lint-rules"],
   rules: {
     // Intentionally disabled default rules
     "no-autofocus-attribute": false,
@@ -42,5 +43,8 @@ module.exports = {
     "eol-last": false,
     quotes: false,
     "self-closing-void-elements": false,
+
+    // Discourse custom
+    "discourse/no-at-class": true,
   },
 };

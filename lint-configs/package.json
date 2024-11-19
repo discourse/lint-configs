@@ -22,9 +22,7 @@
     "./template-lint": {
       "require": "./template-lint.config.cjs"
     },
-    "./eslint-discourse/*": {
-      "require": "./eslint-discourse/*.cjs"
-    }
+    "./template-lint-rules": "./template-lint-rules/index.mjs"
   },
   "scripts": {
     "lint": "eslint --no-error-on-unmatched-pattern **/*.cjs */**.mjs **/*.js && pnpm prettier --check .",

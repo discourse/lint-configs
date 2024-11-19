@@ -4,3 +4,4 @@ packages:
   - "test/cjs"
   - "test/cjs-theme"
   - "test/eslint-rules"
+  - "test/template-lint-rules"
