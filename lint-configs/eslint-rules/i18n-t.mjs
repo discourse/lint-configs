@@ -73,7 +73,7 @@ export default {
               if (!i18nSpecifier || shouldRemoveDefaultImport) {
                 fixes.push(
                   fixImport(fixer, importDeclaration, {
-                    shouldHaveDefaultImport: !shouldRemoveDefaultImport,
+                    defaultImport: !shouldRemoveDefaultImport,
                     namedImportsToAdd: ["i18n"],
                   })
                 );

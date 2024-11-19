@@ -3,14 +3,14 @@
  *
  * @param {ASTNode} importDeclarationNode - The AST node representing the import declaration.
  * @param {Object} options - Options for modifying the import statement.
- * @param {boolean} options.shouldHaveDefaultImport - Whether the import should include a default import.
+ * @param {undefined|false|string} options.defaultImport - Undefined to leave default import unchanged. False to remove it. String to set it to the given name, if it doesn't already exist.
  * @param {string[]} options.namedImportsToAdd - Named imports to add to the import statement.
  * @param {string[]} options.namedImportsToRemove - Named imports to remove from the import statement.
  */
 export function fixImport(
   fixer,
   importDeclarationNode,
-  { shouldHaveDefaultImport, namedImportsToAdd = [], namedImportsToRemove = [] }
+  { defaultImport, namedImportsToAdd = [], namedImportsToRemove = [] }
 ) {
   const existingSpecifiers = importDeclarationNode.specifiers;
   const existingDefaultImport = existingSpecifiers.find(
@@ -27,14 +27,14 @@ export function fixImport(
 
   // Determine final default import
   let finalDefaultImport;
-  if (shouldHaveDefaultImport === undefined) {
+  if (defaultImport === undefined) {
     finalDefaultImport = existingDefaultImport
       ? existingDefaultImport.local.name
       : null;
-  } else if (shouldHaveDefaultImport) {
+  } else if (defaultImport) {
     finalDefaultImport = existingDefaultImport
       ? existingDefaultImport.local.name
-      : shouldHaveDefaultImport;
+      : defaultImport;
   } else {
     finalDefaultImport = null;
   }
