@@ -187,3 +187,10 @@ prettierDecorators();
 prettierScss();
 templateLint();
 chdir("..");
+
+console.log("eslint-rules");
+chdir("eslint-rules");
+execSync("pnpm test", { stdio: "inherit" });
+chdir("..");
+
+console.log("All tests done!");

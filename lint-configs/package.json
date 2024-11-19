@@ -21,6 +21,9 @@
     },
     "./template-lint": {
       "require": "./template-lint.config.cjs"
+    },
+    "./eslint-discourse/*": {
+      "require": "./eslint-discourse/*.cjs"
     }
   },
   "scripts": {

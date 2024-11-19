@@ -9,6 +9,8 @@ import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
+import i18nImport from "./eslint-rules/i18n-import-location.mjs";
+import i18nT from "./eslint-rules/i18n-t.mjs";
 
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
@@ -85,6 +87,12 @@ export default [
       "decorator-position": DecoratorPosition,
       "simple-import-sort": SimpleImportSort,
       qunit: QUnitPlugin,
+      discourse: {
+        rules: {
+          "i18n-import-location": i18nImport,
+          "i18n-t": i18nT,
+        },
+      },
     },
     rules: {
       "block-scoped-var": "error",
@@ -249,6 +257,10 @@ export default [
           ],
         },
       ],
+      // TODO: enable by default once this commit is available widely
+      // https://github.com/discourse/discourse/commit/d606ac3d8e
+      // "discourse/i18n-import-location": ["error"],
+      // "discourse/i18n-t": ["error"],
     },
   },
   {
