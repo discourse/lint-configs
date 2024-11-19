@@ -62,7 +62,7 @@ export function fixImport(
   if (finalNamedImports.length > 0) {
     newImportStatement += `{ ${finalNamedImports.join(", ")} }`;
   }
-  newImportStatement += ` from '${importDeclarationNode.source.value}';`;
+  newImportStatement += ` from "${importDeclarationNode.source.value}";`;
 
   // Replace the entire import declaration
   return fixer.replaceText(importDeclarationNode, newImportStatement);
