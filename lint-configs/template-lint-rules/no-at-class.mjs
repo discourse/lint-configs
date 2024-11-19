@@ -1,6 +1,12 @@
 import { Rule } from "ember-template-lint";
 
-const AFFECTED_COMPONENTS = ["DButton"];
+const AFFECTED_COMPONENTS = [
+  "DButton",
+  "DModal",
+  "TableHeaderToggle",
+  "Textarea",
+  "TextArea",
+];
 
 export default class NoAtClass extends Rule {
   visitor() {
