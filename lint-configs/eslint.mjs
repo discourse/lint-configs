@@ -1,5 +1,6 @@
 import BabelParser from "@babel/eslint-parser";
 import js from "@eslint/js";
+import stylisticJs from "@stylistic/eslint-plugin-js";
 import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
@@ -85,6 +86,7 @@ export default [
       },
     },
     plugins: {
+      "@stylistic/js": stylisticJs,
       ember: EmberPlugin,
       "sort-class-members": SortClassMembers,
       "decorator-position": DecoratorPosition,
@@ -147,6 +149,16 @@ export default [
       "no-duplicate-imports": "error",
       "object-shorthand": ["error", "properties"],
       "no-dupe-class-members": "error",
+      "@stylistic/js/lines-between-class-members": [
+        "error",
+        {
+          enforce: [
+            { blankLine: "always", prev: "*", next: "method" },
+            { blankLine: "always", prev: "method", next: "*" },
+          ],
+        },
+        { exceptAfterSingleLine: true },
+      ],
       "ember/no-classic-components": "off",
       "ember/no-component-lifecycle-hooks": "off",
       "ember/require-tagless-components": "off",
