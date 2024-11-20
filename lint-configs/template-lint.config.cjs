@@ -46,5 +46,20 @@ module.exports = {
 
     // Discourse custom
     "discourse/no-at-class": true,
+    "discourse/no-implicit-this": {
+      allow: [
+        "hide-application-footer",
+        "hide-application-sidebar",
+        "loading-spinner",
+      ],
+    },
   },
+  overrides: [
+    {
+      files: ["**/*.gjs", "**/*.gts"],
+      rules: {
+        "discourse/no-implicit-this": false,
+      },
+    },
+  ],
 };
