@@ -48,9 +48,7 @@ module.exports = {
     "discourse/no-at-class": true,
     "discourse/no-implicit-this": {
       allow: [
-        "hide-application-footer",
-        "hide-application-sidebar",
-        "loading-spinner",
+        /-/, // kebab-case, probably a component or helper
       ],
     },
   },
