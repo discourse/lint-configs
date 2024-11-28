@@ -1,4 +1,5 @@
 import BabelParser from "@babel/eslint-parser";
+import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
 import js from "@eslint/js";
 import stylisticJs from "@stylistic/eslint-plugin-js";
 import EmberESLintParser from "ember-eslint-parser";
@@ -31,7 +32,7 @@ export default [
       parserOptions: {
         requireConfigFile: false,
         babelOptions: {
-          plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
+          plugins: [[PluginProposalDecorators, { legacy: true }]],
         },
       },
 
