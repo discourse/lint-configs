@@ -194,13 +194,10 @@ export default [
       "ember/route-path-style": "off",
       "ember/routes-segments-snake-case": "off",
       "ember/no-replace-test-comments": "error",
-      "qunit/no-assert-equal-boolean": "off",
       "qunit/no-assert-equal": "off",
       "qunit/no-conditional-assertions": "off",
       "qunit/no-identical-names": "off",
       "qunit/no-loose-assertions": "off",
-      "qunit/no-negated-ok": "off",
-      "qunit/no-ok-equality": "off",
       "sort-class-members/sort-class-members": [
         "error",
         {
