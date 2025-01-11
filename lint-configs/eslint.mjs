@@ -1,3 +1,4 @@
+import { createConfigItem } from "@babel/core";
 import BabelParser from "@babel/eslint-parser";
 import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
 import js from "@eslint/js";
@@ -32,7 +33,13 @@ export default [
       parserOptions: {
         requireConfigFile: false,
         babelOptions: {
-          plugins: [[PluginProposalDecorators, { legacy: true }]],
+          plugins: [
+            createConfigItem([
+              PluginProposalDecorators,
+              { legacy: true },
+              "@babel/plugin-proposal-decorators",
+            ]),
+          ],
         },
       },
 
