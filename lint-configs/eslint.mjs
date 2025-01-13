@@ -13,6 +13,7 @@ import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
+import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
 import noSimpleQueryselector from "./eslint-rules/no-simple-queryselector.mjs";
@@ -107,6 +108,7 @@ export default [
           "service-inject-import": serviceInjectImport,
           "no-simple-queryselector": noSimpleQueryselector,
           "deprecated-lookups": deprecatedLookups,
+          "discourse-common-imports": discourseCommonImports,
         },
       },
     },
@@ -289,6 +291,8 @@ export default [
       "discourse/service-inject-import": ["error"],
       "discourse/no-simple-queryselector": ["error"],
       "discourse/deprecated-lookups": ["error"],
+      // TODO: enable by default once 98fa42f2 is widely available
+      // "discourse/discourse-common-imports": ["error"],
     },
   },
   {
