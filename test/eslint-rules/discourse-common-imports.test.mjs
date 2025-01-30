@@ -2,7 +2,7 @@ import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/discourse-common-imports.mjs";
 
 const ruleTester = new RuleTester({
-  parserOptions: { ecmaVersion: 2015, sourceType: "module" },
+  languageOptions: { ecmaVersion: 2018, sourceType: "module" },
 });
 
 ruleTester.run("no-discourse-common-import", rule, {
