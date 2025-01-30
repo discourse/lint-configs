@@ -1,7 +1,7 @@
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/no-simple-queryselector.mjs";
 
-const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 2020 } });
+const ruleTester = new RuleTester({ languageOptions: { ecmaVersion: 2018 } });
 
 ruleTester.run("no-queryselector-body-html", rule, {
   valid: [

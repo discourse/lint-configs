@@ -11,12 +11,28 @@ generateRuleTests({
 
   config: true,
 
-  good: ["{{this.foo}}"],
+  good: [
+    {
+      template: "{{this.foo}}",
+      meta: {
+        moduleId: "hello.gjs",
+      },
+    },
+    {
+      template: "{{this.foo}}",
+      meta: {
+        moduleId: "hello.hbs",
+      },
+    },
+  ],
 
   bad: [
     {
       template: "{{foo}}",
       fixedTemplate: "{{this.foo}}",
+      meta: {
+        moduleId: "hello.hbs",
+      },
       result: {
         column: 2,
         line: 1,

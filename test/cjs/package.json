@@ -3,8 +3,8 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "ember-template-lint": "6.0.0",
-    "eslint": "^9.15.0",
+    "ember-template-lint": "6.1.0",
+    "eslint": "9.19.0",
     "prettier": "2.8.8"
   }
 }

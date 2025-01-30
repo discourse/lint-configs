@@ -2,7 +2,7 @@ import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/i18n-t.mjs";
 
 const ruleTester = new RuleTester({
-  parserOptions: { ecmaVersion: 2015, sourceType: "module" },
+  languageOptions: { ecmaVersion: 2018, sourceType: "module" },
 });
 
 ruleTester.run("i18n-t", rule, {

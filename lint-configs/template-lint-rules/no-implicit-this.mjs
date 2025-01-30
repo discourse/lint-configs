@@ -63,7 +63,7 @@ const ARGLESS_DEFAULT_BLUEPRINT = [
 
 export default class NoImplicitThis extends Rule {
   parseConfig(config) {
-    if (config === false || config === undefined || !this.isStrictMode) {
+    if (config === false || config === undefined || this.isStrictMode) {
       return false;
     }
 

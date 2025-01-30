@@ -1,10 +1,10 @@
 {
-  "name": "test-eslint-rules",
+  "name": "test-template-lint-rules",
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "ember-template-lint": "*",
-    "mocha": "^10.4.0"
+    "ember-template-lint": "6.1.0",
+    "mocha": "^11.1.0"
   },
   "scripts": {
     "test": "mocha *.test.mjs"
