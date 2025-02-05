@@ -6,6 +6,8 @@ settings:
 
 importers:
 
+  .: {}
+
   lint-configs:
     dependencies:
       '@babel/core':
