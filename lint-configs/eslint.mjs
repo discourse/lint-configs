@@ -284,12 +284,15 @@ export default [
           ],
         },
       ],
-      "discourse/i18n-import-location": ["error"],
-      "discourse/i18n-t": ["error"],
+      // TODO: enable by default once this commit is available widely
+      // https://github.com/discourse/discourse/commit/d606ac3d8e
+      // "discourse/i18n-import-location": ["error"],
+      // "discourse/i18n-t": ["error"],
       "discourse/service-inject-import": ["error"],
       "discourse/no-simple-queryselector": ["error"],
       "discourse/deprecated-lookups": ["error"],
-      "discourse/discourse-common-imports": ["error"],
+      // TODO: enable by default once 98fa42f2 is widely available
+      // "discourse/discourse-common-imports": ["error"],
     },
   },
   {
