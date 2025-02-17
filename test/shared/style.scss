@@ -11,6 +11,10 @@ $primary: #22eaca;
   color: var(--special-rgb);
 }
 
+::placeholder {
+  color: red;
+}
+
 html.foo {
   .bar:not(.baz) {
     color: var(--highlight);

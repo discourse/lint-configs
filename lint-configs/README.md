@@ -6,22 +6,32 @@ Shareable lint configs for Discourse core, plugins, and themes
 
 Add `@discourse/lint-configs` to package.json, and create these three files:
 
-### .eslintrc.cjs
+### eslint.config.mjs
 
 ```js
-module.exports = require("@discourse/lint-configs/eslint");
+import DiscourseRecommended from "@discourse/lint-configs/eslint";
+export default [...DiscourseRecommended];
 ```
 
 or in themes/theme components:
 
 ```js
-module.exports = require("@discourse/lint-configs/eslint-theme");
+import DiscourseThemeRecommended from "@discourse/lint-configs/eslint-theme";
+export default [...DiscourseThemeRecommended];
 ```
 
 ### .prettierrc.cjs
 
 ```js
 module.exports = require("@discourse/lint-configs/prettier");
+```
+
+### stylelint.config.mjs
+
+```js
+export default {
+  extends: ["@discourse/lint-configs/stylelint"],
+};
 ```
 
 ### .template-lintrc.cjs
