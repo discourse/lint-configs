@@ -19,6 +19,7 @@
     "./prettier": {
       "require": "./.prettierrc.cjs"
     },
+    "./stylelint": "./stylelint.mjs",
     "./template-lint": {
       "require": "./template-lint.config.cjs"
     },
@@ -43,11 +44,15 @@
     "globals": "^15.14.0",
     "prettier": "^2.8.8",
     "prettier-plugin-ember-template-tag": "^0.3.2",
+    "stylelint": "^16.14.1",
+    "stylelint-config-standard": "^37.0.0",
+    "stylelint-config-standard-scss": "^14.0.0",
     "typescript": "^5.7.3"
   },
   "peerDependencies": {
     "ember-template-lint": "6.1.0",
     "eslint": "9.19.0",
-    "prettier": "2.8.8"
+    "prettier": "2.8.8",
+    "stylelint": "16.14.1"
   }
 }

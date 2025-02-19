@@ -18,6 +18,13 @@ const expectedEslintDecoratorsOutput = `
 ✖ 1 problem (1 error, 0 warnings)
 `;
 
+const expectedStylelintOutput = `
+style.scss
+  14:1  ✖  Unexpected duplicate selector "::placeholder", first used at line 10  no-duplicate-selectors
+
+✖ 1 problem (1 error, 0 warnings)
+`;
+
 const expectedTemplateLintOutput = `
 my-component.gjs
   18:4  error  Unexpected {{log}} usage.  no-log
@@ -146,6 +153,29 @@ function prettierScss() {
   }
 }
 
+function stylelint() {
+  stdout.write("stylelint... ");
+
+  let actual;
+  try {
+    actual = execSync(
+      "cat style.scss | pnpm stylelint --no-color --stdin-filename=style.scss",
+      { stdio: "pipe" }
+    ).toString();
+  } catch (e) {
+    actual = e.stderr.toString();
+  }
+
+  if (expectedStylelintOutput.trim() === actual.trim()) {
+    console.log("✅");
+  } else {
+    process.exitCode = 1;
+    console.error(
+      `failed\n\nexpected:\n${expectedStylelintOutput}\nactual:\n${actual}`
+    );
+  }
+}
+
 function templateLint() {
   stdout.write("ember-template-lint... ");
 
@@ -174,6 +204,7 @@ eslintObjectDecorators();
 prettier();
 prettierDecorators();
 prettierScss();
+stylelint();
 templateLint();
 chdir("..");
 
@@ -185,6 +216,7 @@ eslintObjectDecorators();
 prettier();
 prettierDecorators();
 prettierScss();
+stylelint();
 templateLint();
 chdir("..");
 
