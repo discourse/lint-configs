@@ -159,7 +159,7 @@ function stylelint() {
   let actual;
   try {
     actual = execSync(
-      "cat style.scss | pnpm stylelint --stdin-filename=style.scss",
+      "cat style.scss | pnpm stylelint --no-color --stdin-filename=style.scss",
       { stdio: "pipe" }
     ).toString();
   } catch (e) {
