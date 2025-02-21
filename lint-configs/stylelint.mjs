@@ -28,15 +28,5 @@ export default {
     "scss/comment-no-empty": null,
     "scss/at-mixin-pattern": null,
     "media-feature-range-notation": "prefix",
-    "property-no-vendor-prefix": [
-      true,
-      {
-        ignoreProperties: [
-          "backdrop-filter",
-          "text-size-adjust",
-          "user-select",
-        ],
-      },
-    ],
   },
 };
