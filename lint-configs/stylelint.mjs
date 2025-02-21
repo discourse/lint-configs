@@ -3,7 +3,6 @@ export default {
   rules: {
     "color-no-invalid-hex": true,
     "unit-no-unknown": true,
-    "at-rule-empty-line-before": null,
     "rule-empty-line-before": [
       "always",
       { except: ["after-single-line-comment", "first-nested"] },
