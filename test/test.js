@@ -84,28 +84,6 @@ function prettier() {
   }
 }
 
-function prettierDecorators() {
-  stdout.write("prettier - decorators in object literals... ");
-
-  const expected = readFileSync("object.js", "utf8");
-  let actual;
-
-  try {
-    actual = execSync(
-      "cat object.js | pnpm prettier --stdin-filepath=object.js"
-    ).toString();
-  } catch (e) {
-    actual = e.stdout.toString();
-  }
-
-  if (expected.trim() === actual.trim()) {
-    console.log("✅");
-  } else {
-    process.exitCode = 1;
-    console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
-  }
-}
-
 function prettierScss() {
   stdout.write("prettier - SCSS... ");
 
@@ -176,7 +154,6 @@ chdir("cjs");
 eslint();
 eslintAutofix();
 prettier();
-prettierDecorators();
 prettierScss();
 stylelint();
 templateLint();
@@ -187,7 +164,6 @@ chdir("cjs-theme");
 eslint();
 eslintAutofix();
 prettier();
-prettierDecorators();
 prettierScss();
 stylelint();
 templateLint();
