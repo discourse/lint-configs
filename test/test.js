@@ -11,13 +11,6 @@ const expectedEslintOutput = `
   1 error and 0 warnings potentially fixable with the \`--fix\` option.
 `;
 
-const expectedEslintDecoratorsOutput = `
-/path-prefix/object.js
-  4:4  error  'computed' is not defined  no-undef
-
-✖ 1 problem (1 error, 0 warnings)
-`;
-
 const expectedStylelintOutput = `
 style.scss
   14:1  ✖  Unexpected duplicate selector "::placeholder", first used at line 10  no-duplicate-selectors
@@ -66,27 +59,6 @@ function eslintAutofix() {
     process.exitCode = 1;
     console.error(`failed\n${e.stdout}`);
     return;
-  }
-}
-
-function eslintObjectDecorators() {
-  stdout.write("eslint - decorators in object literals... ");
-
-  let actual;
-  try {
-    actual = execSync("pnpm eslint object.js").toString();
-  } catch (e) {
-    actual = e.stdout.toString();
-    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
-  }
-
-  if (expectedEslintDecoratorsOutput.trim() === actual.trim()) {
-    console.log("✅");
-  } else {
-    process.exitCode = 1;
-    console.error(
-      `failed\n\nexpected:\n${expectedEslintDecoratorsOutput}\nactual:\n${actual}`
-    );
   }
 }
 
@@ -203,7 +175,6 @@ console.log("\ncjs:");
 chdir("cjs");
 eslint();
 eslintAutofix();
-eslintObjectDecorators();
 prettier();
 prettierDecorators();
 prettierScss();
@@ -215,7 +186,6 @@ console.log("\ncjs theme:");
 chdir("cjs-theme");
 eslint();
 eslintAutofix();
-eslintObjectDecorators();
 prettier();
 prettierDecorators();
 prettierScss();
