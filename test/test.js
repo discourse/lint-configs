@@ -26,6 +26,9 @@ style.scss
 `;
 
 const expectedTemplateLintOutput = `
+Linting 1 Total Files with TemplateLint
+	.gjs: 1
+
 my-component.gjs
   18:4  error  Unexpected {{log}} usage.  no-log
 
