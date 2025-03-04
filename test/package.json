@@ -3,7 +3,7 @@
   "private": "true",
   "type": "module",
   "scripts": {
-    "lint": "eslint --no-error-on-unmatched-pattern *.cjs *.mjs *.js && pnpm prettier --check ."
+    "lint": "eslint --no-error-on-unmatched-pattern **/*.cjs */**.mjs **/*.js && pnpm prettier --check \"**/*.{cjs,mjs,js}\""
   },
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
