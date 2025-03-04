@@ -5,7 +5,7 @@
     "@discourse/lint-configs": "workspace:*",
     "ember-template-lint": "7.0.0",
     "eslint": "9.21.0",
-    "prettier": "2.8.8",
+    "prettier": "3.5.3",
     "stylelint": "16.15.0"
   }
 }
