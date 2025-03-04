@@ -1,5 +1,6 @@
 module.exports = {
   plugins: ["prettier-plugin-ember-template-tag"],
+  trailingComma: "es5",
   overrides: [
     {
       files: "*.gjs",

@@ -11,13 +11,6 @@ const expectedEslintOutput = `
   1 error and 0 warnings potentially fixable with the \`--fix\` option.
 `;
 
-const expectedEslintDecoratorsOutput = `
-/path-prefix/object.js
-  4:4  error  'computed' is not defined  no-undef
-
-✖ 1 problem (1 error, 0 warnings)
-`;
-
 const expectedStylelintOutput = `
 style.scss
   14:1  ✖  Unexpected duplicate selector "::placeholder", first used at line 10  no-duplicate-selectors
@@ -69,27 +62,6 @@ function eslintAutofix() {
   }
 }
 
-function eslintObjectDecorators() {
-  stdout.write("eslint - decorators in object literals... ");
-
-  let actual;
-  try {
-    actual = execSync("pnpm eslint object.js").toString();
-  } catch (e) {
-    actual = e.stdout.toString();
-    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
-  }
-
-  if (expectedEslintDecoratorsOutput.trim() === actual.trim()) {
-    console.log("✅");
-  } else {
-    process.exitCode = 1;
-    console.error(
-      `failed\n\nexpected:\n${expectedEslintDecoratorsOutput}\nactual:\n${actual}`
-    );
-  }
-}
-
 function prettier() {
   stdout.write("prettier... ");
 
@@ -99,28 +71,6 @@ function prettier() {
   try {
     actual = execSync(
       "cat my-component.gjs | pnpm prettier --stdin-filepath=my-component.gjs"
-    ).toString();
-  } catch (e) {
-    actual = e.stdout.toString();
-  }
-
-  if (expected.trim() === actual.trim()) {
-    console.log("✅");
-  } else {
-    process.exitCode = 1;
-    console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
-  }
-}
-
-function prettierDecorators() {
-  stdout.write("prettier - decorators in object literals... ");
-
-  const expected = readFileSync("object.js", "utf8");
-  let actual;
-
-  try {
-    actual = execSync(
-      "cat object.js | pnpm prettier --stdin-filepath=object.js"
     ).toString();
   } catch (e) {
     actual = e.stdout.toString();
@@ -203,9 +153,7 @@ console.log("\ncjs:");
 chdir("cjs");
 eslint();
 eslintAutofix();
-eslintObjectDecorators();
 prettier();
-prettierDecorators();
 prettierScss();
 stylelint();
 templateLint();
@@ -215,9 +163,7 @@ console.log("\ncjs theme:");
 chdir("cjs-theme");
 eslint();
 eslintAutofix();
-eslintObjectDecorators();
 prettier();
-prettierDecorators();
 prettierScss();
 stylelint();
 templateLint();

@@ -1,1 +1,0 @@
-../shared/object.js

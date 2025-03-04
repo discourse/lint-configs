@@ -1,3 +1,4 @@
+/* global beforeEach,describe,it */
 import { generateRuleTests } from "ember-template-lint";
 import plugin from "../../lint-configs/template-lint-rules/index.mjs";
 
