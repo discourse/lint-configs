@@ -153,7 +153,7 @@ export default {
         return "tracked";
       } else if (
         node.type === "PropertyDefinition" &&
-        [("service", "optionalService", "controller")].includes(
+        ["service", "optionalService", "controller"].includes(
           node.decorators?.[0]?.expression?.name
         )
       ) {

@@ -42,6 +42,18 @@ ruleTester.run("lines-between-class-members", rule, {
         }
       `,
     },
+    {
+      code: `
+        class Foo {
+          @service bar;
+          @service baz;
+          @optionalService hey;
+          @controller hello;
+
+          <template></template>
+        }
+      `,
+    },
   ],
   invalid: [
     {
