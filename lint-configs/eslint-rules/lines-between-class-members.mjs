@@ -148,7 +148,8 @@ export default {
       if (
         node.type === "PropertyDefinition" &&
         ["service", "optionalService", "controller"].includes(
-          node.decorators?.[0]?.expression?.name
+          node.decorators?.[0]?.expression?.name ||
+            node.decorators?.[0]?.expression?.callee?.name
         )
       ) {
         return "service";
@@ -177,7 +178,8 @@ export default {
         return (
           node.type === "PropertyDefinition" &&
           ["service", "optionalService", "controller"].includes(
-            node.decorators?.[0]?.expression?.name
+            node.decorators?.[0]?.expression?.name ||
+              node.decorators?.[0]?.expression?.callee?.name
           )
         );
       } else if (type === "field") {

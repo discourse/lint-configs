@@ -47,8 +47,11 @@ ruleTester.run("lines-between-class-members", rule, {
         class Foo {
           @service bar;
           @service baz;
+          @service("the-q") quux;
           @optionalService hey;
+          @optionalService("yo") hey;
           @controller hello;
+          @controller("greeter") welcome;
 
           <template></template>
         }
