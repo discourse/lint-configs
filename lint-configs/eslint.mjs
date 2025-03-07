@@ -7,6 +7,7 @@ import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
 import EmberRecommended from "eslint-plugin-ember/configs/recommended";
+import ImportPlugin from "eslint-plugin-import";
 import QUnitPlugin from "eslint-plugin-qunit";
 import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
@@ -101,6 +102,7 @@ export default [
       "decorator-position": DecoratorPosition,
       "simple-import-sort": SimpleImportSort,
       qunit: QUnitPlugin,
+      import: ImportPlugin,
       discourse: {
         rules: {
           "i18n-import-location": i18nImport,
@@ -156,7 +158,7 @@ export default [
       "valid-typeof": "error",
       "wrap-iife": ["error", "inside"],
       curly: "error",
-      "no-duplicate-imports": "error",
+      "import/no-duplicates": "error",
       "object-shorthand": ["error", "properties"],
       "no-dupe-class-members": "error",
       "@stylistic/js/lines-between-class-members": [
