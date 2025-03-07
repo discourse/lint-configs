@@ -174,21 +174,9 @@ export default {
     function match(node, type) {
       if (type === "*") {
         return true;
-      } else if (type === "service") {
-        return (
-          node.type === "PropertyDefinition" &&
-          ["service", "optionalService", "controller"].includes(
-            node.decorators?.[0]?.expression?.name ||
-              node.decorators?.[0]?.expression?.callee?.name
-          )
-        );
-      } else if (type === "field") {
-        return node.type === "PropertyDefinition";
-      } else if (type === "method") {
-        return node.type === "MethodDefinition";
-      } else if (type === "template") {
-        return node.type === "GlimmerTemplate";
       }
+
+      return nodeType(node) === type;
     }
 
     /**
