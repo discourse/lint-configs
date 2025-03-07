@@ -133,7 +133,6 @@ ruleTester.run("lines-between-class-members", rule, {
         { message: "Expected blank line between class members." },
         { message: "Expected blank line between class members." },
         { message: "Expected blank line between class members." },
-        { message: "Expected blank line between class members." },
       ],
       output: `
         class Foo {
@@ -141,7 +140,6 @@ ruleTester.run("lines-between-class-members", rule, {
 
           @tracked counter;
           @tracked text;
-
           other = 0;
 
           get bar() {

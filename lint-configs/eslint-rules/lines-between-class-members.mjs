@@ -23,7 +23,6 @@ export default {
   create(context) {
     const configureList = [
       { blankLine: "always", prev: "service", next: "*" },
-      { blankLine: "always", prev: "tracked", next: "*" },
       { blankLine: "always", prev: "*", next: "method" },
       { blankLine: "always", prev: "method", next: "*" },
       { blankLine: "always", prev: "*", next: "template" },
@@ -148,11 +147,6 @@ export default {
     function nodeType(node) {
       if (
         node.type === "PropertyDefinition" &&
-        node.decorators?.[0]?.expression?.name === "tracked"
-      ) {
-        return "tracked";
-      } else if (
-        node.type === "PropertyDefinition" &&
         ["service", "optionalService", "controller"].includes(
           node.decorators?.[0]?.expression?.name
         )
@@ -179,11 +173,6 @@ export default {
     function match(node, type) {
       if (type === "*") {
         return true;
-      } else if (type === "tracked") {
-        return (
-          node.type === "PropertyDefinition" &&
-          node.decorators?.[0]?.expression?.name === "tracked"
-        );
       } else if (type === "service") {
         return (
           node.type === "PropertyDefinition" &&
