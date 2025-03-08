@@ -284,7 +284,7 @@ export default [
       "discourse/no-simple-queryselector": ["error"],
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
-      // "discourse/lines-between-class-members": ["error"],
+      "discourse/lines-between-class-members": ["error"],
       "discourse/line-after-imports": ["error"],
     },
   },
