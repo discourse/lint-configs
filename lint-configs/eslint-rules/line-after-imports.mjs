@@ -3,7 +3,7 @@ import {
   findLastConsecutiveTokenAfter,
   getBoundaryTokens,
   hasTokenOrCommentBetween,
-} from "./utils/tokens";
+} from "./utils/tokens.mjs";
 
 function findLastIndexOfType(nodes, type) {
   return nodes.findLastIndex((node) => node.type === type);

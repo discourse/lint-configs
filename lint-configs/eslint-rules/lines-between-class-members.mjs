@@ -4,7 +4,7 @@ import {
   getBoundaryTokens,
   hasTokenOrCommentBetween,
   isTokenOnSameLine,
-} from "./utils/tokens";
+} from "./utils/tokens.mjs";
 
 export default {
   meta: {
