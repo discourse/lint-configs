@@ -103,7 +103,12 @@ export function findFirstConsecutiveTokenBefore(
     before !== prevLastToken &&
     nextFirstToken.loc.start.line - before.loc.end.line <= maxLine
   ) {
-    return findFirstConsecutiveTokenBefore(before, prevLastToken, maxLine);
+    return findFirstConsecutiveTokenBefore(
+      sourceCode,
+      before,
+      prevLastToken,
+      maxLine
+    );
   }
 
   return nextFirstToken;
