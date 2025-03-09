@@ -16,6 +16,7 @@ import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
+import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import noSimpleQueryselector from "./eslint-rules/no-simple-queryselector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
@@ -111,6 +112,7 @@ export default [
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
           "lines-between-class-members": linesBetweenClassMembers,
+          "line-after-imports": lineAfterImports,
         },
       },
     },
@@ -283,6 +285,7 @@ export default [
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
       "discourse/lines-between-class-members": ["error"],
+      "discourse/line-after-imports": ["error"],
     },
   },
   {
