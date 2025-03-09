@@ -1,3 +1,6 @@
+// Based on `@stylistic/js/lines-between-class-members`
+// See: https://github.com/eslint-stylistic/eslint-stylistic/blob/d6809c910510a4477e01ea248071f0701d0af4ed/packages/eslint-plugin/rules/lines-between-class-members/lines-between-class-members._js_.ts
+
 import {
   findFirstConsecutiveTokenBefore,
   findLastConsecutiveTokenAfter,
