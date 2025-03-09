@@ -2,7 +2,6 @@ import { createConfigItem } from "@babel/core";
 import BabelParser from "@babel/eslint-parser";
 import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
 import js from "@eslint/js";
-import stylisticJs from "@stylistic/eslint-plugin-js";
 import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
@@ -17,6 +16,7 @@ import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
+import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import noSimpleQueryselector from "./eslint-rules/no-simple-queryselector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 
@@ -96,7 +96,6 @@ export default [
       },
     },
     plugins: {
-      "@stylistic/js": stylisticJs,
       ember: EmberPlugin,
       "sort-class-members": SortClassMembers,
       "decorator-position": DecoratorPosition,
@@ -111,6 +110,7 @@ export default [
           "no-simple-queryselector": noSimpleQueryselector,
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
+          "lines-between-class-members": linesBetweenClassMembers,
         },
       },
     },
@@ -161,16 +161,6 @@ export default [
       "import/no-duplicates": "error",
       "object-shorthand": ["error", "properties"],
       "no-dupe-class-members": "error",
-      "@stylistic/js/lines-between-class-members": [
-        "error",
-        {
-          enforce: [
-            { blankLine: "always", prev: "*", next: "method" },
-            { blankLine: "always", prev: "method", next: "*" },
-          ],
-        },
-        { exceptAfterSingleLine: true },
-      ],
       "ember/no-classic-components": "off",
       "ember/no-component-lifecycle-hooks": "off",
       "ember/require-tagless-components": "off",
@@ -292,6 +282,7 @@ export default [
       "discourse/no-simple-queryselector": ["error"],
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
+      "discourse/lines-between-class-members": ["error"],
     },
   },
   {
