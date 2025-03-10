@@ -3,7 +3,7 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "eslint": "9.21.0",
+    "eslint": "9.22.0",
     "mocha": "^11.1.0"
   },
   "scripts": {
