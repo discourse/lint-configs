@@ -18,12 +18,11 @@ export default {
     docs: {
       description:
         "replace deprecated resolver 'lookup' calls and modifyClass arguments with modern equivalents",
-      category: "Best Practices",
-      recommended: true,
     },
     fixable: "code",
     schema: [], // no options
   },
+
   create(context) {
     return {
       CallExpression(node) {

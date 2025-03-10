@@ -18,7 +18,7 @@ import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
-import noSimpleQueryselector from "./eslint-rules/no-simple-queryselector.mjs";
+import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 
 // Copied from "ember-template-imports/lib/utils"
@@ -108,7 +108,7 @@ export default [
           "i18n-import-location": i18nImport,
           "i18n-t": i18nT,
           "service-inject-import": serviceInjectImport,
-          "no-simple-queryselector": noSimpleQueryselector,
+          "no-simple-query-selector": noSimpleQuerySelector,
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
           "lines-between-class-members": linesBetweenClassMembers,
@@ -280,7 +280,7 @@ export default [
       "discourse/i18n-import-location": ["error"],
       "discourse/i18n-t": ["error"],
       "discourse/service-inject-import": ["error"],
-      "discourse/no-simple-queryselector": ["error"],
+      "discourse/no-simple-query-selector": ["error"],
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
       "discourse/lines-between-class-members": ["error"],

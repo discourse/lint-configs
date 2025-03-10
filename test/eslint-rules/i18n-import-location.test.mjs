@@ -1,11 +1,9 @@
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/i18n-import-location.mjs";
 
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2018, sourceType: "module" },
-});
+const ruleTester = new RuleTester();
 
-ruleTester.run("no-i18n-import", rule, {
+ruleTester.run("i18n-import-location", rule, {
   valid: [
     {
       code: "import { i18n } from 'discourse-i18n';",

@@ -3,12 +3,11 @@ export default {
     type: "suggestion",
     docs: {
       description: "Convert 'inject as service' to 'service'",
-      category: "Best Practices",
-      recommended: false,
     },
     fixable: "code",
     schema: [], // no options
   },
+
   create(context) {
     return {
       ImportDeclaration(node) {

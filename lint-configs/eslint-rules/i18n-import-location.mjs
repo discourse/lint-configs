@@ -6,12 +6,11 @@ export default {
     docs: {
       description:
         "disallow imports from 'i18n' and replace with 'discourse-i18n'",
-      category: "Best Practices",
-      recommended: false,
     },
     fixable: "code",
     schema: [], // no options
   },
+
   create(context) {
     return {
       ImportDeclaration(node) {
