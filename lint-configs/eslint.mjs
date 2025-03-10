@@ -2,11 +2,11 @@ import { createConfigItem } from "@babel/core";
 import BabelParser from "@babel/eslint-parser";
 import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
 import js from "@eslint/js";
-import stylisticJs from "@stylistic/eslint-plugin-js";
 import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
 import EmberRecommended from "eslint-plugin-ember/configs/recommended";
+import ImportPlugin from "eslint-plugin-import";
 import QUnitPlugin from "eslint-plugin-qunit";
 import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
@@ -16,6 +16,8 @@ import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
+import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
+import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import noSimpleQueryselector from "./eslint-rules/no-simple-queryselector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 
@@ -95,12 +97,12 @@ export default [
       },
     },
     plugins: {
-      "@stylistic/js": stylisticJs,
       ember: EmberPlugin,
       "sort-class-members": SortClassMembers,
       "decorator-position": DecoratorPosition,
       "simple-import-sort": SimpleImportSort,
       qunit: QUnitPlugin,
+      import: ImportPlugin,
       discourse: {
         rules: {
           "i18n-import-location": i18nImport,
@@ -109,6 +111,8 @@ export default [
           "no-simple-queryselector": noSimpleQueryselector,
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
+          "lines-between-class-members": linesBetweenClassMembers,
+          "line-after-imports": lineAfterImports,
         },
       },
     },
@@ -156,19 +160,9 @@ export default [
       "valid-typeof": "error",
       "wrap-iife": ["error", "inside"],
       curly: "error",
-      "no-duplicate-imports": "error",
+      "import/no-duplicates": "error",
       "object-shorthand": ["error", "properties"],
       "no-dupe-class-members": "error",
-      "@stylistic/js/lines-between-class-members": [
-        "error",
-        {
-          enforce: [
-            { blankLine: "always", prev: "*", next: "method" },
-            { blankLine: "always", prev: "method", next: "*" },
-          ],
-        },
-        { exceptAfterSingleLine: true },
-      ],
       "ember/no-classic-components": "off",
       "ember/no-component-lifecycle-hooks": "off",
       "ember/require-tagless-components": "off",
@@ -191,7 +185,6 @@ export default [
       "ember/classic-decorator-hooks": "off",
       "ember/classic-decorator-no-classic-methods": "off",
       "ember/no-actions-hash": "off",
-      "ember/no-classic-classes": "off",
       "ember/no-tracked-properties-from-args": "off",
       "ember/no-jquery": "off",
       "ember/no-runloop": "off",
@@ -290,6 +283,8 @@ export default [
       "discourse/no-simple-queryselector": ["error"],
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
+      "discourse/lines-between-class-members": ["error"],
+      "discourse/line-after-imports": ["error"],
     },
   },
   {

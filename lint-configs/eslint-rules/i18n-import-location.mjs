@@ -27,12 +27,12 @@ export default {
         }
 
         if (
-          node.source.value.toLowerCase() === "discourse-common/helpers/i18n"
+          node.source.value.toLowerCase() === "discourse-common/helpers/i18n" ||
+          node.source.value.toLowerCase() === "discourse/helpers/i18n"
         ) {
           context.report({
             node,
-            message:
-              "Import from 'discourse-common/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
+            message: `Import from '${node.source.value}' is not allowed. Use 'discourse-i18n' instead.`,
             fix(fixer) {
               const existingImport = context
                 .getSourceCode()
