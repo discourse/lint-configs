@@ -4,12 +4,11 @@ export default {
     docs: {
       description:
         "disallow imports from 'discourse-common' and replace with modern equivalents",
-      category: "Best Practices",
-      recommended: false,
     },
     fixable: "code",
     schema: [], // no options
   },
+
   create(context) {
     return {
       ImportDeclaration(node) {

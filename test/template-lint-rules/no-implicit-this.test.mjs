@@ -1,13 +1,12 @@
-/* global beforeEach,describe,it */
 import { generateRuleTests } from "ember-template-lint";
 import plugin from "../../lint-configs/template-lint-rules/index.mjs";
 
 generateRuleTests({
   name: "discourse/no-implicit-this",
 
-  groupMethodBefore: beforeEach,
-  groupingMethod: describe,
-  testMethod: it,
+  groupMethodBefore: globalThis.beforeEach,
+  groupingMethod: globalThis.describe,
+  testMethod: globalThis.it,
   plugins: [plugin],
 
   config: true,

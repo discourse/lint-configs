@@ -5,12 +5,11 @@ export default {
     type: "suggestion",
     docs: {
       description: "Use i18n(...) instead of 'I18n.t(...)'.",
-      category: "Best Practices",
-      recommended: false,
     },
     fixable: "code",
     schema: [], // no options
   },
+
   create(context) {
     const sourceCode = context.sourceCode ?? context.getSourceCode();
     let alreadyFixedImport = false;
@@ -53,7 +52,7 @@ export default {
             const fixes = [];
 
             // Replace I18n.t with i18n
-            fixes.push(fixer.replaceText(node, `i18n`));
+            fixes.push(fixer.replaceText(node, "i18n"));
 
             if (!alreadyFixedImport) {
               const importDeclaration = i18nDefaultImport.node.parent;

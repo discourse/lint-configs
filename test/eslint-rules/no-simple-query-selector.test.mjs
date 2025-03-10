@@ -1,9 +1,9 @@
 import { RuleTester } from "eslint";
-import rule from "../../lint-configs/eslint-rules/no-simple-queryselector.mjs";
+import rule from "../../lint-configs/eslint-rules/no-simple-query-selector.mjs";
 
-const ruleTester = new RuleTester({ languageOptions: { ecmaVersion: 2018 } });
+const ruleTester = new RuleTester();
 
-ruleTester.run("no-queryselector-body-html", rule, {
+ruleTester.run("no-simple-query-selector", rule, {
   valid: [
     'document.querySelector(".my-class")',
     "document.body",

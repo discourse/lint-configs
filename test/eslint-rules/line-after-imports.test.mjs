@@ -1,9 +1,7 @@
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/line-after-imports.mjs";
 
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2018 },
-});
+const ruleTester = new RuleTester();
 
 ruleTester.run("line-after-imports", rule, {
   valid: [

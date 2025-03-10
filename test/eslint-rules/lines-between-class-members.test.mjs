@@ -3,7 +3,7 @@ import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/lines-between-class-members.mjs";
 
 const ruleTester = new RuleTester({
-  languageOptions: { parser: EmberESLintParser, ecmaVersion: 2018 },
+  languageOptions: { parser: EmberESLintParser },
 });
 
 ruleTester.run("lines-between-class-members", rule, {
