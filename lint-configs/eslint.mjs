@@ -185,7 +185,6 @@ export default [
       "ember/classic-decorator-hooks": "off",
       "ember/classic-decorator-no-classic-methods": "off",
       "ember/no-actions-hash": "off",
-      "ember/no-classic-classes": "off",
       "ember/no-tracked-properties-from-args": "off",
       "ember/no-jquery": "off",
       "ember/no-runloop": "off",
