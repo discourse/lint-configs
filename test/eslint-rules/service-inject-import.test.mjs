@@ -1,9 +1,7 @@
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/service-inject-import.mjs";
 
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2018, sourceType: "module" },
-});
+const ruleTester = new RuleTester();
 
 ruleTester.run("service-inject-import", rule, {
   valid: [`import { service } from "@ember/service";`],

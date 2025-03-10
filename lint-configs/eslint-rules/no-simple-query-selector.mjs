@@ -1,16 +1,14 @@
-// no-queryselector-body-html.mjs
 export default {
   meta: {
     type: "problem",
     docs: {
       description:
         'disallow document.querySelector("body") and document.querySelector("html")',
-      category: "Best Practices",
-      recommended: false,
     },
     fixable: "code",
     schema: [], // no options
   },
+
   create(context) {
     return {
       CallExpression(node) {

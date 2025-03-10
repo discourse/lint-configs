@@ -1,11 +1,9 @@
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/discourse-common-imports.mjs";
 
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2018, sourceType: "module" },
-});
+const ruleTester = new RuleTester();
 
-ruleTester.run("no-discourse-common-import", rule, {
+ruleTester.run("discourse-common-imports", rule, {
   valid: [
     {
       code: `import Something from "discourse/lib/environment";`,

@@ -1,9 +1,7 @@
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/i18n-t.mjs";
 
-const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2018, sourceType: "module" },
-});
+const ruleTester = new RuleTester();
 
 ruleTester.run("i18n-t", rule, {
   valid: [
@@ -51,7 +49,7 @@ ruleTester.run("i18n-t", rule, {
         'import I18n from "discourse-i18n";',
         'I18n.t("some string");',
         'I18n.t("some string");',
-        'I18n.messsageFormat("some string");',
+        'I18n.messageFormat("some string");',
       ].join("\n"),
       errors: [
         {
@@ -65,7 +63,7 @@ ruleTester.run("i18n-t", rule, {
         'import I18n, { i18n } from "discourse-i18n";',
         'i18n("some string");',
         'i18n("some string");',
-        'I18n.messsageFormat("some string");',
+        'I18n.messageFormat("some string");',
       ].join("\n"),
     },
     {
