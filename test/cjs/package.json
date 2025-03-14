@@ -6,6 +6,6 @@
     "ember-template-lint": "7.0.1",
     "eslint": "9.22.0",
     "prettier": "3.5.3",
-    "stylelint": "16.15.0"
+    "stylelint": "16.16.0"
   }
 }
