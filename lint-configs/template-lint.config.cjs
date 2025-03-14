@@ -1,6 +1,7 @@
 module.exports = {
   extends: ["recommended", "stylistic"],
   plugins: ["@discourse/lint-configs/template-lint-rules"],
+  ignore: ["**/*.js"],
   rules: {
     // Intentionally disabled default rules
     "no-autofocus-attribute": false,
