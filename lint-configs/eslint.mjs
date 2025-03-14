@@ -30,6 +30,8 @@ export default [
   ...EmberRecommended,
   {
     ignores: ["assets/vendor/**/*", "public/**/*"],
+  },
+  {
     languageOptions: {
       ecmaVersion: 2018,
       sourceType: "module",
