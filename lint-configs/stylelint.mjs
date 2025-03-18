@@ -26,6 +26,5 @@ export default {
     "scss/at-function-pattern": null,
     "scss/comment-no-empty": null,
     "scss/at-mixin-pattern": null,
-    "media-feature-range-notation": "prefix",
   },
 };
