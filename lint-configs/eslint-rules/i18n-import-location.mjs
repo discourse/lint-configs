@@ -33,6 +33,15 @@ export default {
             node,
             message: `Import from '${node.source.value}' is not allowed. Use 'discourse-i18n' instead.`,
             fix(fixer) {
+              const canSafelyReplace =
+                node.specifiers.length === 1 &&
+                node.specifiers[0].type === "ImportDefaultSpecifier" &&
+                node.specifiers[0].local.name === "i18n";
+
+              if (!canSafelyReplace) {
+                return;
+              }
+
               const existingImport = context
                 .getSourceCode()
                 .ast.body.find(
