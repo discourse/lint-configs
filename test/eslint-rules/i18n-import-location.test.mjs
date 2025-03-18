@@ -40,5 +40,14 @@ ruleTester.run("i18n-import-location", rule, {
       ],
       output: "import { i18n } from 'discourse-i18n';",
     },
+    {
+      code: "import i18n0 from 'discourse/helpers/i18n';",
+      errors: [
+        {
+          message:
+            "Import from 'discourse/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
+        },
+      ],
+    },
   ],
 });
