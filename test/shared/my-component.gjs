@@ -1,4 +1,4 @@
-import or from "truth-helpers/helpers/or";
+import { or } from "truth-helpers";
 import { service } from "@ember/service";
 import Component from "@glimmer/component";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
