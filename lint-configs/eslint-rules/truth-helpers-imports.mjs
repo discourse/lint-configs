@@ -11,7 +11,7 @@ export default {
   create(context) {
     return {
       ImportDeclaration(node) {
-        if (/truth-helpers\/helpers\//i.test(node.source.value)) {
+        if (node.source.value.startsWith("truth-helpers/helpers/")) {
           context.report({
             node,
             message: `It is recommended to use 'truth-helpers' import instead of '${node.source.value}'.`,
