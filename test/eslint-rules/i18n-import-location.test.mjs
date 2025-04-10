@@ -48,6 +48,7 @@ ruleTester.run("i18n-import-location", rule, {
             "Import from 'discourse/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
         },
       ],
+      output: "import { i18n as i18n0 } from 'discourse-i18n';",
     },
   ],
 });

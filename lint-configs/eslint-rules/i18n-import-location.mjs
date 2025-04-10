@@ -35,8 +35,7 @@ export default {
             fix(fixer) {
               const canSafelyReplace =
                 node.specifiers.length === 1 &&
-                node.specifiers[0].type === "ImportDefaultSpecifier" &&
-                node.specifiers[0].local.name === "i18n";
+                node.specifiers[0].type === "ImportDefaultSpecifier";
 
               if (!canSafelyReplace) {
                 return;
@@ -58,10 +57,17 @@ export default {
                   }),
                 ];
               } else {
-                return fixer.replaceText(
-                  node,
-                  `import { i18n } from 'discourse-i18n';`
-                );
+                const localName = node.specifiers[0].local.name;
+                let sourceName = node.source.value.match(/([^/]+)$/)[0];
+                let code;
+
+                if (localName === sourceName) {
+                  code = `import { ${localName} } from 'discourse-i18n';`;
+                } else {
+                  code = `import { ${sourceName} as ${localName} } from 'discourse-i18n';`;
+                }
+
+                return fixer.replaceText(node, code);
               }
             },
           });
