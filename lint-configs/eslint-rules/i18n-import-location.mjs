@@ -1,5 +1,3 @@
-import { fixImport } from "./utils/fix-import.mjs";
-
 export default {
   meta: {
     type: "suggestion",
@@ -41,34 +39,17 @@ export default {
                 return;
               }
 
-              const existingImport = context
-                .getSourceCode()
-                .ast.body.find(
-                  (n) =>
-                    n.type === "ImportDeclaration" &&
-                    n.source.value === "discourse-i18n"
-                );
+              const localName = node.specifiers[0].local.name;
+              let sourceName = node.source.value.match(/([^/]+)$/)[0];
+              let code;
 
-              if (existingImport) {
-                return [
-                  fixer.remove(node),
-                  fixImport(fixer, existingImport, {
-                    namedImportsToAdd: ["i18n"],
-                  }),
-                ];
+              if (localName === sourceName) {
+                code = `import { ${localName} } from 'discourse-i18n';`;
               } else {
-                const localName = node.specifiers[0].local.name;
-                let sourceName = node.source.value.match(/([^/]+)$/)[0];
-                let code;
-
-                if (localName === sourceName) {
-                  code = `import { ${localName} } from 'discourse-i18n';`;
-                } else {
-                  code = `import { ${sourceName} as ${localName} } from 'discourse-i18n';`;
-                }
-
-                return fixer.replaceText(node, code);
+                code = `import { ${sourceName} as ${localName} } from 'discourse-i18n';`;
               }
+
+              return fixer.replaceText(node, code);
             },
           });
         }
