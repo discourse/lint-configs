@@ -20,5 +20,15 @@ ruleTester.run("truth-helpers-imports", rule, {
       ],
       output: "import { not } from 'truth-helpers';",
     },
+    {
+      code: "import or0 from 'truth-helpers/helpers/or';",
+      errors: [
+        {
+          message:
+            "It is recommended to use 'truth-helpers' import instead of 'truth-helpers/helpers/or'.",
+        },
+      ],
+      output: "import { or as or0 } from 'truth-helpers';",
+    },
   ],
 });

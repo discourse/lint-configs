@@ -16,10 +16,17 @@ export default {
             node,
             message: `It is recommended to use 'truth-helpers' import instead of '${node.source.value}'.`,
             fix(fixer) {
-              return fixer.replaceText(
-                node,
-                `import { ${node.specifiers[0].local.name} } from 'truth-helpers';`
-              );
+              let code;
+              const localName = node.specifiers[0].local.name;
+              const sourceName = node.source.value.match(/([^/]+)$/)[0];
+
+              if (localName === sourceName) {
+                code = `import { ${sourceName} } from 'truth-helpers';`;
+              } else {
+                code = `import { ${sourceName} as ${localName} } from 'truth-helpers';`;
+              }
+
+              return fixer.replaceText(node, code);
             },
           });
         }
