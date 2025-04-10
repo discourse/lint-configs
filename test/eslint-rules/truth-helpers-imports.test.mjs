@@ -21,6 +21,16 @@ ruleTester.run("truth-helpers-imports", rule, {
       output: "import { not } from 'truth-helpers';",
     },
     {
+      code: "import notEq from 'truth-helpers/helpers/not-eq';",
+      errors: [
+        {
+          message:
+            "It is recommended to use 'truth-helpers' import instead of 'truth-helpers/helpers/not-eq'.",
+        },
+      ],
+      output: "import { notEq } from 'truth-helpers';",
+    },
+    {
       code: "import or0 from 'truth-helpers/helpers/or';",
       errors: [
         {

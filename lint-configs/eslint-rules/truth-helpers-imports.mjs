@@ -18,10 +18,14 @@ export default {
             fix(fixer) {
               let code;
               const localName = node.specifiers[0].local.name;
-              const sourceName = node.source.value.match(/([^/]+)$/)[0];
+              let sourceName = node.source.value.match(/([^/]+)$/)[0];
+
+              if (sourceName === "not-eq") {
+                sourceName = "notEq";
+              }
 
               if (localName === sourceName) {
-                code = `import { ${sourceName} } from 'truth-helpers';`;
+                code = `import { ${localName} } from 'truth-helpers';`;
               } else {
                 code = `import { ${sourceName} as ${localName} } from 'truth-helpers';`;
               }
