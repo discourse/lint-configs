@@ -1,3 +1,5 @@
+import { fixImport } from "./utils/fix-import.mjs";
+
 export default {
   meta: {
     type: "suggestion",
@@ -18,7 +20,7 @@ export default {
             message:
               "Import from 'i18n' is not allowed. Use 'discourse-i18n' instead.",
             fix(fixer) {
-              return fixer.replaceText(node.source, "'discourse-i18n'");
+              return fixer.replaceText(node.source, `"discourse-i18n"`);
             },
           });
         }
@@ -41,15 +43,35 @@ export default {
 
               const localName = node.specifiers[0].local.name;
               let sourceName = node.source.value.match(/([^/]+)$/)[0];
-              let code;
+              let importString;
 
               if (localName === sourceName) {
-                code = `import { ${localName} } from 'discourse-i18n';`;
+                importString = `${localName}`;
               } else {
-                code = `import { ${sourceName} as ${localName} } from 'discourse-i18n';`;
+                importString = `${sourceName} as ${localName}`;
               }
 
-              return fixer.replaceText(node, code);
+              const existingImport = context
+                .getSourceCode()
+                .ast.body.find(
+                  (n) =>
+                    n.type === "ImportDeclaration" &&
+                    n.source.value === "discourse-i18n"
+                );
+
+              if (existingImport) {
+                return [
+                  fixer.remove(node),
+                  fixImport(fixer, existingImport, {
+                    namedImportsToAdd: [importString],
+                  }),
+                ];
+              } else {
+                return fixer.replaceText(
+                  node,
+                  `import { ${importString} } from "discourse-i18n";`
+                );
+              }
             },
           });
         }

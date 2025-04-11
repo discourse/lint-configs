@@ -18,7 +18,7 @@ ruleTester.run("i18n-import-location", rule, {
             "Import from 'i18n' is not allowed. Use 'discourse-i18n' instead.",
         },
       ],
-      output: "import { i18n } from 'discourse-i18n';",
+      output: `import { i18n } from "discourse-i18n";`,
     },
     {
       code: "import i18n from 'discourse-common/helpers/i18n';",
@@ -28,7 +28,7 @@ ruleTester.run("i18n-import-location", rule, {
             "Import from 'discourse-common/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
         },
       ],
-      output: "import { i18n } from 'discourse-i18n';",
+      output: `import { i18n } from "discourse-i18n";`,
     },
     {
       code: "import i18n from 'discourse/helpers/i18n';",
@@ -38,7 +38,7 @@ ruleTester.run("i18n-import-location", rule, {
             "Import from 'discourse/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
         },
       ],
-      output: "import { i18n } from 'discourse-i18n';",
+      output: `import { i18n } from "discourse-i18n";`,
     },
     {
       code: "import i18n0 from 'discourse/helpers/i18n';",
@@ -48,23 +48,20 @@ ruleTester.run("i18n-import-location", rule, {
             "Import from 'discourse/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
         },
       ],
-      output: "import { i18n as i18n0 } from 'discourse-i18n';",
+      output: `import { i18n as i18n0 } from "discourse-i18n";`,
     },
     {
       code: `
         import i18n0 from 'discourse/helpers/i18n';
         import I18n from 'discourse-i18n';
-      `,
+      `.replace(/^\s*|\s*$/gm, ""),
       errors: [
         {
           message:
             "Import from 'discourse/helpers/i18n' is not allowed. Use 'discourse-i18n' instead.",
         },
       ],
-      output: `
-        import { i18n as i18n0 } from 'discourse-i18n';
-        import I18n from 'discourse-i18n';
-      `,
+      output: `\nimport I18n, { i18n as i18n0 } from "discourse-i18n";`,
     },
   ],
 });
