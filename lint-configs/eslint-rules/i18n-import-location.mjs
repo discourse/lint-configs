@@ -20,7 +20,7 @@ export default {
             message:
               "Import from 'i18n' is not allowed. Use 'discourse-i18n' instead.",
             fix(fixer) {
-              return fixer.replaceText(node.source, "'discourse-i18n'");
+              return fixer.replaceText(node.source, `"discourse-i18n"`);
             },
           });
         }
@@ -35,11 +35,20 @@ export default {
             fix(fixer) {
               const canSafelyReplace =
                 node.specifiers.length === 1 &&
-                node.specifiers[0].type === "ImportDefaultSpecifier" &&
-                node.specifiers[0].local.name === "i18n";
+                node.specifiers[0].type === "ImportDefaultSpecifier";
 
               if (!canSafelyReplace) {
                 return;
+              }
+
+              const localName = node.specifiers[0].local.name;
+              let sourceName = node.source.value.match(/([^/]+)$/)[0];
+              let importString;
+
+              if (localName === sourceName) {
+                importString = `${localName}`;
+              } else {
+                importString = `${sourceName} as ${localName}`;
               }
 
               const existingImport = context
@@ -54,13 +63,13 @@ export default {
                 return [
                   fixer.remove(node),
                   fixImport(fixer, existingImport, {
-                    namedImportsToAdd: ["i18n"],
+                    namedImportsToAdd: [importString],
                   }),
                 ];
               } else {
                 return fixer.replaceText(
                   node,
-                  `import { i18n } from 'discourse-i18n';`
+                  `import { ${importString} } from "discourse-i18n";`
                 );
               }
             },
