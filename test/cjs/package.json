@@ -3,9 +3,9 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "ember-template-lint": "7.0.1",
-    "eslint": "9.22.0",
+    "ember-template-lint": "7.0.7",
+    "eslint": "9.24.0",
     "prettier": "3.5.3",
-    "stylelint": "16.16.0"
+    "stylelint": "16.18.0"
   }
 }
