@@ -58,6 +58,13 @@ module.exports = {
       files: ["**/*.gjs", "**/*.gts"],
       rules: {
         "discourse/no-implicit-this": false,
+        "no-action-modifiers": true,
+      },
+    },
+    {
+      files: ["**/templates/**/*.gjs"],
+      rules: {
+        "no-action": true,
       },
     },
   ],
