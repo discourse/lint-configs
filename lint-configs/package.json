@@ -1,6 +1,6 @@
 {
   "name": "@discourse/lint-configs",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "description": "Shareable lint configs for Discourse core, plugins, and themes",
   "author": "Discourse",
   "license": "MIT",
@@ -30,11 +30,11 @@
     "test": "cd ../test && node test.js"
   },
   "dependencies": {
-    "@babel/core": "^7.26.10",
-    "@babel/eslint-parser": "^7.27.0",
-    "@babel/plugin-proposal-decorators": "^7.25.9",
-    "ember-template-lint": "^7.0.7",
-    "eslint": "^9.24.0",
+    "@babel/core": "^7.27.1",
+    "@babel/eslint-parser": "^7.27.1",
+    "@babel/plugin-proposal-decorators": "^7.27.1",
+    "ember-template-lint": "^7.6.0",
+    "eslint": "^9.26.0",
     "eslint-plugin-decorator-position": "^6.0.0",
     "eslint-plugin-ember": "^12.5.0",
     "eslint-plugin-import": "^2.31.0",
@@ -44,15 +44,15 @@
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
     "prettier-plugin-ember-template-tag": "^2.0.5",
-    "stylelint": "^16.18.0",
+    "stylelint": "^16.19.1",
     "stylelint-config-standard": "^38.0.0",
     "stylelint-config-standard-scss": "^14.0.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "ember-template-lint": "7.0.7",
-    "eslint": "9.24.0",
+    "ember-template-lint": "7.6.0",
+    "eslint": "9.26.0",
     "prettier": "3.5.3",
-    "stylelint": "16.18.0"
+    "stylelint": "16.19.1"
   }
 }
