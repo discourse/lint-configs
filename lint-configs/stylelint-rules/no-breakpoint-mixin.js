@@ -1,6 +1,6 @@
 import stylelint from "stylelint";
 
-const ruleName = "discourse/no-global-breakpoint-mixin";
+const ruleName = "discourse/no-breakpoint-mixin";
 const messages = stylelint.utils.ruleMessages(ruleName, {
   rejected:
     'Replace "@include breakpoint(...)" with "@include viewport.until(...)"',
@@ -32,7 +32,7 @@ const ruleFunction = (primaryOption) => {
           result,
           ruleName,
           fix: () => {
-            const fixableRegex = /breakpoint\("?([^,]+?)"?\)/;
+            const fixableRegex = /breakpoint\("?([^,]+?)"?(, min-width)?\)/;
             const match = atRule.params.match(fixableRegex);
             if (!match) {
               // Not autofixable
@@ -41,6 +41,7 @@ const ruleFunction = (primaryOption) => {
 
             const oldBreakpoint = match[1].trim();
             const newBreakpoint = breakpointMappings[oldBreakpoint];
+            const isMinWidth = match[2] === ", min-width";
 
             if (!newBreakpoint) {
               // Not autofixable
@@ -48,10 +49,17 @@ const ruleFunction = (primaryOption) => {
             }
 
             // Apply autofix
-            atRule.params = atRule.params.replace(
-              fixableRegex,
-              `viewport.until(${newBreakpoint})`
-            );
+            if (isMinWidth) {
+              atRule.params = atRule.params.replace(
+                fixableRegex,
+                `viewport.from(${newBreakpoint})`
+              );
+            } else {
+              atRule.params = atRule.params.replace(
+                fixableRegex,
+                `viewport.until(${newBreakpoint})`
+              );
+            }
 
             // Ensure the `@use "lib/viewport";` is added at the top of the file
             const hasViewportImport = root.nodes.some(

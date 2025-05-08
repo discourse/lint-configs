@@ -1,9 +1,9 @@
 import { strict as assert } from "node:assert";
 import test from "node:test";
 import stylelint from "stylelint";
-import plugin from "../../lint-configs/stylelint-rules/no-global-breakpoint-mixin.js";
+import plugin from "../../lint-configs/stylelint-rules/no-breakpoint-mixin.js";
 
-const ruleName = "discourse/no-global-breakpoint-mixin";
+const ruleName = "discourse/no-breakpoint-mixin";
 
 test(ruleName, async (t) => {
   const config = {
@@ -18,6 +18,9 @@ test(ruleName, async (t) => {
       @include breakpoint(mobile-small) {
         color: red;
       }
+      @include breakpoint("tablet", min-width) {
+        color: blue;
+      }
     `;
 
       // Run without autofix to check for warnings
@@ -28,7 +31,7 @@ test(ruleName, async (t) => {
       });
 
       assert.equal(resultWithoutFix.errored, true); // Should report an error
-      assert.equal(resultWithoutFix.results[0].warnings.length, 1); // One warning expected
+      assert.equal(resultWithoutFix.results[0].warnings.length, 2); // Two warnings expected
       assert.ok(
         resultWithoutFix.results[0].warnings[0].text.includes(
           'Replace "@include breakpoint(...)" with "@include viewport.until(...)"'
@@ -43,10 +46,11 @@ test(ruleName, async (t) => {
         syntax: "scss",
       });
 
-      assert.equal(resultWithFix.errored, false); // No errors after autofix
-      assert.equal(resultWithFix.results[0].warnings.length, 0); // No warnings after autofix
-      assert.ok(resultWithFix.code.includes('@use "lib/viewport"')); // Ensure @use is added
-      assert.ok(resultWithFix.code.includes("@include viewport.until(sm)")); // Ensure mixin is updated
+      assert.equal(resultWithFix.errored, false);
+      assert.equal(resultWithFix.results[0].warnings.length, 0);
+      assert.ok(resultWithFix.code.includes('@use "lib/viewport"'));
+      assert.ok(resultWithFix.code.includes("@include viewport.until(sm)"));
+      assert.ok(resultWithFix.code.includes("@include viewport.from(md)"));
     }
   );
 

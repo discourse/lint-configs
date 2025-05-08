@@ -30,6 +30,6 @@ export default {
     "scss/comment-no-empty": null,
     "scss/at-mixin-pattern": null,
 
-    "discourse/no-global-breakpoint-mixin": true,
+    "discourse/no-breakpoint-mixin": true,
   },
 };
