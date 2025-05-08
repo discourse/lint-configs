@@ -128,6 +128,15 @@ importers:
         specifier: ^11.2.2
         version: 11.2.2
 
+  test/stylelint-rules:
+    devDependencies:
+      '@discourse/lint-configs':
+        specifier: workspace:*
+        version: link:../../lint-configs
+      stylelint:
+        specifier: ^16.19.1
+        version: 16.19.1(typescript@5.8.3)
+
   test/template-lint-rules:
     devDependencies:
       '@discourse/lint-configs':

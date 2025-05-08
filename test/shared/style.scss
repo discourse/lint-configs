@@ -20,3 +20,9 @@ html.foo {
     color: var(--highlight);
   }
 }
+
+body {
+  @include breakpoint("sm") {
+    color: red;
+  }
+}

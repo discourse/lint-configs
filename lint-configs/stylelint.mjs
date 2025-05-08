@@ -1,5 +1,8 @@
+import DiscourseRules from "./stylelint-rules/index.js";
+
 export default {
   extends: ["stylelint-config-standard-scss"],
+  plugins: [DiscourseRules],
   rules: {
     "color-no-invalid-hex": true,
     "unit-no-unknown": true,
@@ -26,5 +29,7 @@ export default {
     "scss/at-function-pattern": null,
     "scss/comment-no-empty": null,
     "scss/at-mixin-pattern": null,
+
+    "discourse/no-breakpoint-mixin": true,
   },
 };
