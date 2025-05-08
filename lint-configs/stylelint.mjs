@@ -31,5 +31,6 @@ export default {
     "scss/at-mixin-pattern": null,
 
     "discourse/no-breakpoint-mixin": true,
+    "discourse/no-mixed-declarations": true,
   },
 };
