@@ -1,6 +1,6 @@
 /* global describe, it */
 
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import stylelint from "stylelint";
 import plugin from "../../lint-configs/stylelint-rules/no-global-breakpoint-mixin.js";
 
@@ -12,7 +12,7 @@ describe(ruleName, () => {
     rules: { [ruleName]: true },
   };
 
-  it("should report an error for invalid SCSS and autofix it", async () => {
+  it("reports an error for invalid SCSS and autofixes it", async () => {
     const invalidSCSS = `
       @include breakpoint(mobile-small) {
         color: red;
@@ -48,7 +48,7 @@ describe(ruleName, () => {
     assert.ok(resultWithFix.code.includes("@include viewport.until(sm)")); // Ensure mixin is updated
   });
 
-  it("should not report an error for valid SCSS", async () => {
+  it("does not report an error for valid SCSS", async () => {
     const validSCSS = `
       @use "lib/viewport";
       @include viewport.until(sm) {
@@ -66,7 +66,7 @@ describe(ruleName, () => {
     assert.equal(result.results[0].warnings.length, 0); // No warnings for valid SCSS
   });
 
-  it("should add @use 'lib/viewport' if missing", async () => {
+  it("adds @use 'lib/viewport' if missing", async () => {
     const invalidSCSS = `
       @include breakpoint("tablet") {
         color: blue;
