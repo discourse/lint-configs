@@ -3,10 +3,9 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "stylelint": "^16.19.1",
-    "mocha": "^11.2.2"
+    "stylelint": "^16.19.1"
   },
   "scripts": {
-    "test": "mocha *.test.mjs"
+    "test": "node --test"
   }
 }
