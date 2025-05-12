@@ -12,29 +12,28 @@ export default {
     const sourceCode = context.sourceCode;
 
     return {
-      Program(node) {
-        const body = node.body;
-        const index = body.findIndex(
-          (n) => n.type === "ExportDefaultDeclaration"
-        );
+      ExportDefaultDeclaration(node) {
+        const declaration = node.declaration;
+        const decorators = declaration?.decorators || [];
+        const targetNode = decorators.length > 0 ? decorators[0] : node;
 
-        if (index === -1 || index === 0) {
-          // No default export or starts with the export
+        const previousToken = sourceCode.getTokenBefore(targetNode, {
+          includeComments: true,
+        });
+
+        if (!previousToken) {
           return;
         }
 
-        const currentToken = body[index];
-        const previousToken = sourceCode.getTokenBefore(currentToken);
-
         const isPadded =
-          currentToken.loc.end.line - previousToken.loc.end.line > 1;
+          targetNode.loc.start.line - previousToken.loc.end.line > 1;
 
         if (isPadded) {
           return;
         }
 
         context.report({
-          node: body[index],
+          node: targetNode,
           message: "Expected blank line before the default export.",
 
           fix(fixer) {
