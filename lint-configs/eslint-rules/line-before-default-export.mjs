@@ -1,3 +1,7 @@
+function isCommentNode(node) {
+  return node.type === "Line" || node.type === "Block";
+}
+
 export default {
   meta: {
     type: "layout",
@@ -13,23 +17,33 @@ export default {
 
     return {
       ExportDefaultDeclaration(node) {
-        const declaration = node.declaration;
-        const decorators = declaration?.decorators || [];
-        const targetNode = decorators.length > 0 ? decorators[0] : node;
-
-        const previousToken = sourceCode.getTokenBefore(targetNode, {
-          includeComments: true,
-        });
-
-        if (!previousToken) {
-          return;
+        let targetNode = node;
+        if (node.declaration?.decorators?.length) {
+          targetNode = node.declaration.decorators[0];
         }
 
-        const isPadded =
-          targetNode.loc.start.line - previousToken.loc.end.line > 1;
+        let previousToken;
+        while (true) {
+          previousToken = sourceCode.getTokenBefore(targetNode, {
+            includeComments: true,
+          });
+          if (!previousToken) {
+            // Top of file, no need for newline
+            return;
+          }
 
-        if (isPadded) {
-          return;
+          const isPadded =
+            targetNode.loc.start.line - previousToken.loc.end.line > 1;
+          if (isPadded) {
+            return;
+          }
+
+          if (isCommentNode(previousToken)) {
+            targetNode = previousToken;
+            continue;
+          }
+
+          break;
         }
 
         context.report({
