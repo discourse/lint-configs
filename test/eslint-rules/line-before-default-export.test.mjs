@@ -25,6 +25,22 @@ ruleTester.run("line-before-default-export", rule, {
         export default class Foo {};
       `,
     },
+    {
+      code: `
+        const A = "b";
+
+        // Test comment
+        export default class Foo {};
+      `,
+    },
+    {
+      code: `
+        const A = "b";
+        // Test comment
+
+        export default class Foo {};
+      `,
+    },
   ],
   invalid: [
     {
@@ -41,6 +57,20 @@ ruleTester.run("line-before-default-export", rule, {
         </template>;
 
         export default Foo;
+      `,
+    },
+    {
+      code: `
+        const A = "b";
+        // Test comment
+        export default class Foo {};
+      `,
+      errors: [{ message: "Expected blank line before the default export." }],
+      output: `
+        const A = "b";
+
+        // Test comment
+        export default class Foo {};
       `,
     },
   ],
