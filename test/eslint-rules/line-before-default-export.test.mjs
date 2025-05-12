@@ -17,6 +17,14 @@ ruleTester.run("line-before-default-export", rule, {
         export default Foo;
       `,
     },
+    {
+      code: `
+        const A = "b";
+
+        @className("foo")
+        export default class Foo {};
+      `,
+    },
   ],
   invalid: [
     {
