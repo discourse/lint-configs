@@ -1,6 +1,6 @@
 import { Rule } from "ember-template-lint";
 
-export default class PluginOutletLazyHashRule extends Rule {
+export default class PluginOutletLazyHash extends Rule {
   visitor() {
     return {
       ElementNode(node) {
