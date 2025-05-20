@@ -1,5 +1,6 @@
 import NoAtClass from "./no-at-class.mjs";
 import NoImplicitThis from "./no-implicit-this.mjs";
+import PluginOutletLazyHash from "./plugin-outlet-lazy-hash.mjs";
 
 export default {
   // Name of plugin
@@ -9,5 +10,6 @@ export default {
   rules: {
     "discourse/no-at-class": NoAtClass,
     "discourse/no-implicit-this": NoImplicitThis,
+    "discourse/plugin-outlet-lazy-hash": PluginOutletLazyHash,
   },
 };
