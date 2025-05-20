@@ -29,6 +29,7 @@ module.exports = {
     "no-unnecessary-curly-strings": true,
     "simple-modifiers": true,
     "no-chained-this": true,
+    "require-strict-mode": true,
 
     // Pending non-default rules
     "attribute-order": false,
