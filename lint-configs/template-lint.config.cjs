@@ -54,6 +54,7 @@ module.exports = {
         /-/, // kebab-case, probably a component or helper
       ],
     },
+    "discourse/plugin-outlet-lazy-hash": true,
   },
   overrides: [
     {
