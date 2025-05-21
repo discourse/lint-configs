@@ -29,6 +29,10 @@ export default {
     "scss/at-function-pattern": null,
     "scss/comment-no-empty": null,
     "scss/at-mixin-pattern": null,
+    "declaration-property-value-keyword-no-deprecated": [
+      true,
+      { ignoreKeywords: ["break-word"] },
+    ],
 
     "discourse/no-breakpoint-mixin": true,
   },
