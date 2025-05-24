@@ -1,9 +1,9 @@
 import { RuleTester } from "eslint";
-import rule from "../../lint-configs/eslint-rules/no-register-connector-class.mjs";
+import rule from "../../lint-configs/eslint-rules/deprecated-plugin-apis.mjs";
 
 const ruleTester = new RuleTester();
 
-ruleTester.run("no-register-connector-class", rule, {
+ruleTester.run("deprecated-plugin-apis", rule, {
   valid: [
     "api.renderInOutlet('user-profile-primary', MyComponent)",
     "someObject.registerConnectorClass()",
@@ -20,6 +20,18 @@ ruleTester.run("no-register-connector-class", rule, {
         {
           message:
             "registerConnectorClass is deprecated. Create a glimmer component in a plugin connector directory or use renderInOutlet instead.",
+        },
+      ],
+    },
+    {
+      code: `
+        api.decoratePluginOutlet("below-footer", () => {
+        });
+      `,
+      errors: [
+        {
+          message:
+            "decoratePluginOutlet is deprecated. Use element modifiers on a component instead.",
         },
       ],
     },
