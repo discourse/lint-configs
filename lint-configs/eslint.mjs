@@ -13,13 +13,13 @@ import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
+import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
-import noRegisterConnectorClass from "./eslint-rules/no-register-connector-class.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
@@ -119,7 +119,7 @@ export default [
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
           "lines-between-class-members": linesBetweenClassMembers,
-          "no-register-connector-class": noRegisterConnectorClass,
+          "deprecated-plugin-apis": deprecatedPluginApis,
           "line-after-imports": lineAfterImports,
           "line-before-default-export": lineBeforeDefaultExport,
         },
