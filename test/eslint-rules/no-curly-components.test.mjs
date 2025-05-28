@@ -1,6 +1,6 @@
+import EmberEslintParser from "ember-eslint-parser";
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/no-curly-components.mjs";
-import EmberEslintParser from "ember-eslint-parser";
 
 const ruleTester = new RuleTester({
   languageOptions: {
