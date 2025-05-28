@@ -9,7 +9,15 @@ const ruleTester = new RuleTester({
 });
 
 ruleTester.run("no-curly-components", rule, {
-  valid: [],
+  valid: [
+    `
+    import SomeComponent from 'foo/components/some-component';
+    import AnotherComponent from 'foo/components/another-component';
+    <template>
+      <SomeComponent @arg1={{AnotherComponent}} />
+    </template>
+    `,
+  ],
   invalid: [
     {
       name: "simple component",

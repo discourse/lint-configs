@@ -6,6 +6,15 @@ function lintCurlyComponent(node, context) {
     node.path.head.type === "VarHead" &&
     !node.tail?.length;
 
+  let check = node.parent;
+  while (check) {
+    if (check.type === "GlimmerAttrNode") {
+      // <Foo @bar={{baz}} />
+      return;
+    }
+    check = check.parent;
+  }
+
   if (!isSimplePath) {
     return;
   }

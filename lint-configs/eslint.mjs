@@ -12,6 +12,7 @@ import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
+import capitalComponents from "./eslint-rules/capital-components.mjs";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
@@ -124,6 +125,7 @@ export default [
           "line-after-imports": lineAfterImports,
           "line-before-default-export": lineBeforeDefaultExport,
           "no-curly-components": noCurlyComponents,
+          "capital-components": capitalComponents,
         },
       },
     },
@@ -299,6 +301,7 @@ export default [
       "discourse/line-after-imports": ["error"],
       "discourse/line-before-default-export": ["error"],
       "discourse/no-curly-components": ["error"],
+      "discourse/capital-components": ["error"],
     },
   },
   {
