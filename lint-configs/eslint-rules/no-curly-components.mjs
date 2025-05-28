@@ -1,4 +1,4 @@
-import { fixImport } from "./utils/fix-import.mjs";
+import path from "path";
 
 export default {
   meta: {
@@ -51,7 +51,21 @@ export default {
 
         const importedModuleName = importBinding.node.parent.source.value;
 
-        if (!importedModuleName.includes("/components/")) {
+        // This is not perfect, but it should catch 99% of components
+        let resolvedModuleName = importedModuleName;
+        if (importedModuleName.startsWith(".")) {
+          const cwd = context.cwd;
+          const sourceDirectoryFromCwd = path.dirname(
+            path.relative(cwd, context.getFilename())
+          );
+
+          resolvedModuleName = path.join(
+            sourceDirectoryFromCwd,
+            importedModuleName
+          );
+        }
+
+        if (!resolvedModuleName.includes("/components/")) {
           return;
         }
 
@@ -59,7 +73,19 @@ export default {
           node,
           message: `Use angle bracket syntax for components.`,
           fix(fixer) {
-            return [fixer.replaceText(node, `<${variableName} />`)];
+            const fixes = [];
+
+            let argumentString = "";
+
+            node.hash?.pairs.forEach(({ key, value }) => {
+              let valueSource = context.sourceCode.text.slice(...value.range);
+              valueSource = valueSource.replace(/^\(/, "").replace(/\)$/, "");
+              argumentString += `@${key}={{${valueSource}}} `;
+            });
+
+            return [
+              fixer.replaceText(node, `<${variableName} ${argumentString}/>`),
+            ];
           },
         });
       },
