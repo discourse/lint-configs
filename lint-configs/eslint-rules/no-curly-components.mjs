@@ -66,8 +66,7 @@ function lintCurlyComponent(node, context) {
       node.hash?.pairs.forEach(({ key, value }) => {
         let valueSource = context.sourceCode.getText(value);
         valueSource = valueSource.replace(/^\(/, "").replace(/\)$/, "");
-        if (value.type === "GlimmerStringLiteral") {
-        } else {
+        if (value.type !== "GlimmerStringLiteral") {
           valueSource = `{{${valueSource}}}`;
         }
         argumentString += `@${key}=${valueSource} `;
