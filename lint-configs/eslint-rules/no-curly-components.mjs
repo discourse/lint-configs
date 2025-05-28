@@ -6,6 +6,10 @@ function lintCurlyComponent(node, context) {
     node.path.head.type === "VarHead" &&
     !node.tail?.length;
 
+  if (!isSimplePath) {
+    return;
+  }
+
   let check = node.parent;
   while (check) {
     if (check.type === "GlimmerAttrNode") {
@@ -13,10 +17,6 @@ function lintCurlyComponent(node, context) {
       return;
     }
     check = check.parent;
-  }
-
-  if (!isSimplePath) {
-    return;
   }
 
   const variableName = node.path.head.name;
