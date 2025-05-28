@@ -67,7 +67,6 @@ function lintCurlyComponent(node, context) {
         let valueSource = context.sourceCode.getText(value);
         valueSource = valueSource.replace(/^\(/, "").replace(/\)$/, "");
         if (value.type === "GlimmerStringLiteral") {
-          valueSource.replace(/^"/, "").replace(/"$/, "");
         } else {
           valueSource = `{{${valueSource}}}`;
         }
