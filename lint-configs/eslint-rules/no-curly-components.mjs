@@ -83,8 +83,26 @@ export default {
               argumentString += `@${key}={{${valueSource}}} `;
             });
 
+            const newVariableName = variableName.replace(/^[a-z]/, (char) =>
+              char.toUpperCase()
+            );
+
+            fixes.push(fixer.replaceText(importBinding.node, newVariableName));
+
+            variable.references.forEach((ref) => {
+              if (ref.identifier === node.path.head) {
+                // Don't replace the reference inside the node we're fixing
+                return;
+              }
+              fixes.push(fixer.replaceText(ref.identifier, newVariableName));
+            });
+
             return [
-              fixer.replaceText(node, `<${variableName} ${argumentString}/>`),
+              fixer.replaceText(
+                node,
+                `<${newVariableName} ${argumentString}/>`
+              ),
+              ...fixes,
             ];
           },
         });
