@@ -104,14 +104,13 @@ export default {
   },
 
   create(context) {
-    const pendingRenames = new Map();
     return {
       GlimmerBlockStatement(node) {
-        return lintCurlyComponent(node, context, pendingRenames);
+        return lintCurlyComponent(node, context);
       },
 
       GlimmerMustacheStatement(node) {
-        return lintCurlyComponent(node, context, pendingRenames);
+        return lintCurlyComponent(node, context);
       },
     };
   },
