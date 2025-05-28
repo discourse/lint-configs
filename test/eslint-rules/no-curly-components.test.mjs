@@ -11,55 +11,80 @@ const ruleTester = new RuleTester({
 ruleTester.run("no-curly-components", rule, {
   valid: [],
   invalid: [
-    // {
-    //   name: "simple component",
-    //   code: `
-    //     import someComponent from "foo/components/some-component";
-    //     <template>
-    //       {{someComponent}}
-    //     </template>
-    //   `,
-    //   errors: [
-    //     {
-    //       message: "Use angle bracket syntax for components.",
-    //       type: "GlimmerMustacheStatement",
-    //     },
-    //   ],
-    //   output: `
-    //     import someComponent from "foo/components/some-component";
-    //     <template>
-    //       <someComponent />
-    //     </template>
-    //   `,
-    // },
-    // {
-    //   name: "component with arguments",
-    //   code: `
-    //     import someComponent from "foo/components/some-component";
-    //     const someVariable = "value 🧑‍🧑‍🧒‍🧒";
-    //     const otherReferenceToComponent = someComponent;
-    //     <template>
-    //       {{#if someComponent}}
-    //         {{someComponent arg1="value1" arg2=someVariable arg3=(if true "value3")}}
-    //       {{/if}}
-    //     </template>
-    //   `,
-    //   errors: [
-    //     {
-    //       message: "Use angle bracket syntax for components.",
-    //       type: "GlimmerMustacheStatement",
-    //     },
-    //   ],
-    //   output: `
-    //     import SomeComponent from "foo/components/some-component";
-    //     const someVariable = "value 🧑‍🧑‍🧒‍🧒";
-    //     const otherReferenceToComponent = SomeComponent;
-    //     <template>
-    //       {{#if SomeComponent}}
-    //         <SomeComponent @arg1={{"value1"}} @arg2={{someVariable}} @arg3={{if true "value3"}} />
-    //       {{/if}}
-    //     </template>
-    //   `,
-    // },
+    {
+      name: "simple component",
+      code: `
+        import someComponent from "foo/components/some-component";
+        <template>
+          {{someComponent}}
+          {{someComponent}}
+        </template>
+      `,
+      errors: [
+        {
+          message: "Use angle bracket syntax for components.",
+          type: "GlimmerMustacheStatement",
+        },
+        {
+          message: "Use angle bracket syntax for components.",
+          type: "GlimmerMustacheStatement",
+        },
+      ],
+      output: `
+        import someComponent from "foo/components/some-component";
+        <template>
+          <someComponent />
+          <someComponent />
+        </template>
+      `,
+    },
+    {
+      name: "component with arguments",
+      code: `
+        import someComponent from "foo/components/some-component";
+        const someVariable = "value 🧑‍🧑‍🧒‍🧒";
+        <template>
+          {{someComponent arg1="value1" arg2=someVariable arg3=(if true "value3")}}
+        </template>
+      `,
+      errors: [
+        {
+          message: "Use angle bracket syntax for components.",
+          type: "GlimmerMustacheStatement",
+        },
+      ],
+      output: `
+        import someComponent from "foo/components/some-component";
+        const someVariable = "value 🧑‍🧑‍🧒‍🧒";
+        <template>
+          <someComponent @arg1={{"value1"}} @arg2={{someVariable}} @arg3={{if true "value3"}} />
+        </template>
+      `,
+    },
+    {
+      name: "component with yield",
+      code: `
+        import someComponent from "foo/components/some-component";
+        <template>
+          {{#someComponent arg1="value1"}}
+            <div>Content</div>
+          {{/someComponent}}
+        </template>
+      `,
+      errors: [
+        {
+          message: "Use angle bracket syntax for components.",
+          type: "GlimmerBlockStatement",
+        },
+      ],
+      output: `
+        import someComponent from "foo/components/some-component";
+        <template>
+          <someComponent @arg1={{"value1"}} >
+            <div>Content</div>
+          </someComponent>
+        </template>
+      `,
+    },
   ],
 });
