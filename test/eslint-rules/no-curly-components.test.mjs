@@ -65,7 +65,7 @@ ruleTester.run("no-curly-components", rule, {
         import someComponent from "foo/components/some-component";
         const someVariable = "value 🧑‍🧑‍🧒‍🧒";
         <template>
-          <someComponent @arg1={{"value1"}} @arg2={{someVariable}} @arg3={{if true "value3"}} />
+          <someComponent @arg1="value1" @arg2={{someVariable}} @arg3={{if true "value3"}} />
         </template>
       `,
     },
@@ -88,7 +88,7 @@ ruleTester.run("no-curly-components", rule, {
       output: `
         import someComponent from "foo/components/some-component";
         <template>
-          <someComponent @arg1={{"value1"}} >
+          <someComponent @arg1="value1" >
             <div>Content</div>
           </someComponent>
         </template>
