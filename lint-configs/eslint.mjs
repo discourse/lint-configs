@@ -24,6 +24,7 @@ import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
+import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
 
 // Copied from "ember-template-imports/lib/utils"
@@ -117,6 +118,7 @@ export default [
           "i18n-t": i18nT,
           "service-inject-import": serviceInjectImport,
           "truth-helpers-imports": truthHelpersImports,
+          "theme-imports": themeImports,
           "no-simple-query-selector": noSimpleQuerySelector,
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
@@ -294,6 +296,7 @@ export default [
       "discourse/i18n-t": ["error"],
       "discourse/service-inject-import": ["error"],
       "discourse/truth-helpers-imports": ["error"],
+      "discourse/theme-imports": ["error"],
       "discourse/no-simple-query-selector": ["error"],
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
