@@ -4,7 +4,7 @@
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
     "ember-template-lint": "7.7.0",
-    "mocha": "^11.4.0"
+    "mocha": "^11.5.0"
   },
   "scripts": {
     "test": "mocha *.test.mjs"
