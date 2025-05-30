@@ -190,8 +190,6 @@ export default [
       "ember/avoid-leaking-state-in-ember-objects": "off",
       "ember/no-get": "off",
       "ember/no-observers": "off",
-      "ember/no-mixins": "off",
-      "ember/no-new-mixins": "off",
       "ember/no-implicit-injections": "off", // this rule is broken
       "ember/no-array-prototype-extensions": "off",
       "ember/no-at-ember-render-modifiers": "off",
