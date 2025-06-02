@@ -299,6 +299,7 @@ export default [
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
       "discourse/lines-between-class-members": ["error"],
+      "discourse/deprecated-plugin-apis": ["error"],
       "discourse/line-after-imports": ["error"],
       "discourse/line-before-default-export": ["error"],
       "discourse/no-curly-components": ["error"],
