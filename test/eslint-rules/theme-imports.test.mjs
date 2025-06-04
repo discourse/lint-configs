@@ -50,6 +50,25 @@ import { i18n } from "discourse-i18n";
     },
 
     {
+      name: "replacing themePrefix",
+      code: `
+import prefix from "discourse/helpers/theme-prefix";
+<template>
+  {{prefix "baz"}}
+  {{log (prefix "bar")}}
+</template>
+`,
+      errors: [{ message: "Importing themePrefix is not allowed." }],
+      output: `
+
+<template>
+  {{themePrefix "baz"}}
+  {{log (themePrefix "bar")}}
+</template>
+`,
+    },
+
+    {
       name: "replacing renamed themeI18n and where i18n exists",
       code: `
 import { i18n } from "discourse-i18n";
