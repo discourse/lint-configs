@@ -2,7 +2,8 @@ export default {
   meta: {
     type: "problem",
     docs: {
-      description: "Do not use themeSetting or themeI18n helpers.",
+      description:
+        "Do not use themeSetting, themeI18n, or themePrefix helpers.",
     },
     fixable: "code",
     schema: [], // no options
@@ -41,6 +42,31 @@ export default {
                   );
                 }
               });
+
+              return fixes;
+            },
+          });
+        } else if (modulePath === "discourse/helpers/theme-prefix") {
+          context.report({
+            node,
+            message: `Importing themePrefix is not allowed.`,
+            fix(fixer) {
+              const fixes = [fixer.remove(node)];
+
+              const importName = node.specifiers[0].local.name;
+
+              if (importName !== "themePrefix") {
+                const themePrefix = moduleScope.variables.find(
+                  (v) => v.name === importName
+                );
+                themePrefix.references.forEach((ref) => {
+                  const ident = ref.identifier;
+
+                  if (ident?.type === "VarHead") {
+                    fixes.push(fixer.replaceText(ident, "themePrefix"));
+                  }
+                });
+              }
 
               return fixes;
             },
