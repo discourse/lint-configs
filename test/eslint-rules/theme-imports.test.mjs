@@ -22,10 +22,10 @@ import themeSetting from "discourse/helpers/theme-setting";
 `,
       errors: [{ message: "Importing themeSetting is not allowed." }],
       output: `
-import { get } from "@ember/object";
+
 <template>
-  {{get settings "quux"}}
-  {{if (get settings "foo.bar") "yes" "no"}}
+  {{settings.quux}}
+  {{if settings.foo.bar "yes" "no"}}
 </template>
 `,
     },
