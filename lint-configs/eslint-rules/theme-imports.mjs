@@ -24,24 +24,75 @@ export default {
             fix(fixer) {
               const fixes = [fixer.remove(node)];
 
+              let addImport = false;
               const importName = node.specifiers[0].local.name;
               const themeSetting = moduleScope.variables.find(
                 (v) => v.name === importName
               );
               themeSetting.references.forEach((ref) => {
                 const expression = ref.identifier.parent.parent;
-                const param = expression?.params[0];
 
-                if (expression?.type === "GlimmerMustacheStatement") {
-                  fixes.push(
-                    fixer.replaceText(expression, `{{settings.${param.value}}}`)
-                  );
-                } else if (expression?.type === "GlimmerSubExpression") {
-                  fixes.push(
-                    fixer.replaceText(expression, `settings.${param.value}`)
-                  );
+                const param = expression?.params[0];
+                if (param?.value) {
+                  if (expression?.type === "GlimmerMustacheStatement") {
+                    fixes.push(
+                      fixer.replaceText(
+                        expression,
+                        `{{settings.${param.value}}}`
+                      )
+                    );
+                  } else if (expression?.type === "GlimmerSubExpression") {
+                    fixes.push(
+                      fixer.replaceText(expression, `settings.${param.value}`)
+                    );
+                  }
+                } else {
+                  // the complex params case
+                  if (
+                    [
+                      "GlimmerMustacheStatement",
+                      "GlimmerSubExpression",
+                    ].includes(expression?.type)
+                  ) {
+                    if (param) {
+                      addImport = true;
+                      fixes.push(
+                        fixer.replaceText(ref.identifier, "get settings")
+                      );
+                    }
+                  }
                 }
               });
+
+              if (addImport) {
+                const getFunction = moduleScope.variables.find(
+                  (v) => v.name === "get"
+                );
+                if (getFunction) {
+                  const importBindingDefinition = getFunction.defs[0];
+                  if (importBindingDefinition.node.imported.name === "get") {
+                    if (
+                      importBindingDefinition.parent.source.value ===
+                      "@ember/object"
+                    ) {
+                      // no need to add the import
+                    } else {
+                      // can't autofix
+                      return;
+                    }
+                  } else {
+                    // can't autofix
+                    return;
+                  }
+                } else {
+                  fixes.push(
+                    fixer.insertTextAfter(
+                      node,
+                      `import { get } from "@ember/object";`
+                    )
+                  );
+                }
+              }
 
               return fixes;
             },
