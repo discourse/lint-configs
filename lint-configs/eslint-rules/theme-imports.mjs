@@ -22,9 +22,35 @@ export default {
             node,
             message: `Importing themeSetting is not allowed.`,
             fix(fixer) {
-              const fixes = [
-                fixer.replaceText(node, `import { get } from "@ember/object";`),
-              ];
+              const fixes = [fixer.remove(node)];
+
+              const getFunction = moduleScope.variables.find(
+                (v) => v.name === "get"
+              );
+              if (getFunction) {
+                const importBindingDefinition = getFunction.defs[0];
+                if (importBindingDefinition.node.imported.name === "get") {
+                  if (
+                    importBindingDefinition.parent.source.value ===
+                    "@ember/object"
+                  ) {
+                    // no need to add the import
+                  } else {
+                    // can't autofix
+                    return;
+                  }
+                } else {
+                  // can't autofix
+                  return;
+                }
+              } else {
+                fixes.push(
+                  fixer.insertTextAfter(
+                    node,
+                    `import { get } from "@ember/object";`
+                  )
+                );
+              }
 
               const importName = node.specifiers[0].local.name;
               const themeSetting = moduleScope.variables.find(

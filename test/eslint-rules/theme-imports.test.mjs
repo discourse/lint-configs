@@ -47,6 +47,7 @@ import themeSetting from "discourse/helpers/theme-setting";
       errors: [{ message: "Importing themeSetting is not allowed." }],
       output: `
 import { get } from "@ember/object";
+
 <template>
 {{#let
   (get settings (concat "featured_card_image_" index))
