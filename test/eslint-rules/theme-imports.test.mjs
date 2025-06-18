@@ -31,6 +31,34 @@ import { get } from "@ember/object";
     },
 
     {
+      name: "a more complex settings path",
+      code: `
+import { get } from "@ember/object";
+import themeSetting from "discourse/helpers/theme-setting";
+<template>
+{{#let
+  (themeSetting (concat "featured_card_image_" index))
+  as |theme-image|
+}}
+  {{theme-image}}
+{{/let}}
+</template>
+      `,
+      errors: [{ message: "Importing themeSetting is not allowed." }],
+      output: `
+import { get } from "@ember/object";
+<template>
+{{#let
+  (get settings (concat "featured_card_image_" index))
+  as |theme-image|
+}}
+  {{theme-image}}
+{{/let}}
+</template>
+      `,
+    },
+
+    {
       name: "replacing themeI18n",
       code: `
 import themeI18n from "discourse/helpers/theme-i18n";
@@ -89,33 +117,6 @@ import { i18n } from "discourse-i18n";
   {{log (i18n (themePrefix "bar"))}}
 </template>
 `,
-    },
-
-    {
-      name: "bloop",
-      code: `
-import themeSetting from "discourse/helpers/theme-setting";
-<template>
-{{#let
-  (themeSetting (concat "featured_card_image_" index))
-  as |theme-image|
-}}
-  {{theme-image}}
-{{/let}}
-</template>
-      `,
-      errors: [{ message: "Importing themeSetting is not allowed." }],
-      output: `
-import { get } from "@ember/object";
-<template>
-{{#let
-  (get settings (concat "featured_card_image_" index))
-  as |theme-image|
-}}
-  {{theme-image}}
-{{/let}}
-</template>
-      `,
     },
   ],
 });
