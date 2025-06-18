@@ -22,10 +22,10 @@ import themeSetting from "discourse/helpers/theme-setting";
 `,
       errors: [{ message: "Importing themeSetting is not allowed." }],
       output: `
-
+import { get } from "@ember/object";
 <template>
-  {{settings.quux}}
-  {{if settings.foo.bar "yes" "no"}}
+  {{get settings "quux"}}
+  {{if (get settings "foo.bar") "yes" "no"}}
 </template>
 `,
     },
@@ -89,6 +89,33 @@ import { i18n } from "discourse-i18n";
   {{log (i18n (themePrefix "bar"))}}
 </template>
 `,
+    },
+
+    {
+      name: "bloop",
+      code: `
+import themeSetting from "discourse/helpers/theme-setting";
+<template>
+{{#let
+  (themeSetting (concat "featured_card_image_" index))
+  as |theme-image|
+}}
+  {{theme-image}}
+{{/let}}
+</template>
+      `,
+      errors: [{ message: "Importing themeSetting is not allowed." }],
+      output: `
+import { get } from "@ember/object";
+<template>
+{{#let
+  (get settings (concat "featured_card_image_" index))
+  as |theme-image|
+}}
+  {{theme-image}}
+{{/let}}
+</template>
+      `,
     },
   ],
 });

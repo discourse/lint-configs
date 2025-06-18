@@ -22,7 +22,9 @@ export default {
             node,
             message: `Importing themeSetting is not allowed.`,
             fix(fixer) {
-              const fixes = [fixer.remove(node)];
+              const fixes = [
+                fixer.replaceText(node, `import { get } from "@ember/object";`),
+              ];
 
               const importName = node.specifiers[0].local.name;
               const themeSetting = moduleScope.variables.find(
@@ -30,16 +32,17 @@ export default {
               );
               themeSetting.references.forEach((ref) => {
                 const expression = ref.identifier.parent.parent;
-                const param = expression?.params[0];
-
-                if (expression?.type === "GlimmerMustacheStatement") {
-                  fixes.push(
-                    fixer.replaceText(expression, `{{settings.${param.value}}}`)
-                  );
-                } else if (expression?.type === "GlimmerSubExpression") {
-                  fixes.push(
-                    fixer.replaceText(expression, `settings.${param.value}`)
-                  );
+                if (
+                  ["GlimmerMustacheStatement", "GlimmerSubExpression"].includes(
+                    expression?.type
+                  )
+                ) {
+                  const param = expression.params[0];
+                  if (param) {
+                    fixes.push(
+                      fixer.replaceText(ref.identifier, "get settings")
+                    );
+                  }
                 }
               });
 
