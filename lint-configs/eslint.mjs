@@ -13,6 +13,7 @@ import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
 import capitalComponents from "./eslint-rules/capital-components.mjs";
+import deprecatedImports from "./eslint-rules/deprecated-imports.mjs";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
@@ -124,6 +125,7 @@ export default [
           "no-simple-query-selector": noSimpleQuerySelector,
           "deprecated-lookups": deprecatedLookups,
           "discourse-common-imports": discourseCommonImports,
+          "deprecated-imports": deprecatedImports,
           "lines-between-class-members": linesBetweenClassMembers,
           "deprecated-plugin-apis": deprecatedPluginApis,
           "line-after-imports": lineAfterImports,
@@ -297,6 +299,7 @@ export default [
       "discourse/no-simple-query-selector": ["error"],
       "discourse/deprecated-lookups": ["error"],
       "discourse/discourse-common-imports": ["error"],
+      "discourse/deprecated-imports": ["error"],
       "discourse/lines-between-class-members": ["error"],
       "discourse/deprecated-plugin-apis": ["error"],
       "discourse/line-after-imports": ["error"],
