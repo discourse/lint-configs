@@ -23,6 +23,7 @@ import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
+import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
@@ -132,6 +133,7 @@ export default [
           "line-before-default-export": lineBeforeDefaultExport,
           "no-curly-components": noCurlyComponents,
           "capital-components": capitalComponents,
+          "no-onclick": noOnclick,
         },
       },
     },
@@ -306,6 +308,7 @@ export default [
       "discourse/line-before-default-export": ["error"],
       "discourse/no-curly-components": ["error"],
       "discourse/capital-components": ["error"],
+      "discourse/no-onclick": ["error"],
     },
   },
   {
