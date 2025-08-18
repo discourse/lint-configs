@@ -35,6 +35,21 @@ export default {
               );
             },
           });
+        } else if (
+          node.source.value === "@ember/application" &&
+          node.specifiers[0]?.local.name === "getOwner"
+        ) {
+          context.report({
+            node,
+            message:
+              "Use '@ember/owner' instead of '@ember/application' to import 'getOwner'",
+            fix(fixer) {
+              return fixer.replaceText(
+                node,
+                `import { getOwner } from "@ember/owner";`
+              );
+            },
+          });
         }
       },
     };

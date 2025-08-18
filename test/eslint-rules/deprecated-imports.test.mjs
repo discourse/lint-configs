@@ -7,6 +7,7 @@ ruleTester.run("deprecated-imports", rule, {
   valid: [
     `import getUrl from "discourse/lib/get-url";`,
     `import { htmlSafe } from "@ember/template";`,
+    `import { getOwner } from "@ember/owner";`,
   ],
   invalid: [
     {
@@ -28,6 +29,16 @@ ruleTester.run("deprecated-imports", rule, {
         },
       ],
       output: `import { htmlSafe } from "@ember/template";`,
+    },
+    {
+      code: `import { getOwner } from "@ember/application";`,
+      errors: [
+        {
+          message:
+            "Use '@ember/owner' instead of '@ember/application' to import 'getOwner'",
+        },
+      ],
+      output: `import { getOwner } from "@ember/owner";`,
     },
   ],
 });
