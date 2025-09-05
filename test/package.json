@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "eslint": "9.32.0",
+    "eslint": "9.34.0",
     "prettier": "3.6.2"
   }
 }
