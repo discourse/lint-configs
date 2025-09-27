@@ -3,7 +3,7 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "stylelint": "^16.23.1"
+    "stylelint": "^16.24.0"
   },
   "scripts": {
     "test": "node --test"
