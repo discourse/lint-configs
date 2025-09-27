@@ -3,8 +3,8 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "ember-template-lint": "7.9.1",
-    "mocha": "^11.7.1"
+    "ember-template-lint": "7.9.3",
+    "mocha": "^11.7.2"
   },
   "scripts": {
     "test": "mocha *.test.mjs"
