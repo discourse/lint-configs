@@ -25,6 +25,7 @@ import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
+import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import themeImports from "./eslint-rules/theme-imports.mjs";
@@ -121,6 +122,7 @@ export default [
           "i18n-t": i18nT,
           "service-inject-import": serviceInjectImport,
           "truth-helpers-imports": truthHelpersImports,
+          "no-unused-services": noUnusedServices,
           "plugin-api-no-version": pluginApiNoVersion,
           "theme-imports": themeImports,
           "no-simple-query-selector": noSimpleQuerySelector,
@@ -296,6 +298,7 @@ export default [
       "discourse/i18n-t": ["error"],
       "discourse/service-inject-import": ["error"],
       "discourse/truth-helpers-imports": ["error"],
+      "discourse/no-unused-services": ["error"],
       "discourse/plugin-api-no-version": ["error"],
       "discourse/theme-imports": ["error"],
       "discourse/no-simple-query-selector": ["error"],
