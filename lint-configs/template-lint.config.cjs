@@ -11,7 +11,6 @@ module.exports = {
 
     // Pending default rules
     "link-href-attributes": false,
-    "no-action": false,
     "no-at-ember-render-modifiers": false,
     "no-curly-component-invocation": false,
     "no-duplicate-landmark-elements": false,
@@ -34,7 +33,6 @@ module.exports = {
     // Pending non-default rules
     "attribute-order": false,
     "inline-link-to": false,
-    "no-action-modifiers": false,
     "no-builtin-form-components": false,
     "no-this-in-template-only-components": false, // emits false-positives in gjs
 
@@ -61,13 +59,6 @@ module.exports = {
       files: ["**/*.gjs", "**/*.gts"],
       rules: {
         "discourse/no-implicit-this": false,
-        "no-action-modifiers": true,
-      },
-    },
-    {
-      files: ["**/templates/**/*.gjs"],
-      rules: {
-        "no-action": true,
       },
     },
   ],
