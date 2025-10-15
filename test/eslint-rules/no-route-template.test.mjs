@@ -18,14 +18,33 @@ ruleTester.run("no-route-template", rule, {
   ],
   invalid: [
     {
-      code: `import RouteTemplate from "ember-route-template";
-export default RouteTemplate(<template>Hello world</template>);`,
+      code: [
+        `import RouteTemplate from "ember-route-template";`,
+        `export default RouteTemplate(<template>Hello world</template>);`,
+      ].join("\n"),
       errors: [
         {
           message: "Remove RouteTemplate wrapper for route templates.",
         },
       ],
-      output: `\n<template>Hello world</template>`,
+      output: `\nexport default <template>Hello world</template>;`,
+    },
+    {
+      code: [
+        `import RouteTemplate from "ember-route-template";`,
+        `import Component from "@glimmer/component";`,
+        `export default RouteTemplate(class extends Component { <template>Hello world</template> });`,
+      ].join("\n"),
+      errors: [
+        {
+          message: "Remove RouteTemplate wrapper for route templates.",
+        },
+      ],
+      output: [
+        "",
+        `import Component from "@glimmer/component";`,
+        `export default class extends Component { <template>Hello world</template> };`,
+      ].join("\n"),
     },
   ],
 });

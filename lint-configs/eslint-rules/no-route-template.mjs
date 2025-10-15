@@ -42,7 +42,9 @@ export default {
               if (importDecl) {
                 fixes.push(fixer.remove(importDecl));
               }
-              fixes.push(fixer.replaceText(node, sourceCode.getText(arg)));
+              fixes.push(
+                fixer.replaceText(node.declaration, sourceCode.getText(arg))
+              );
               return fixes;
             },
           });
