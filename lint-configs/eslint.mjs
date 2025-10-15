@@ -12,6 +12,7 @@ import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
+import adminImportPath from "./eslint-rules/admin-import-path.mjs";
 import capitalComponents from "./eslint-rules/capital-components.mjs";
 import deprecatedImports from "./eslint-rules/deprecated-imports.mjs";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
@@ -136,6 +137,7 @@ export default [
           "no-curly-components": noCurlyComponents,
           "capital-components": capitalComponents,
           "no-onclick": noOnclick,
+          "admin-import-path": adminImportPath,
         },
       },
     },
@@ -312,6 +314,7 @@ export default [
       "discourse/no-curly-components": ["error"],
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
+      // "discourse/admin-import-path": ["error"], // Enable once admin move is widespread
     },
   },
   {
