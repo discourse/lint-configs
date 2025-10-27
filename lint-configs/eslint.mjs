@@ -29,6 +29,7 @@ import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
+import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs";
 import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
 
@@ -138,6 +139,7 @@ export default [
           "capital-components": capitalComponents,
           "no-onclick": noOnclick,
           "no-route-template": noRouteTemplate,
+          "template-tag-no-self-this": templateTagNoSelfThis,
         },
       },
     },
@@ -314,6 +316,7 @@ export default [
       "discourse/no-curly-components": ["error"],
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
+      "discourse/template-tag-no-self-this": ["error"],
       // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
     },
   },
