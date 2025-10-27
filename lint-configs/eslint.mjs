@@ -24,6 +24,7 @@ import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.m
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
+import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
@@ -136,6 +137,7 @@ export default [
           "no-curly-components": noCurlyComponents,
           "capital-components": capitalComponents,
           "no-onclick": noOnclick,
+          "no-route-template": noRouteTemplate,
         },
       },
     },
@@ -312,6 +314,7 @@ export default [
       "discourse/no-curly-components": ["error"],
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
+      // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
     },
   },
   {

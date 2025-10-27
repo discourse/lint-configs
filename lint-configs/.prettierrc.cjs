@@ -6,12 +6,14 @@ module.exports = {
       files: "*.gjs",
       options: {
         parser: "ember-template-tag",
+        templateExportDefault: true,
       },
     },
     {
       files: "*.gts",
       options: {
         parser: "ember-template-tag",
+        templateExportDefault: true,
       },
     },
   ],
