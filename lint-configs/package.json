@@ -13,8 +13,7 @@
   },
   "homepage": "https://github.com/discourse/lint-configs#readme",
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "type": "module",
   "exports": {
