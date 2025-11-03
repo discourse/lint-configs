@@ -161,6 +161,7 @@ export default [
       "no-eval": "error",
       "no-extend-native": "error",
       "no-inner-declarations": "error",
+      "no-invalid-this": "error",
       "no-irregular-whitespace": "error",
       "no-iterator": "error",
       "no-loop-func": "error",
