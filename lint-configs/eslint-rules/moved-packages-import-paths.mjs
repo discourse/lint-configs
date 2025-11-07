@@ -1,3 +1,6 @@
+const MATCHER =
+  /^(admin\/|float-kit\/|select-kit\/|truth-helpers|dialog-holder\/)/;
+
 export default {
   meta: {
     type: "suggestion",
@@ -11,7 +14,7 @@ export default {
   create(context) {
     return {
       ImportDeclaration(node) {
-        if (node.source.value.startsWith("admin/")) {
+        if (MATCHER.test(node.source.value)) {
           const correctedValue = `discourse/${node.source.value}`;
           context.report({
             node,
