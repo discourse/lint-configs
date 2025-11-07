@@ -22,6 +22,7 @@ import i18nT from "./eslint-rules/i18n-t.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
+import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
@@ -140,6 +141,7 @@ export default [
           "no-onclick": noOnclick,
           "no-route-template": noRouteTemplate,
           "template-tag-no-self-this": templateTagNoSelfThis,
+          "moved-packages-import-paths": movedPackagesImportPaths,
         },
       },
     },
@@ -318,6 +320,7 @@ export default [
       "discourse/no-onclick": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
       // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
+      // "discourse/moved-packages-import-paths": ["error"], // Enable when the package move commits are released
     },
   },
   {
