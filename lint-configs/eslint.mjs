@@ -320,7 +320,7 @@ export default [
       "discourse/no-onclick": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
       // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
-      "discourse/moved-packages-import-paths": ["error"],
+      // "discourse/moved-packages-import-paths": ["error"], // Enable when the package move commits are released
     },
   },
   {
