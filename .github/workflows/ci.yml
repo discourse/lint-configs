@@ -16,9 +16,9 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24"
           cache: "pnpm"
 
       - name: Pnpm install
@@ -45,10 +45,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Publish package
-        uses: JS-DevTools/npm-publish@v3
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
         with:
-          package: ./lint-configs
-          token: ${{ secrets.NPM_TOKEN }}
-          access: public
-          provenance: true
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Publish package
+        run: pnpm publish ./lint-configs -r

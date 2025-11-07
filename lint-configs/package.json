@@ -1,6 +1,6 @@
 {
   "name": "@discourse/lint-configs",
-  "version": "2.32.0",
+  "version": "2.34.2",
   "description": "Shareable lint configs for Discourse core, plugins, and themes",
   "author": "Discourse",
   "license": "MIT",
@@ -12,6 +12,9 @@
     "url": "git+https://github.com/discourse/lint-configs.git"
   },
   "homepage": "https://github.com/discourse/lint-configs#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "exports": {
     "./eslint": "./eslint.mjs",
