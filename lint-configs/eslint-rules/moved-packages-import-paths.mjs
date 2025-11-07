@@ -5,7 +5,7 @@ export default {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Use the updated import path for admin modules",
+      description: "Use the updated import paths",
     },
     fixable: "code",
     schema: [], // no options
