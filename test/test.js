@@ -5,10 +5,11 @@ import process, { chdir, stdout } from "node:process";
 
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
-  1:1  error  Run autofix to sort these imports!  simple-import-sort/imports
+  1:1  error  Use 'discourse/truth-helpers' instead of 'truth-helpers'  discourse/moved-packages-import-paths
+  1:1  error  Run autofix to sort these imports!                        simple-import-sort/imports
 
-✖ 1 problem (1 error, 0 warnings)
-  1 error and 0 warnings potentially fixable with the \`--fix\` option.
+✖ 2 problems (2 errors, 0 warnings)
+  2 errors and 0 warnings potentially fixable with the \`--fix\` option.
 `;
 
 const expectedStylelintOutput = `
