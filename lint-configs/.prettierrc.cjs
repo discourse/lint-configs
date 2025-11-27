@@ -1,5 +1,7 @@
+const prettierPluginEmberTemplateTag = require("prettier-plugin-ember-template-tag");
+
 module.exports = {
-  plugins: ["prettier-plugin-ember-template-tag"],
+  plugins: [prettierPluginEmberTemplateTag],
   trailingComma: "es5",
   overrides: [
     {
