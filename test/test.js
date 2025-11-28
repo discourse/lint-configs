@@ -45,7 +45,7 @@ function eslint() {
 
   let actual;
   try {
-    actual = execSync("pnpm eslint my-component.gjs").toString();
+    actual = execSync("pnpm eslint --concurrency 2 my-component.gjs").toString();
   } catch (e) {
     actual = e.stdout.toString();
     actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");

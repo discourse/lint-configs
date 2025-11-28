@@ -1,6 +1,4 @@
-import { createConfigItem } from "@babel/core";
-import BabelParser from "@babel/eslint-parser";
-import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
+// import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
 import js from "@eslint/js";
 import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
@@ -48,17 +46,11 @@ export default [
     languageOptions: {
       ecmaVersion: 2018,
       sourceType: "module",
-      parser: BabelParser,
+      parser: EmberESLintParser,
       parserOptions: {
         requireConfigFile: false,
         babelOptions: {
-          plugins: [
-            createConfigItem([
-              PluginProposalDecorators,
-              { legacy: true },
-              "@babel/plugin-proposal-decorators",
-            ]),
-          ],
+          plugins: [["@babel/plugin-proposal-decorators", { legacy: true }]],
         },
       },
 
@@ -321,12 +313,6 @@ export default [
       "discourse/template-tag-no-self-this": ["error"],
       // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
       // "discourse/moved-packages-import-paths": ["error"], // Enable when the package move commits are released
-    },
-  },
-  {
-    files: ["**/*.gjs", "**/*.gts"],
-    languageOptions: {
-      parser: EmberESLintParser,
     },
   },
 ];
