@@ -1,4 +1,5 @@
-const templateTagPluginPath = require.resolve("prettier-plugin-ember-template-tag");
+const templateTagPluginPath =
+  require.resolve("prettier-plugin-ember-template-tag");
 
 module.exports = {
   plugins: [templateTagPluginPath],

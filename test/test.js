@@ -52,7 +52,9 @@ function eslintConcurrency() {
 
   let actual;
   try {
-    actual = execSync(`pnpm eslint --concurrency 3 "concurrency/*.gjs"`).toString();
+    actual = execSync(
+      `pnpm eslint --concurrency 3 "concurrency/*.gjs"`
+    ).toString();
   } catch (e) {
     actual = e.stdout.toString();
     actual = actual.replace(/^\/.+\/test\/concurrency\//m, "/path-prefix/");
