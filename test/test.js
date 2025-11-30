@@ -13,6 +13,13 @@ import process, { chdir, stdout } from "node:process";
 //   2 errors and 0 warnings potentially fixable with the \`--fix\` option.
 // `;
 
+const expectedEslintConcurrencyOutput = `
+/Users/cvx/discourse/lint-configs/test/concurrency/b.gjs
+  1:27  error  'unused' is defined but never used  no-unused-vars
+
+✖ 1 problem (1 error, 0 warnings)
+`;
+
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
   1:1  error  Run autofix to sort these imports!  simple-import-sort/imports
@@ -39,6 +46,27 @@ my-component.gjs
 
 ✖ 1 problems (1 errors, 0 warnings)
 `;
+
+function eslintConcurrency() {
+  stdout.write("eslint concurrency... ");
+
+  let actual;
+  try {
+    actual = execSync(`pnpm eslint --concurrency 3 "concurrency/*.gjs"`).toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
+  }
+
+  if (expectedEslintConcurrencyOutput.trim() === actual.trim()) {
+    console.log("✅");
+  } else {
+    process.exitCode = 1;
+    console.error(
+      `failed\n\nexpected:\n${expectedEslintConcurrencyOutput}\nactual:\n${actual}`
+    );
+  }
+}
 
 function eslint() {
   stdout.write("eslint... ");
@@ -160,6 +188,8 @@ function templateLint() {
     );
   }
 }
+
+eslintConcurrency();
 
 console.log("\ncjs:");
 chdir("cjs");

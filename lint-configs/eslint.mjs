@@ -52,6 +52,7 @@ export default [
       sourceType: "module",
       parser: BabelParser,
       parserOptions: {
+        useBabel: true,
         requireConfigFile: false,
         babelOptions: {
           plugins: [[decoratorsPluginPath, { legacy: true }]],
