@@ -1,6 +1,4 @@
-import { createConfigItem } from "@babel/core";
 import BabelParser from "@babel/eslint-parser";
-import PluginProposalDecorators from "@babel/plugin-proposal-decorators";
 import js from "@eslint/js";
 import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
@@ -34,6 +32,9 @@ import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs"
 import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
 
+const decoratorsPluginPath =
+  require.resolve("@babel/plugin-proposal-decorators");
+
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
@@ -52,13 +53,7 @@ export default [
       parserOptions: {
         requireConfigFile: false,
         babelOptions: {
-          plugins: [
-            createConfigItem([
-              PluginProposalDecorators,
-              { legacy: true },
-              "@babel/plugin-proposal-decorators",
-            ]),
-          ],
+          plugins: [[decoratorsPluginPath, { legacy: true }]],
         },
       },
 
