@@ -32,8 +32,9 @@ import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs"
 import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
 
-const decoratorsPluginPath =
-  require.resolve("@babel/plugin-proposal-decorators");
+let decoratorsPluginPath = import.meta
+  .resolve("@babel/plugin-proposal-decorators")
+  .replace(/^file:\/\//, "");
 
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
