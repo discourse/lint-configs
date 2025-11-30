@@ -14,7 +14,7 @@ import process, { chdir, stdout } from "node:process";
 // `;
 
 const expectedEslintConcurrencyOutput = `
-/Users/cvx/discourse/lint-configs/test/concurrency/b.gjs
+/path-prefix/b.gjs
   1:27  error  'unused' is defined but never used  no-unused-vars
 
 ✖ 1 problem (1 error, 0 warnings)
@@ -55,7 +55,7 @@ function eslintConcurrency() {
     actual = execSync(`pnpm eslint --concurrency 3 "concurrency/*.gjs"`).toString();
   } catch (e) {
     actual = e.stdout.toString();
-    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
+    actual = actual.replace(/^\/.+\/test\/concurrency\//m, "/path-prefix/");
   }
 
   if (expectedEslintConcurrencyOutput.trim() === actual.trim()) {
