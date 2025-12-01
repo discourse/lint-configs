@@ -6,14 +6,7 @@ module.exports = {
   trailingComma: "es5",
   overrides: [
     {
-      files: "*.gjs",
-      options: {
-        parser: "ember-template-tag",
-        templateExportDefault: true,
-      },
-    },
-    {
-      files: "*.gts",
+      files: ["*.gjs", "*.gts"],
       options: {
         parser: "ember-template-tag",
         templateExportDefault: true,
