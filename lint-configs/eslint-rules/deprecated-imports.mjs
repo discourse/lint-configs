@@ -2,10 +2,10 @@ export default {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Use the correct import paths"
+      description: "Use the correct import paths",
     },
     fixable: "code",
-    schema: [] // no options
+    schema: [], // no options
   },
 
   create(context) {
@@ -13,13 +13,13 @@ export default {
       ImportDeclaration(node) {
         function denyImporting(symbolName, messageTemplate) {
           const specifier = node.specifiers.find(
-            (spec) => spec.imported && (spec.imported.name === symbolName)
+            (spec) => spec.imported && spec.imported.name === symbolName
           );
 
           if (specifier) {
             context.report({
               node: specifier,
-              message: messageTemplate(symbolName)
+              message: messageTemplate(symbolName),
             });
           }
         }
@@ -32,7 +32,7 @@ export default {
           if (defaultSpecifier) {
             context.report({
               node: defaultSpecifier,
-              message
+              message,
             });
           }
         }
@@ -44,7 +44,7 @@ export default {
               "Use 'discourse/lib/get-url' instead of 'discourse/helpers/get-url'",
             fix(fixer) {
               return fixer.replaceText(node.source, `"discourse/lib/get-url"`);
-            }
+            },
           });
         } else if (
           node.source.value === "discourse/helpers/html-safe" &&
@@ -59,7 +59,7 @@ export default {
                 node,
                 `import { htmlSafe } from "@ember/template";`
               );
-            }
+            },
           });
         } else if (
           node.source.value === "@ember/application" &&
@@ -74,27 +74,28 @@ export default {
                 node,
                 `import { getOwner } from "@ember/owner";`
               );
-            }
+            },
           });
-        } else if (
-          node.source.value === "@ember/array"
-        ) {
-          const messageTemplate = (symbolName) => `Importing '${symbolName}' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.`;
+        } else if (node.source.value === "@ember/array") {
+          const messageTemplate = (symbolName) =>
+            `Importing '${symbolName}' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.`;
           denyImporting("A", messageTemplate);
           denyImporting("NativeArray", messageTemplate);
           denyImporting("MutableArray", messageTemplate);
 
-          denyDefaultImport("Importing EmberArray (default import) from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
-        } else if (
-          node.source.value === "@ember/array/mutable"
-        ) {
-          denyDefaultImport("Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
-        } else if (
-          node.source.value === "@ember/array/proxy"
-        ) {
-          denyDefaultImport("Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
+          denyDefaultImport(
+            "Importing EmberArray (default import) from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead."
+          );
+        } else if (node.source.value === "@ember/array/mutable") {
+          denyDefaultImport(
+            "Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead."
+          );
+        } else if (node.source.value === "@ember/array/proxy") {
+          denyDefaultImport(
+            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead."
+          );
         }
-      }
+      },
     };
-  }
+  },
 };
