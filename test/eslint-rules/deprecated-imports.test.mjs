@@ -46,7 +46,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'A' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -56,7 +56,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'A' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -66,7 +66,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'NativeArray' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'NativeArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -76,7 +76,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'NativeArray' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'NativeArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -86,7 +86,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'MutableArray' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'MutableArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -96,7 +96,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'MutableArray' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'MutableArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -106,11 +106,11 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'A' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
         {
           message:
-            "Importing 'NativeArray' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'NativeArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -120,11 +120,11 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing 'A' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
         {
           message:
-            "Importing 'MutableArray' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing 'MutableArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -134,7 +134,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing EmberArray (default import) from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing EmberArray (default) from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -144,7 +144,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing EmberArray (default import) from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing EmberArray (default) from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -154,7 +154,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing MutableArray from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -164,7 +164,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing MutableArray from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -174,7 +174,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -184,7 +184,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,

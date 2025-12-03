@@ -78,21 +78,22 @@ export default {
           });
         } else if (node.source.value === "@ember/array") {
           const messageTemplate = (symbolName) =>
-            `Importing '${symbolName}' from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.`;
+            `Importing '${symbolName}' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.`;
+
           denyImporting("A", messageTemplate);
           denyImporting("NativeArray", messageTemplate);
           denyImporting("MutableArray", messageTemplate);
 
           denyDefaultImport(
-            "Importing EmberArray (default import) from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead."
+            "Importing EmberArray (default) from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead."
           );
         } else if (node.source.value === "@ember/array/mutable") {
           denyDefaultImport(
-            "Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead."
+            "Importing MutableArray from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead."
           );
         } else if (node.source.value === "@ember/array/proxy") {
           denyDefaultImport(
-            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead."
+            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead."
           );
         }
       },
