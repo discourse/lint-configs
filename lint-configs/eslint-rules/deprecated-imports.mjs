@@ -11,6 +11,32 @@ export default {
   create(context) {
     return {
       ImportDeclaration(node) {
+        function denyImporting(symbolName, messageTemplate) {
+          const specifier = node.specifiers.find(
+            (spec) => spec.imported && spec.imported.name === symbolName
+          );
+
+          if (specifier) {
+            context.report({
+              node: specifier,
+              message: messageTemplate(symbolName),
+            });
+          }
+        }
+
+        function denyDefaultImport(message) {
+          const defaultSpecifier = node.specifiers.find(
+            (spec) => spec.type === "ImportDefaultSpecifier"
+          );
+
+          if (defaultSpecifier) {
+            context.report({
+              node: defaultSpecifier,
+              message,
+            });
+          }
+        }
+
         if (node.source.value === "discourse/helpers/get-url") {
           context.report({
             node,
@@ -50,6 +76,25 @@ export default {
               );
             },
           });
+        } else if (node.source.value === "@ember/array") {
+          const messageTemplate = (symbolName) =>
+            `Importing '${symbolName}' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.`;
+
+          denyImporting("A", messageTemplate);
+          denyImporting("NativeArray", messageTemplate);
+          denyImporting("MutableArray", messageTemplate);
+
+          denyDefaultImport(
+            "Importing EmberArray (default) from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead."
+          );
+        } else if (node.source.value === "@ember/array/mutable") {
+          denyDefaultImport(
+            "Importing MutableArray (default) from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead."
+          );
+        } else if (node.source.value === "@ember/array/proxy") {
+          denyDefaultImport(
+            "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead."
+          );
         }
       },
     };

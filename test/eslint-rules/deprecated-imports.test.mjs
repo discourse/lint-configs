@@ -8,6 +8,7 @@ ruleTester.run("deprecated-imports", rule, {
     `import getUrl from "discourse/lib/get-url";`,
     `import { htmlSafe } from "@ember/template";`,
     `import { getOwner } from "@ember/owner";`,
+    `import { isArray } from "@ember/array";`,
   ],
   invalid: [
     {
@@ -39,6 +40,154 @@ ruleTester.run("deprecated-imports", rule, {
         },
       ],
       output: `import { getOwner } from "@ember/owner";`,
+    },
+    {
+      code: `import { A } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { A as emberArray } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { NativeArray } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'NativeArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { NativeArray as EmberNativeArray } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'NativeArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { MutableArray } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'MutableArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { MutableArray as EmberMutableArray } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'MutableArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { A, isArray, NativeArray } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+        {
+          message:
+            "Importing 'NativeArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import { A as emberA, makeArray, MutableArray as EmberMutable } from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing 'A' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+        {
+          message:
+            "Importing 'MutableArray' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import EmberArray from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing EmberArray (default) from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import A from "@ember/array";`,
+      errors: [
+        {
+          message:
+            "Importing EmberArray (default) from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import MutableArray from "@ember/array/mutable";`,
+      errors: [
+        {
+          message:
+            "Importing MutableArray (default) from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import EmberMutableArray from "@ember/array/mutable";`,
+      errors: [
+        {
+          message:
+            "Importing MutableArray (default) from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import ArrayProxy from "@ember/array/proxy";`,
+      errors: [
+        {
+          message:
+            "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      code: `import EmberArrayProxy from "@ember/array/proxy";`,
+      errors: [
+        {
+          message:
+            "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+        },
+      ],
+      output: null,
     },
   ],
 });
