@@ -149,5 +149,25 @@ ruleTester.run("deprecated-imports", rule, {
       ],
       output: null
     },
+    {
+      code: `import MutableArray from "@ember/array/mutable";`,
+      errors: [
+        {
+          message:
+            "Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+        },
+      ],
+      output: null
+    },
+    {
+      code: `import EmberMutableArray from "@ember/array/mutable";`,
+      errors: [
+        {
+          message:
+            "Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+        },
+      ],
+      output: null
+    },
   ],
 });

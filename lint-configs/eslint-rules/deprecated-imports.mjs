@@ -85,6 +85,10 @@ export default {
           denyImporting("MutableArray", messageTemplate);
 
           denyDefaultImport("Importing EmberArray (default import) from '@ember/array' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
+        } else if (
+          node.source.value === "@ember/array/mutable"
+        ) {
+          denyDefaultImport("Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
         }
       }
     };
