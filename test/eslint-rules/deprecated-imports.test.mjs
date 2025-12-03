@@ -154,7 +154,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing MutableArray from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+            "Importing MutableArray (default) from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -164,7 +164,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing MutableArray from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+            "Importing MutableArray (default) from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -174,7 +174,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+            "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,
@@ -184,7 +184,7 @@ ruleTester.run("deprecated-imports", rule, {
       errors: [
         {
           message:
-            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
+            "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead.",
         },
       ],
       output: null,

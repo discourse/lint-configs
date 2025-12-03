@@ -89,11 +89,11 @@ export default {
           );
         } else if (node.source.value === "@ember/array/mutable") {
           denyDefaultImport(
-            "Importing MutableArray from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead."
+            "Importing MutableArray (default) from '@ember/array/mutable' is deprecated. Use tracked arrays or native JavaScript arrays instead."
           );
         } else if (node.source.value === "@ember/array/proxy") {
           denyDefaultImport(
-            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead."
+            "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead."
           );
         }
       },
