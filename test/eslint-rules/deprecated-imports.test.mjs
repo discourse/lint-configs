@@ -169,5 +169,25 @@ ruleTester.run("deprecated-imports", rule, {
       ],
       output: null
     },
+    {
+      code: `import ArrayProxy from "@ember/array/proxy";`,
+      errors: [
+        {
+          message:
+            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+        },
+      ],
+      output: null
+    },
+    {
+      code: `import EmberArrayProxy from "@ember/array/proxy";`,
+      errors: [
+        {
+          message:
+            "Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.",
+        },
+      ],
+      output: null
+    },
   ],
 });

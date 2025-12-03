@@ -89,6 +89,10 @@ export default {
           node.source.value === "@ember/array/mutable"
         ) {
           denyDefaultImport("Importing MutableArray from '@ember/array/mutable' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
+        } else if (
+          node.source.value === "@ember/array/proxy"
+        ) {
+          denyDefaultImport("Importing ArrayProxy from '@ember/array/proxy' is deprecated. For reactive needs use a tracked array, otherwise use native JavaScript arrays instead.");
         }
       }
     };
