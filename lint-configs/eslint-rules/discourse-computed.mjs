@@ -240,7 +240,8 @@ export default {
 
                 // Replace standalone parameter references with this.propertyName
                 // Use word boundaries to avoid replacing parts of other identifiers
-                const regex = new RegExp(`\\b${paramName}\\b`, "g");
+                // Use negative lookahead to avoid replacing object property keys (e.g., "data: value")
+                const regex = new RegExp(`\\b${paramName}\\b(?!\\s*:)`, "g");
                 newBodyText = newBodyText.replace(
                   regex,
                   `this.${propertyName}`

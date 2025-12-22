@@ -334,5 +334,45 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed with parameter name used as object key",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"someData\", \"displayMode\")",
+        "  chartConfig(data, displayMode) {",
+        "    return {",
+        "      data: {",
+        "        value: data",
+        "      },",
+        "      mode: displayMode",
+        "    };",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"someData\", \"displayMode\")",
+        "  get chartConfig() {",
+        "    return {",
+        "      data: {",
+        "        value: this.someData",
+        "      },",
+        "      mode: this.displayMode",
+        "    };",
+        "  }",
+        "}"
+      ].join("\n")
+    },
   ]
 });
