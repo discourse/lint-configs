@@ -13,6 +13,82 @@ export default {
     const sourceCode = context.getSourceCode();
     let hasComputedImport = false;
     let emberObjectImportNode = null;
+    let discourseComputedInfo = null; // Cache info about discourseComputed decorators
+
+    // Helper function to scan all discourseComputed decorators in the file
+    function analyzeDiscourseComputedUsage() {
+      if (discourseComputedInfo !== null) {
+        return discourseComputedInfo;
+      }
+
+      const info = {
+        hasNestedProps: false,
+        hasFixableDecorators: false,
+      };
+
+      // Traverse the AST to find all MethodDefinition nodes with @discourseComputed
+      sourceCode.ast.body.forEach(statement => {
+        // Handle class declarations
+        if (statement.type === 'ClassDeclaration' || statement.type === 'ClassExpression') {
+          analyzeClassBody(statement.body, info);
+        }
+        // Handle export default class
+        if (statement.type === 'ExportDefaultDeclaration' &&
+            (statement.declaration.type === 'ClassDeclaration' ||
+             statement.declaration.type === 'ClassExpression')) {
+          analyzeClassBody(statement.declaration.body, info);
+        }
+        // Handle export class
+        if (statement.type === 'ExportNamedDeclaration' &&
+            statement.declaration &&
+            (statement.declaration.type === 'ClassDeclaration' ||
+             statement.declaration.type === 'ClassExpression')) {
+          analyzeClassBody(statement.declaration.body, info);
+        }
+      });
+
+      discourseComputedInfo = info;
+      return info;
+    }
+
+    function analyzeClassBody(classBody, info) {
+      if (!classBody || !classBody.body) {
+        return;
+      }
+
+      classBody.body.forEach(member => {
+        if (member.type !== 'MethodDefinition' || !member.decorators) {
+          return;
+        }
+
+        // Check if this method has @discourseComputed decorator
+        const discourseDecorator = member.decorators.find(decorator => {
+          if (decorator.expression.type === 'CallExpression') {
+            return decorator.expression.callee.name === 'discourseComputed';
+          }
+          return decorator.expression.name === 'discourseComputed';
+        });
+
+        if (discourseDecorator) {
+          // Extract decorator arguments
+          let hasNestedProperty = false;
+          if (discourseDecorator.expression.type === 'CallExpression') {
+            const args = discourseDecorator.expression.arguments;
+            hasNestedProperty = args.some(arg => {
+              return arg.type === 'Literal' &&
+                     typeof arg.value === 'string' &&
+                     arg.value.includes('.');
+            });
+          }
+
+          if (hasNestedProperty) {
+            info.hasNestedProps = true;
+          } else {
+            info.hasFixableDecorators = true;
+          }
+        }
+      });
+    }
 
     return {
       ImportDeclaration(node) {
@@ -39,21 +115,8 @@ export default {
             defaultSpecifier &&
             defaultSpecifier.local.name === "discourseComputed"
           ) {
-            // Check if any @discourseComputed usage has nested properties
-            const ast = sourceCode.ast;
-            let hasNestedProps = false;
-            let hasFixableDecorators = false;
-
-            // Simple regex check in source code for @discourseComputed with nested properties
-            const sourceText = sourceCode.getText();
-            const decoratorPattern = /@discourseComputed\([^)]*"[^"]*\.[^"]*"[^)]*\)/;
-            const allDiscourseComputedPattern = /@discourseComputed(?:\([^)]*\))?/g;
-
-            hasNestedProps = decoratorPattern.test(sourceText);
-
-            // Check if there are any fixable decorators (without nested properties)
-            const allMatches = sourceText.match(allDiscourseComputedPattern) || [];
-            hasFixableDecorators = allMatches.some(match => !decoratorPattern.test(match));
+            // Analyze all @discourseComputed usage in the file using AST
+            const { hasNestedProps, hasFixableDecorators } = analyzeDiscourseComputedUsage();
 
             context.report({
               node,
