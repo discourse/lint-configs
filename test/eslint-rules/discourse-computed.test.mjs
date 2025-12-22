@@ -46,7 +46,7 @@ ruleTester.run("discourse-computed", rule, {
         'import { computed } from "@ember/object";',
         'class MyClass {',
         '  @computed("someProperty")',
-        '  myComputed() {',
+        '  get myComputed() {',
         '    return this.someProperty + 1;',
         '  }',
         '}',
@@ -55,7 +55,7 @@ ruleTester.run("discourse-computed", rule, {
     {
       name: "discourseComputed with multiple decorators in import",
       code: [
-        'import discourseComputed, { on } from "discourse/lib/decorators";',
+        'import discourseComputed, { or } from "discourse/lib/decorators";',
         'class MyClass {',
         '  @discourseComputed("someProperty")',
         '  myComputed(someProperty) {',
@@ -73,12 +73,43 @@ ruleTester.run("discourse-computed", rule, {
         },
       ],
       output: [
-        'import { on } from "discourse/lib/decorators";',
+        'import { or } from "discourse/lib/decorators";',
         'import { computed } from "@ember/object";',
         'class MyClass {',
         '  @computed("someProperty")',
-        '  myComputed() {',
+        '  get myComputed() {',
         '    return this.someProperty + 1;',
+        '  }',
+        '}',
+      ].join("\n"),
+    },
+    {
+      name: "discourseComputed with multiple arguments",
+      code: [
+        'import discourseComputed, { or } from "discourse/lib/decorators";',
+        'class MyClass {',
+        '  @discourseComputed("somePropertyX", "somePropertyZ", "somePropertyY")',
+        '  myComputed(parameterX, parameterZ, parameterY) {',
+        '    return { X: parameterX, Y: parameterY, Z: parameterZ };',
+        '  }',
+        '}',
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            'Use \'import { computed } from "@ember/object";\' instead of \'import discourseComputed from "discourse/lib/decorators";\'.',
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
+        },
+      ],
+      output: [
+        'import { or } from "discourse/lib/decorators";',
+        'import { computed } from "@ember/object";',
+        'class MyClass {',
+        '  @computed("somePropertyX", "somePropertyZ", "somePropertyY")',
+        '  get myComputed() {',
+        '    return { X: this.somePropertyX, Y: this.somePropertyY, Z: this.somePropertyZ };',
         '  }',
         '}',
       ].join("\n"),

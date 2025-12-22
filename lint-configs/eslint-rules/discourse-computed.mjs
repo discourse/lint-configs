@@ -127,32 +127,40 @@ export default {
               fixes.push(fixer.replaceText(decoratorExpression, "computed"));
             }
 
-            // 2. Remove parameters from the method
-            if (node.value.params.length > 0) {
-              const methodKey = node.key;
-              const methodBody = node.value.body;
+            // 2. Convert method to getter and handle parameters
+            const methodKey = node.key;
+            const methodBody = node.value.body;
+            const hasParams = node.value.params.length > 0;
 
-              // Get parameter names for replacement
-              const paramNames = node.value.params.map((param) => param.name);
+            // Get parameter names for replacement
+            const paramNames = node.value.params.map((param) => param.name);
 
-              // Get decorator arguments (the property names to observe)
-              let decoratorArgs = [];
-              if (decoratorExpression.type === "CallExpression") {
-                decoratorArgs = decoratorExpression.arguments.map((arg) => {
-                  if (arg.type === "Literal") {
-                    return arg.value;
-                  }
-                  return null;
-                }).filter(Boolean);
-              }
+            // Get decorator arguments (the property names to observe)
+            let decoratorArgs = [];
+            if (decoratorExpression.type === "CallExpression") {
+              decoratorArgs = decoratorExpression.arguments.map((arg) => {
+                if (arg.type === "Literal") {
+                  return arg.value;
+                }
+                return null;
+              }).filter(Boolean);
+            }
 
-              // Replace method signature to remove parameters
+            // Add 'get' keyword before method name if not already a getter
+            if (node.kind !== "get") {
+              fixes.push(
+                fixer.insertTextBefore(methodKey, "get ")
+              );
+            }
+
+            // Remove parameters from the method signature
+            if (hasParams) {
               const paramsStart = node.value.params[0].range[0];
               const paramsEnd =
                 node.value.params[node.value.params.length - 1].range[1];
               fixes.push(fixer.removeRange([paramsStart, paramsEnd]));
 
-              // 3. Replace parameter references with this.propertyName in method body
+              // Replace parameter references with this.propertyName in method body
               const bodyText = sourceCode.getText(methodBody);
               let newBodyText = bodyText;
 
