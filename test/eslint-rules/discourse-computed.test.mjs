@@ -303,5 +303,36 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed removed when computed already imported",
+      code: [
+        "import { computed } from \"@ember/object\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"someProperty\")",
+        "  myComputed(variable) {",
+        "    return variable + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"someProperty\")",
+        "  get myComputed() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
   ]
 });

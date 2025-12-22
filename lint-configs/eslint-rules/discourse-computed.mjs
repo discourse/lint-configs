@@ -115,6 +115,11 @@ export default {
                       fixes.push(
                         fixer.insertTextAfter(lastSpecifier, ", computed")
                       );
+                    } else if (emberObjectImportNode && hasComputedImport) {
+                      // We have @ember/object import with computed already, just remove discourseComputed
+                      const nextChar = sourceCode.getText().charAt(node.range[1]);
+                      const rangeEnd = nextChar === '\n' ? node.range[1] + 1 : node.range[1];
+                      fixes.push(fixer.removeRange([node.range[0], rangeEnd]));
                     } else if (!emberObjectImportNode) {
                       // No @ember/object import, replace discourseComputed import with it
                       fixes.push(
