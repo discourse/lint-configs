@@ -16,6 +16,7 @@ export default {
     let hasComputedImport = false;
     let emberObjectImportNode = null;
     let discourseComputedInfo = null; // Cache info about discourseComputed decorators
+    let discourseComputedLocalName = null; // Track the local name used for discourseComputed import
 
     // Helper function to scan all discourseComputed decorators in the file
     function analyzeDiscourseComputedUsage() {
@@ -86,12 +87,12 @@ export default {
           return;
         }
 
-        // Check if this method has @discourseComputed decorator
+        // Check if this method has @discourseComputed decorator (using the tracked local name)
         const discourseDecorator = member.decorators.find(decorator => {
           if (decorator.expression.type === 'CallExpression') {
-            return decorator.expression.callee.name === 'discourseComputed';
+            return decorator.expression.callee.name === discourseComputedLocalName;
           }
-          return decorator.expression.name === 'discourseComputed';
+          return decorator.expression.name === discourseComputedLocalName;
         });
 
         if (discourseDecorator) {
@@ -172,9 +173,9 @@ export default {
         if (prop.type === 'Property' && prop.decorators && prop.decorators.length > 0) {
           const discourseDecorator = prop.decorators.find(decorator => {
             if (decorator.expression.type === 'CallExpression') {
-              return decorator.expression.callee.name === 'discourseComputed';
+              return decorator.expression.callee.name === discourseComputedLocalName;
             }
-            return decorator.expression.name === 'discourseComputed';
+            return decorator.expression.name === discourseComputedLocalName;
           });
 
           if (discourseDecorator) {
@@ -189,7 +190,7 @@ export default {
             prop.value &&
             prop.value.type === 'CallExpression' &&
             prop.value.callee &&
-            prop.value.callee.name === 'discourseComputed') {
+            prop.value.callee.name === discourseComputedLocalName) {
           // Classic classes with discourseComputed function calls cannot be auto-fixed
           info.hasClassicClassDecorators = true;
         }
@@ -211,16 +212,17 @@ export default {
           }
         }
 
-        // Handle import discourseComputed from "discourse/lib/decorators"
+        // Handle import from "discourse/lib/decorators"
+        // The default export is discourseComputed, but it could be imported with any name
         if (node.source.value === "discourse/lib/decorators") {
           const defaultSpecifier = node.specifiers.find(
             (spec) => spec.type === "ImportDefaultSpecifier"
           );
 
-          if (
-            defaultSpecifier &&
-            defaultSpecifier.local.name === "discourseComputed"
-          ) {
+          if (defaultSpecifier) {
+            // Store the local name used for the discourseComputed import
+            discourseComputedLocalName = defaultSpecifier.local.name;
+
             // Analyze all @discourseComputed usage in the file using AST
             const { hasNestedProps, hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
@@ -333,8 +335,8 @@ export default {
       },
 
       CallExpression(node) {
-        // Check if this is a discourseComputed function call
-        if (node.callee && node.callee.name === "discourseComputed") {
+        // Check if this is a discourseComputed function call (using the tracked local name)
+        if (node.callee && node.callee.name === discourseComputedLocalName) {
           // Check if we're inside a .extend() call (classic class)
           let parent = node.parent;
           let isClassicClass = false;
@@ -357,7 +359,7 @@ export default {
           if (isClassicClass) {
             context.report({
               node,
-              message: "Cannot auto-fix discourseComputed in classic Ember classes. Please convert to native ES6 class first.",
+              message: `Cannot auto-fix ${discourseComputedLocalName} in classic Ember classes. Please convert to native ES6 class first.`,
             });
             return;
           }
@@ -372,13 +374,13 @@ export default {
 
         // Check if this property is a method in a classic class
         if (node.value && node.value.type === "FunctionExpression") {
-          // Find @discourseComputed decorator
+          // Find decorator using the tracked local name
           const discourseComputedDecorator = node.decorators.find(
             (decorator) => {
               if (decorator.expression.type === "CallExpression") {
-                return decorator.expression.callee.name === "discourseComputed";
+                return decorator.expression.callee.name === discourseComputedLocalName;
               }
-              return decorator.expression.name === "discourseComputed";
+              return decorator.expression.name === discourseComputedLocalName;
             }
           );
 
@@ -405,7 +407,7 @@ export default {
             if (isClassicClass) {
               context.report({
                 node: discourseComputedDecorator,
-                message: "Cannot auto-fix @discourseComputed in classic Ember classes. Please convert to native ES6 class first.",
+                message: `Cannot auto-fix @${discourseComputedLocalName} in classic Ember classes. Please convert to native ES6 class first.`,
               });
               return;
             }
@@ -418,13 +420,13 @@ export default {
           return;
         }
 
-        // Find @discourseComputed decorator
+        // Find decorator using the tracked local name
         const discourseComputedDecorator = node.decorators.find(
           (decorator) => {
             if (decorator.expression.type === "CallExpression") {
-              return decorator.expression.callee.name === "discourseComputed";
+              return decorator.expression.callee.name === discourseComputedLocalName;
             }
-            return decorator.expression.name === "discourseComputed";
+            return decorator.expression.name === discourseComputedLocalName;
           }
         );
 

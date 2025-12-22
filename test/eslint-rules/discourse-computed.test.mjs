@@ -467,6 +467,36 @@ ruleTester.run("discourse-computed", rule, {
       ].join("\n")
     },
     {
+      name: "discourseComputed imported with different name",
+      code: [
+        "import myComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @myComputed(\"someProperty\")",
+        "  myValue(someProperty) {",
+        "    return someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"someProperty\")",
+        "  get myValue() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
       name: "discourseComputed as function call in classic Ember class - no auto-fix",
       code: [
         "import Component from \"@ember/component\";",
@@ -513,6 +543,31 @@ ruleTester.run("discourse-computed", rule, {
         },
         {
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed imported with different name in classic class - no auto-fix",
+      code: [
+        "import Component from \"@ember/component\";",
+        "import myComputed from \"discourse/lib/decorators\";",
+        "",
+        "const EmberObjectComponent = Component.extend({",
+        "  name: \"\",",
+        "",
+        "  text: myComputed(\"name\", function(name) {",
+        "    return `hello, ${name}`;",
+        "  }),",
+        "});"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix myComputed in classic Ember classes. Please convert to native ES6 class first."
         }
       ],
       output: null
