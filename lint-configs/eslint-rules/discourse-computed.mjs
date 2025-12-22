@@ -26,28 +26,50 @@ export default {
       const info = {
         hasNestedProps: false,
         hasFixableDecorators: false,
+        hasClassicClassDecorators: false,
       };
 
-      // Traverse the AST to find all MethodDefinition nodes with @discourseComputed
-      sourceCode.ast.body.forEach(statement => {
-        // Handle class declarations
-        if (statement.type === 'ClassDeclaration' || statement.type === 'ClassExpression') {
-          analyzeClassBody(statement.body, info);
+      // Helper to traverse any node recursively
+      function traverseNode(node) {
+        if (!node || typeof node !== 'object') {
+          return;
         }
-        // Handle export default class
-        if (statement.type === 'ExportDefaultDeclaration' &&
-            (statement.declaration.type === 'ClassDeclaration' ||
-             statement.declaration.type === 'ClassExpression')) {
-          analyzeClassBody(statement.declaration.body, info);
+
+        // Check ES6 class declarations
+        if (node.type === 'ClassDeclaration' || node.type === 'ClassExpression') {
+          analyzeClassBody(node.body, info);
         }
-        // Handle export class
-        if (statement.type === 'ExportNamedDeclaration' &&
-            statement.declaration &&
-            (statement.declaration.type === 'ClassDeclaration' ||
-             statement.declaration.type === 'ClassExpression')) {
-          analyzeClassBody(statement.declaration.body, info);
+
+        // Check for classic Ember classes (e.g., Component.extend({ ... }))
+        if (node.type === 'CallExpression' &&
+            node.callee &&
+            node.callee.type === 'MemberExpression' &&
+            node.callee.property &&
+            node.callee.property.name === 'extend') {
+          // This is a .extend() call - check its arguments for decorated properties
+          node.arguments.forEach(arg => {
+            if (arg.type === 'ObjectExpression') {
+              analyzeObjectExpression(arg, info);
+            }
+          });
         }
-      });
+
+        // Recursively traverse all child nodes
+        for (const key in node) {
+          if (key === 'parent' || key === 'range' || key === 'loc') {
+            continue;
+          }
+          const child = node[key];
+          if (Array.isArray(child)) {
+            child.forEach(item => traverseNode(item));
+          } else {
+            traverseNode(child);
+          }
+        }
+      }
+
+      // Traverse the AST starting from the body
+      sourceCode.ast.body.forEach(statement => traverseNode(statement));
 
       discourseComputedInfo = info;
       return info;
@@ -88,6 +110,40 @@ export default {
           } else {
             info.hasFixableDecorators = true;
           }
+        }
+      });
+    }
+
+    function analyzeObjectExpression(objExpr, info) {
+      if (!objExpr || !objExpr.properties) {
+        return;
+      }
+
+      objExpr.properties.forEach(prop => {
+        // Check if this property has decorators (classic class with decorator syntax)
+        if (prop.type === 'Property' && prop.decorators && prop.decorators.length > 0) {
+          const discourseDecorator = prop.decorators.find(decorator => {
+            if (decorator.expression.type === 'CallExpression') {
+              return decorator.expression.callee.name === 'discourseComputed';
+            }
+            return decorator.expression.name === 'discourseComputed';
+          });
+
+          if (discourseDecorator) {
+            // Classic classes with decorators cannot be auto-fixed
+            info.hasClassicClassDecorators = true;
+          }
+        }
+
+        // Check if this property uses discourseComputed as a function call
+        // e.g., { text: discourseComputed("name", function(name) { ... }) }
+        if (prop.type === 'Property' &&
+            prop.value &&
+            prop.value.type === 'CallExpression' &&
+            prop.value.callee &&
+            prop.value.callee.name === 'discourseComputed') {
+          // Classic classes with discourseComputed function calls cannot be auto-fixed
+          info.hasClassicClassDecorators = true;
         }
       });
     }
@@ -223,6 +279,87 @@ export default {
                 return fixes;
               },
             });
+          }
+        }
+      },
+
+      CallExpression(node) {
+        // Check if this is a discourseComputed function call
+        if (node.callee && node.callee.name === "discourseComputed") {
+          // Check if we're inside a .extend() call (classic class)
+          let parent = node.parent;
+          let isClassicClass = false;
+
+          // Traverse up to check if this is inside a .extend() call
+          while (parent) {
+            if (
+              parent.type === "CallExpression" &&
+              parent.callee &&
+              parent.callee.type === "MemberExpression" &&
+              parent.callee.property &&
+              parent.callee.property.name === "extend"
+            ) {
+              isClassicClass = true;
+              break;
+            }
+            parent = parent.parent;
+          }
+
+          if (isClassicClass) {
+            context.report({
+              node,
+              message: "Cannot auto-fix discourseComputed in classic Ember classes. Please convert to native ES6 class first.",
+            });
+            return;
+          }
+        }
+      },
+
+      Property(node) {
+        // Handle classic Ember classes with decorator syntax (e.g., Component.extend({ @discourseComputed ... }))
+        if (!node.decorators || node.decorators.length === 0) {
+          return;
+        }
+
+        // Check if this property is a method in a classic class
+        if (node.value && node.value.type === "FunctionExpression") {
+          // Find @discourseComputed decorator
+          const discourseComputedDecorator = node.decorators.find(
+            (decorator) => {
+              if (decorator.expression.type === "CallExpression") {
+                return decorator.expression.callee.name === "discourseComputed";
+              }
+              return decorator.expression.name === "discourseComputed";
+            }
+          );
+
+          if (discourseComputedDecorator) {
+            // Check if we're inside a .extend() call (classic class)
+            let parent = node.parent;
+            let isClassicClass = false;
+
+            // Traverse up to check if this is inside a .extend() call
+            while (parent) {
+              if (
+                parent.type === "CallExpression" &&
+                parent.callee &&
+                parent.callee.type === "MemberExpression" &&
+                parent.callee.property &&
+                parent.callee.property.name === "extend"
+              ) {
+                isClassicClass = true;
+                break;
+              }
+              parent = parent.parent;
+            }
+
+            if (isClassicClass) {
+              context.report({
+                node: discourseComputedDecorator,
+                message: "Cannot auto-fix @discourseComputed in classic Ember classes. Please convert to native ES6 class first.",
+              });
+              return;
+            }
           }
         }
       },

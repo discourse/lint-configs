@@ -466,5 +466,34 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed as function call in classic Ember class - no auto-fix",
+      code: [
+        "import Component from \"@ember/component\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "",
+        "const EmberObjectComponent = Component.extend({",
+        "  name: \"\",",
+        "",
+        "  text: discourseComputed(\"name\", function(name) {",
+        "    return `hello, ${name}`;",
+        "  }),",
+        "});"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix discourseComputed in classic Ember classes. Please convert to native ES6 class first."
+        }
+      ],
+      output: null
+    },
+    // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
+    // is not included here because the test environment doesn't have the Babel transformer
+    // needed to parse decorator syntax on object properties. This functionality should be
+    // tested manually in the actual Discourse codebase where the transformer is available.
   ]
 });
