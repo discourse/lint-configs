@@ -42,64 +42,104 @@ export default {
             // Check if any @discourseComputed usage has nested properties
             const ast = sourceCode.ast;
             let hasNestedProps = false;
+            let hasFixableDecorators = false;
 
             // Simple regex check in source code for @discourseComputed with nested properties
             const sourceText = sourceCode.getText();
             const decoratorPattern = /@discourseComputed\([^)]*"[^"]*\.[^"]*"[^)]*\)/;
+            const allDiscourseComputedPattern = /@discourseComputed(?:\([^)]*\))?/g;
+
             hasNestedProps = decoratorPattern.test(sourceText);
+
+            // Check if there are any fixable decorators (without nested properties)
+            const allMatches = sourceText.match(allDiscourseComputedPattern) || [];
+            hasFixableDecorators = allMatches.some(match => !decoratorPattern.test(match));
 
             context.report({
               node,
               message:
                 'Use \'import { computed } from "@ember/object";\' instead of \'import discourseComputed from "discourse/lib/decorators";\'.',
-              fix: hasNestedProps ? undefined : function(fixer) {
+              fix: function(fixer) {
                 const fixes = [];
+
+                // Only provide fixes if there are fixable decorators
+                if (!hasFixableDecorators) {
+                  return fixes;
+                }
 
                 // Check if there are other named imports in discourse/lib/decorators
                 const namedSpecifiers = node.specifiers.filter(
                   (spec) => spec.type === "ImportSpecifier"
                 );
 
-                if (namedSpecifiers.length > 0) {
-                  // Remove just the default import, keep the named imports
-                  const firstNamedImport = namedSpecifiers[0];
-                  fixes.push(
-                    fixer.replaceTextRange(
-                      [node.range[0], firstNamedImport.range[0]],
-                      "import { "
-                    )
-                  );
-                } else {
-                  // No other imports from discourse/lib/decorators, remove entire import line
-                  // Include the newline character in the removal
-                  const nextChar = sourceCode.getText().charAt(node.range[1]);
-                  const rangeEnd = nextChar === '\n' ? node.range[1] + 1 : node.range[1];
-                  fixes.push(fixer.removeRange([node.range[0], rangeEnd]));
-                }
-
-                // Add computed to existing @ember/object import or create new one
-                if (emberObjectImportNode && !hasComputedImport) {
-                  // Add computed to existing @ember/object import
-                  const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
-                  fixes.push(
-                    fixer.insertTextAfter(lastSpecifier, ", computed")
-                  );
-                } else if (!emberObjectImportNode) {
-                  // Create new @ember/object import
+                // If there are nested properties, we keep the discourseComputed import
+                // Otherwise, we remove it
+                if (!hasNestedProps) {
                   if (namedSpecifiers.length > 0) {
-                    // Add after current import
+                    // Remove just the default import, keep the named imports
+                    const firstNamedImport = namedSpecifiers[0];
+                    fixes.push(
+                      fixer.replaceTextRange(
+                        [node.range[0], firstNamedImport.range[0]],
+                        "import { "
+                      )
+                    );
+
+                    // Add computed import after this line (since we're keeping the import)
+                    if (!emberObjectImportNode || !hasComputedImport) {
+                      if (emberObjectImportNode && !hasComputedImport) {
+                        // Add computed to existing @ember/object import
+                        const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
+                        fixes.push(
+                          fixer.insertTextAfter(lastSpecifier, ", computed")
+                        );
+                      } else if (!emberObjectImportNode) {
+                        // Add new @ember/object import after current import
+                        fixes.push(
+                          fixer.insertTextAfter(
+                            node,
+                            '\nimport { computed } from "@ember/object";'
+                          )
+                        );
+                      }
+                    }
+                  } else {
+                    // No other imports from discourse/lib/decorators, replace entire import
+                    if (emberObjectImportNode && !hasComputedImport) {
+                      // We have @ember/object import, remove discourseComputed and add computed to it
+                      const nextChar = sourceCode.getText().charAt(node.range[1]);
+                      const rangeEnd = nextChar === '\n' ? node.range[1] + 1 : node.range[1];
+                      fixes.push(fixer.removeRange([node.range[0], rangeEnd]));
+
+                      const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
+                      fixes.push(
+                        fixer.insertTextAfter(lastSpecifier, ", computed")
+                      );
+                    } else if (!emberObjectImportNode) {
+                      // No @ember/object import, replace discourseComputed import with it
+                      fixes.push(
+                        fixer.replaceText(
+                          node,
+                          'import { computed } from "@ember/object";'
+                        )
+                      );
+                    }
+                  }
+                } else {
+                  // Has nested props but also has fixable decorators
+                  // Keep discourseComputed import but add computed for the fixable ones
+                  if (emberObjectImportNode && !hasComputedImport) {
+                    // Add computed to existing @ember/object import
+                    const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
+                    fixes.push(
+                      fixer.insertTextAfter(lastSpecifier, ", computed")
+                    );
+                  } else if (!emberObjectImportNode) {
+                    // Add new @ember/object import after current import
                     fixes.push(
                       fixer.insertTextAfter(
                         node,
                         '\nimport { computed } from "@ember/object";'
-                      )
-                    );
-                  } else {
-                    // Replace removed import
-                    fixes.push(
-                      fixer.insertTextAfter(
-                        node,
-                        'import { computed } from "@ember/object";\n'
                       )
                     );
                   }

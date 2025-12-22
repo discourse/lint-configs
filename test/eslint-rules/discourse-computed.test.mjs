@@ -200,6 +200,108 @@ ruleTester.run("discourse-computed", rule, {
         }
       ],
       output: null
-    }
+    },
+    {
+      name: "mixing will fix / won't fix examples",
+      code: [
+        "import { action } from \"@ember/object\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed",
+        "  get myComputed() {",
+        "    return this.unreferencedValue;",
+        "  }",
+        "",
+        "  @discourseComputed(\"someProperty\")",
+        "  myOtherComputed(someProperty) {",
+        "    return someProperty + 1;",
+        "  }",
+        "",
+        "  @discourseComputed(\"model.property\")",
+        "  myDiscourseComputed(modelProperty) {",
+        "    return modelProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { action, computed } from \"@ember/object\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @computed",
+        "  get myComputed() {",
+        "    return this.unreferencedValue;",
+        "  }",
+        "",
+        "  @computed(\"someProperty\")",
+        "  get myOtherComputed() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "",
+        "  @discourseComputed(\"model.property\")",
+        "  myDiscourseComputed(modelProperty) {",
+        "    return modelProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "Real world example with existing @ember/object/computed import",
+      code: [
+        "import Component from \"@ember/component\";",
+        "import { alias } from \"@ember/object/computed\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "",
+        "export default class AdminReportTableCell extends Component {",
+        "  options = null;",
+        "",
+        "  @alias(\"label.type\") type;",
+        "",
+        "  @discourseComputed(\"label\", \"data\", \"options\")",
+        "  computedLabel(label, data, options) {",
+        "    return label.compute(data, options || {});",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import Component from \"@ember/component\";",
+        "import { alias } from \"@ember/object/computed\";",
+        "import { computed } from \"@ember/object\";",
+        "",
+        "export default class AdminReportTableCell extends Component {",
+        "  options = null;",
+        "",
+        "  @alias(\"label.type\") type;",
+        "",
+        "  @computed(\"label\", \"data\", \"options\")",
+        "  get computedLabel() {",
+        "    return this.label.compute(this.data, this.options || {});",
+        "  }",
+        "}"
+      ].join("\n")
+    },
   ]
 });
