@@ -404,5 +404,67 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed with default import only from @ember/object",
+      code: [
+        "import EmberObject from \"@ember/object\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"basicNameValidation\", \"uniqueNameValidation\")",
+        "  nameValidation(basicNameValidation, uniqueNameValidation) {",
+        "    return uniqueNameValidation ? uniqueNameValidation : basicNameValidation;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import EmberObject, { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"basicNameValidation\", \"uniqueNameValidation\")",
+        "  get nameValidation() {",
+        "    return this.uniqueNameValidation ? this.uniqueNameValidation : this.basicNameValidation;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with default and named imports from @ember/object",
+      code: [
+        "import EmberObject, { action } from \"@ember/object\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"value\")",
+        "  myValue(value) {",
+        "    return value + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import EmberObject, { action, computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"value\")",
+        "  get myValue() {",
+        "    return this.value + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
   ]
 });

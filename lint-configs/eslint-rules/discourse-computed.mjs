@@ -90,6 +90,27 @@ export default {
       });
     }
 
+    // Helper function to add 'computed' to an existing @ember/object import
+    function addComputedToImport(importNode, fixer) {
+      const namedImports = importNode.specifiers.filter(
+        spec => spec.type === 'ImportSpecifier'
+      );
+
+      if (namedImports.length > 0) {
+        // There are already named imports, add computed to them
+        const lastNamedImport = namedImports[namedImports.length - 1];
+        return fixer.insertTextAfter(lastNamedImport, ', computed');
+      } else {
+        // Only default import exists, need to add { computed }
+        const defaultImport = importNode.specifiers.find(
+          spec => spec.type === 'ImportDefaultSpecifier'
+        );
+        if (defaultImport) {
+          return fixer.insertTextAfter(defaultImport, ', { computed }');
+        }
+      }
+    }
+
     return {
       ImportDeclaration(node) {
         // Check if computed is already imported from @ember/object
@@ -152,10 +173,7 @@ export default {
                     if (!emberObjectImportNode || !hasComputedImport) {
                       if (emberObjectImportNode && !hasComputedImport) {
                         // Add computed to existing @ember/object import
-                        const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
-                        fixes.push(
-                          fixer.insertTextAfter(lastSpecifier, ", computed")
-                        );
+                        fixes.push(addComputedToImport(emberObjectImportNode, fixer));
                       } else if (!emberObjectImportNode) {
                         // Add new @ember/object import after current import
                         fixes.push(
@@ -174,10 +192,7 @@ export default {
                       const rangeEnd = nextChar === '\n' ? node.range[1] + 1 : node.range[1];
                       fixes.push(fixer.removeRange([node.range[0], rangeEnd]));
 
-                      const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
-                      fixes.push(
-                        fixer.insertTextAfter(lastSpecifier, ", computed")
-                      );
+                      fixes.push(addComputedToImport(emberObjectImportNode, fixer));
                     } else if (emberObjectImportNode && hasComputedImport) {
                       // We have @ember/object import with computed already, just remove discourseComputed
                       const nextChar = sourceCode.getText().charAt(node.range[1]);
@@ -198,10 +213,7 @@ export default {
                   // Keep discourseComputed import but add computed for the fixable ones
                   if (emberObjectImportNode && !hasComputedImport) {
                     // Add computed to existing @ember/object import
-                    const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
-                    fixes.push(
-                      fixer.insertTextAfter(lastSpecifier, ", computed")
-                    );
+                    fixes.push(addComputedToImport(emberObjectImportNode, fixer));
                   } else if (!emberObjectImportNode) {
                     // Add new @ember/object import after current import
                     fixes.push(
