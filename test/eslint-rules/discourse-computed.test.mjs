@@ -491,6 +491,56 @@ ruleTester.run("discourse-computed", rule, {
       ],
       output: null
     },
+    {
+      name: "mixed classic and ES6 classes - keep discourseComputed import",
+      code: [
+        "import Component from \"@ember/component\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "",
+        "const ClassicComponent = Component.extend({",
+        "  classicProp: discourseComputed(\"name\", function(name) {",
+        "    return name;",
+        "  }),",
+        "});",
+        "",
+        "class ModernComponent extends Component {",
+        "  @discourseComputed(\"value\")",
+        "  modernProp(value) {",
+        "    return value + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix discourseComputed in classic Ember classes. Please convert to native ES6 class first."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import Component from \"@ember/component\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "import { computed } from \"@ember/object\";",
+        "",
+        "const ClassicComponent = Component.extend({",
+        "  classicProp: discourseComputed(\"name\", function(name) {",
+        "    return name;",
+        "  }),",
+        "});",
+        "",
+        "class ModernComponent extends Component {",
+        "  @computed(\"value\")",
+        "  get modernProp() {",
+        "    return this.value + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
     // needed to parse decorator syntax on object properties. This functionality should be

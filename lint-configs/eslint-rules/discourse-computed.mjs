@@ -174,7 +174,7 @@ export default {
             defaultSpecifier.local.name === "discourseComputed"
           ) {
             // Analyze all @discourseComputed usage in the file using AST
-            const { hasNestedProps, hasFixableDecorators } = analyzeDiscourseComputedUsage();
+            const { hasNestedProps, hasFixableDecorators, hasClassicClassDecorators } = analyzeDiscourseComputedUsage();
 
             context.report({
               node,
@@ -193,9 +193,9 @@ export default {
                   (spec) => spec.type === "ImportSpecifier"
                 );
 
-                // If there are nested properties, we keep the discourseComputed import
+                // If there are nested properties or classic class decorators, we keep the discourseComputed import
                 // Otherwise, we remove it
-                if (!hasNestedProps) {
+                if (!hasNestedProps && !hasClassicClassDecorators) {
                   if (namedSpecifiers.length > 0) {
                     // Keep named imports, only remove default import
                     fixes.push(
@@ -254,7 +254,7 @@ export default {
                     }
                   }
                 } else {
-                  // Has nested props but also has fixable decorators
+                  // Has nested props or classic class decorators, but also has fixable decorators
                   // Keep discourseComputed import but add computed for the fixable ones
                   if (!hasComputedImport) {
                     if (emberObjectImportNode) {
