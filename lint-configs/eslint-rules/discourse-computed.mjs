@@ -577,10 +577,27 @@ export default {
           checkForReassignment(node.value.body);
         }
 
+        // Check if we need to rename non-fixable decorators
+        // This happens when: import was originally named 'computed', we're keeping it (mixed scenario),
+        // and we renamed it to 'discourseComputed'
+        const { hasNestedProps } = analyzeDiscourseComputedUsage();
+        const needsDecoratorRename = (hasNestedProperty || hasParameterReassignment) &&
+                                     hasNestedProps &&
+                                     discourseComputedLocalName === 'computed';
+
         context.report({
           node: discourseComputedDecorator,
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
-          fix: (hasNestedProperty || hasParameterReassignment) ? undefined : function(fixer) {
+          fix: (hasNestedProperty || hasParameterReassignment)
+            ? (needsDecoratorRename ? function(fixer) {
+                // Just rename the decorator to match the renamed import
+                if (decoratorExpression.type === "CallExpression") {
+                  return fixer.replaceText(decoratorExpression.callee, "discourseComputed");
+                } else {
+                  return fixer.replaceText(decoratorExpression, "discourseComputed");
+                }
+              } : undefined)
+            : function(fixer) {
             const fixes = [];
 
             // 1. Replace @discourseComputed with @computed in the decorator

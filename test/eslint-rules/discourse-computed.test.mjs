@@ -685,6 +685,80 @@ ruleTester.run("discourse-computed", rule, {
       ].join("\n")
     },
     {
+      name: "discourseComputed imported as 'computed' without named imports",
+      code: [
+        "import computed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @computed(\"someProperty\")",
+        "  myComputed(someProperty) {",
+        "    return someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"someProperty\")",
+        "  get myComputed() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "mixed fixable and non-fixable with computed name conflict",
+      code: [
+        "import computed, { debounce } from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @computed(\"foo.{bar,baz}\")",
+        "  nestedComputed(foo) {",
+        "    return foo.bar + foo.baz;",
+        "  }",
+        "",
+        "  @computed(\"someProperty\")",
+        "  normalComputed(someProperty) {",
+        "    return someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import discourseComputed, { debounce } from \"discourse/lib/decorators\";",
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @discourseComputed(\"foo.{bar,baz}\")",
+        "  nestedComputed(foo) {",
+        "    return foo.bar + foo.baz;",
+        "  }",
+        "",
+        "  @computed(\"someProperty\")",
+        "  get normalComputed() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
       name: "computed already imported with alias from @ember/object",
       code: [
         "import { computed as emberComputed } from \"@ember/object\";",
