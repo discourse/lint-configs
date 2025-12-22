@@ -12,11 +12,13 @@ export default {
   create(context) {
     const sourceCode = context.getSourceCode();
     let hasComputedImport = false;
+    let emberObjectImportNode = null;
 
     return {
       ImportDeclaration(node) {
         // Check if computed is already imported from @ember/object
         if (node.source.value === "@ember/object") {
+          emberObjectImportNode = node;
           const computedSpecifier = node.specifiers.find(
             (spec) =>
               spec.type === "ImportSpecifier" &&
@@ -53,7 +55,7 @@ export default {
               fix: hasNestedProps ? undefined : function(fixer) {
                 const fixes = [];
 
-                // Check if there are other named imports
+                // Check if there are other named imports in discourse/lib/decorators
                 const namedSpecifiers = node.specifiers.filter(
                   (spec) => spec.type === "ImportSpecifier"
                 );
@@ -61,12 +63,6 @@ export default {
                 if (namedSpecifiers.length > 0) {
                   // Remove just the default import, keep the named imports
                   const firstNamedImport = namedSpecifiers[0];
-                  const textBeforeFirstNamed = sourceCode.getText().slice(
-                    node.range[0],
-                    firstNamedImport.range[0]
-                  );
-
-                  // Replace "import discourseComputed, {" with "import {"
                   fixes.push(
                     fixer.replaceTextRange(
                       [node.range[0], firstNamedImport.range[0]],
@@ -74,24 +70,39 @@ export default {
                     )
                   );
                 } else {
-                  // No other imports, replace entire import
-                  fixes.push(
-                    fixer.replaceText(
-                      node,
-                      'import { computed } from "@ember/object";'
-                    )
-                  );
+                  // No other imports from discourse/lib/decorators, remove entire import line
+                  // Include the newline character in the removal
+                  const nextChar = sourceCode.getText().charAt(node.range[1]);
+                  const rangeEnd = nextChar === '\n' ? node.range[1] + 1 : node.range[1];
+                  fixes.push(fixer.removeRange([node.range[0], rangeEnd]));
                 }
 
-                // Add computed import if we removed the entire import or if there were other imports
-                if (namedSpecifiers.length > 0) {
-                  // Add new import after this one
+                // Add computed to existing @ember/object import or create new one
+                if (emberObjectImportNode && !hasComputedImport) {
+                  // Add computed to existing @ember/object import
+                  const lastSpecifier = emberObjectImportNode.specifiers[emberObjectImportNode.specifiers.length - 1];
                   fixes.push(
-                    fixer.insertTextAfter(
-                      node,
-                      '\nimport { computed } from "@ember/object";'
-                    )
+                    fixer.insertTextAfter(lastSpecifier, ", computed")
                   );
+                } else if (!emberObjectImportNode) {
+                  // Create new @ember/object import
+                  if (namedSpecifiers.length > 0) {
+                    // Add after current import
+                    fixes.push(
+                      fixer.insertTextAfter(
+                        node,
+                        '\nimport { computed } from "@ember/object";'
+                      )
+                    );
+                  } else {
+                    // Replace removed import
+                    fixes.push(
+                      fixer.insertTextAfter(
+                        node,
+                        'import { computed } from "@ember/object";\n'
+                      )
+                    );
+                  }
                 }
 
                 return fixes;
