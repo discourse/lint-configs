@@ -17,6 +17,45 @@ export default {
     let emberObjectImportNode = null;
     let discourseComputedInfo = null; // Cache info about discourseComputed decorators
     let discourseComputedLocalName = null; // Track the local name used for discourseComputed import
+    let importsAnalyzed = false; // Track if we've scanned all imports
+
+    // Helper function to scan all imports in the file
+    function analyzeAllImports() {
+      if (importsAnalyzed) {
+        return;
+      }
+
+      sourceCode.ast.body.forEach(statement => {
+        if (statement.type !== 'ImportDeclaration') {
+          return;
+        }
+
+        // Check for @ember/object import with computed
+        if (statement.source.value === "@ember/object") {
+          emberObjectImportNode = statement;
+          const computedSpecifier = statement.specifiers.find(
+            (spec) =>
+              spec.type === "ImportSpecifier" &&
+              spec.imported.name === "computed"
+          );
+          if (computedSpecifier) {
+            hasComputedImport = true;
+          }
+        }
+
+        // Check for discourse/lib/decorators default import
+        if (statement.source.value === "discourse/lib/decorators") {
+          const defaultSpecifier = statement.specifiers.find(
+            (spec) => spec.type === "ImportDefaultSpecifier"
+          );
+          if (defaultSpecifier) {
+            discourseComputedLocalName = defaultSpecifier.local.name;
+          }
+        }
+      });
+
+      importsAnalyzed = true;
+    }
 
     // Helper function to scan all discourseComputed decorators in the file
     function analyzeDiscourseComputedUsage() {
@@ -199,18 +238,8 @@ export default {
 
     return {
       ImportDeclaration(node) {
-        // Check if computed is already imported from @ember/object
-        if (node.source.value === "@ember/object") {
-          emberObjectImportNode = node;
-          const computedSpecifier = node.specifiers.find(
-            (spec) =>
-              spec.type === "ImportSpecifier" &&
-              spec.imported.name === "computed"
-          );
-          if (computedSpecifier) {
-            hasComputedImport = true;
-          }
-        }
+        // Analyze all imports first to avoid race conditions
+        analyzeAllImports();
 
         // Handle import from "discourse/lib/decorators"
         // The default export is discourseComputed, but it could be imported with any name
@@ -220,9 +249,6 @@ export default {
           );
 
           if (defaultSpecifier) {
-            // Store the local name used for the discourseComputed import
-            discourseComputedLocalName = defaultSpecifier.local.name;
-
             // Analyze all @discourseComputed usage in the file using AST
             const { hasNestedProps, hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
