@@ -374,5 +374,35 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed with shorthand property",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"userId\", \"userName\")",
+        "  userData(userId, userName) {",
+        "    return { userId, userName };",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"userId\", \"userName\")",
+        "  get userData() {",
+        "    return { userId: this.userId, userName: this.userName };",
+        "  }",
+        "}"
+      ].join("\n")
+    },
   ]
 });

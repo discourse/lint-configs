@@ -231,25 +231,93 @@ export default {
               fixes.push(fixer.removeRange([paramsStart, paramsEnd]));
 
               // Replace parameter references with this.propertyName in method body
-              const bodyText = sourceCode.getText(methodBody);
-              let newBodyText = bodyText;
+              // Use AST traversal to find identifiers and check their context
+              const replacements = [];
 
+              // Create a map of param names to property names
+              const paramToProperty = {};
               paramNames.forEach((paramName, index) => {
-                // Use the corresponding decorator argument if available, otherwise use param name
-                const propertyName = decoratorArgs[index] || paramName;
-
-                // Replace standalone parameter references with this.propertyName
-                // Use word boundaries to avoid replacing parts of other identifiers
-                // Use negative lookahead to avoid replacing object property keys (e.g., "data: value")
-                const regex = new RegExp(`\\b${paramName}\\b(?!\\s*:)`, "g");
-                newBodyText = newBodyText.replace(
-                  regex,
-                  `this.${propertyName}`
-                );
+                paramToProperty[paramName] = decoratorArgs[index] || paramName;
               });
 
-              if (newBodyText !== bodyText) {
-                fixes.push(fixer.replaceText(methodBody, newBodyText));
+              // Traverse the method body AST to find identifier references
+              const traverse = (astNode) => {
+                if (!astNode || typeof astNode !== 'object') {
+                  return;
+                }
+
+                // Check if this is an identifier that matches a parameter name
+                if (astNode.type === 'Identifier' && paramToProperty[astNode.name]) {
+                  // Check if this identifier should be replaced
+                  const parent = astNode.parent;
+
+                  // Skip if it's a property key in an object literal (non-shorthand)
+                  if (parent && parent.type === 'Property' && parent.key === astNode && !parent.shorthand) {
+                    // This is an object property key like { data: ... }, don't replace
+                    return;
+                  }
+
+                  // Skip if it's a property key in object pattern (destructuring)
+                  if (parent && parent.type === 'Property' && parent.key === astNode && parent.value !== astNode) {
+                    return;
+                  }
+
+                  // Handle shorthand properties: { userId } -> { userId: this.userId }
+                  if (parent && parent.type === 'Property' && parent.shorthand) {
+                    const propertyName = paramToProperty[astNode.name];
+                    replacements.push({
+                      range: astNode.range,
+                      text: `${astNode.name}: this.${propertyName}`
+                    });
+                    return;
+                  }
+
+                  // This identifier should be replaced
+                  const propertyName = paramToProperty[astNode.name];
+                  replacements.push({
+                    range: astNode.range,
+                    text: `this.${propertyName}`
+                  });
+                }
+
+                // Recursively traverse child nodes
+                for (const key in astNode) {
+                  if (key === 'parent' || key === 'range' || key === 'loc') {
+                    continue;
+                  }
+
+                  const child = astNode[key];
+                  if (Array.isArray(child)) {
+                    child.forEach(item => {
+                      if (item && typeof item === 'object') {
+                        item.parent = astNode;
+                        traverse(item);
+                      }
+                    });
+                  } else if (child && typeof child === 'object') {
+                    child.parent = astNode;
+                    traverse(child);
+                  }
+                }
+              };
+
+              traverse(methodBody);
+
+              // Sort replacements by range (descending) so we replace from end to start
+              // This prevents offset issues
+              replacements.sort((a, b) => b.range[0] - a.range[0]);
+
+              // Apply replacements
+              if (replacements.length > 0) {
+                let bodyText = sourceCode.getText(methodBody);
+
+                replacements.forEach(({ range, text }) => {
+                  const start = range[0] - methodBody.range[0];
+                  const end = range[1] - methodBody.range[0];
+                  bodyText = bodyText.slice(0, start) + text + bodyText.slice(end);
+                });
+
+                fixes.push(fixer.replaceText(methodBody, bodyText));
               }
             }
 
