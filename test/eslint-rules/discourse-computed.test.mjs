@@ -492,6 +492,32 @@ ruleTester.run("discourse-computed", rule, {
       output: null
     },
     {
+      name: "discourseComputed with parameter reassignment - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"title\")",
+        "  titleLength(title) {",
+        "    title = title || \"\";",
+        "    if (isHTMLSafe(title)) {",
+        "      return title.toString().length;",
+        "    }",
+        "    return title.replace(/\\s+/gim, \" \").trim().length;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: null
+    },
+    {
       name: "mixed classic and ES6 classes - keep discourseComputed import",
       code: [
         "import Component from \"@ember/component\";",

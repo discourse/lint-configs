@@ -27,6 +27,7 @@ export default {
         hasNestedProps: false,
         hasFixableDecorators: false,
         hasClassicClassDecorators: false,
+        hasParameterReassignments: false,
       };
 
       // Helper to traverse any node recursively
@@ -105,8 +106,55 @@ export default {
             });
           }
 
+          // Check if any parameters are reassigned
+          const paramNames = member.value.params.map((param) => param.name);
+          let hasParameterReassignment = false;
+
+          if (paramNames.length > 0) {
+            const checkForReassignment = (astNode) => {
+              if (!astNode || typeof astNode !== 'object') {
+                return;
+              }
+
+              // Check for assignment to a parameter
+              if (astNode.type === 'AssignmentExpression' &&
+                  astNode.left &&
+                  astNode.left.type === 'Identifier' &&
+                  paramNames.includes(astNode.left.name)) {
+                hasParameterReassignment = true;
+                return;
+              }
+
+              // Check for update expressions (++, --)
+              if (astNode.type === 'UpdateExpression' &&
+                  astNode.argument &&
+                  astNode.argument.type === 'Identifier' &&
+                  paramNames.includes(astNode.argument.name)) {
+                hasParameterReassignment = true;
+                return;
+              }
+
+              // Recursively check children
+              for (const key in astNode) {
+                if (key === 'parent' || key === 'range' || key === 'loc') {
+                  continue;
+                }
+                const child = astNode[key];
+                if (Array.isArray(child)) {
+                  child.forEach(item => checkForReassignment(item));
+                } else {
+                  checkForReassignment(child);
+                }
+              }
+            };
+
+            checkForReassignment(member.value.body);
+          }
+
           if (hasNestedProperty) {
             info.hasNestedProps = true;
+          } else if (hasParameterReassignment) {
+            info.hasParameterReassignments = true;
           } else {
             info.hasFixableDecorators = true;
           }
@@ -174,7 +222,7 @@ export default {
             defaultSpecifier.local.name === "discourseComputed"
           ) {
             // Analyze all @discourseComputed usage in the file using AST
-            const { hasNestedProps, hasFixableDecorators, hasClassicClassDecorators } = analyzeDiscourseComputedUsage();
+            const { hasNestedProps, hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
             context.report({
               node,
@@ -193,9 +241,9 @@ export default {
                   (spec) => spec.type === "ImportSpecifier"
                 );
 
-                // If there are nested properties or classic class decorators, we keep the discourseComputed import
-                // Otherwise, we remove it
-                if (!hasNestedProps && !hasClassicClassDecorators) {
+                // If there are nested properties, classic class decorators, or parameter reassignments,
+                // we keep the discourseComputed import. Otherwise, we remove it
+                if (!hasNestedProps && !hasClassicClassDecorators && !hasParameterReassignments) {
                   if (namedSpecifiers.length > 0) {
                     // Keep named imports, only remove default import
                     fixes.push(
@@ -254,7 +302,7 @@ export default {
                     }
                   }
                 } else {
-                  // Has nested props or classic class decorators, but also has fixable decorators
+                  // Has nested props, classic class decorators, or parameter reassignments, but also has fixable decorators
                   // Keep discourseComputed import but add computed for the fixable ones
                   if (!hasComputedImport) {
                     if (emberObjectImportNode) {
@@ -400,10 +448,56 @@ export default {
           typeof arg === "string" && arg.includes(".")
         );
 
+        // Check if any parameters are reassigned in the method body
+        // This requires manual intervention, so we skip auto-fix
+        const paramNames = node.value.params.map((param) => param.name);
+        let hasParameterReassignment = false;
+
+        if (paramNames.length > 0) {
+          const checkForReassignment = (astNode) => {
+            if (!astNode || typeof astNode !== 'object') {
+              return;
+            }
+
+            // Check for assignment to a parameter
+            if (astNode.type === 'AssignmentExpression' &&
+                astNode.left &&
+                astNode.left.type === 'Identifier' &&
+                paramNames.includes(astNode.left.name)) {
+              hasParameterReassignment = true;
+              return;
+            }
+
+            // Check for update expressions (++, --)
+            if (astNode.type === 'UpdateExpression' &&
+                astNode.argument &&
+                astNode.argument.type === 'Identifier' &&
+                paramNames.includes(astNode.argument.name)) {
+              hasParameterReassignment = true;
+              return;
+            }
+
+            // Recursively check children
+            for (const key in astNode) {
+              if (key === 'parent' || key === 'range' || key === 'loc') {
+                continue;
+              }
+              const child = astNode[key];
+              if (Array.isArray(child)) {
+                child.forEach(item => checkForReassignment(item));
+              } else {
+                checkForReassignment(child);
+              }
+            }
+          };
+
+          checkForReassignment(node.value.body);
+        }
+
         context.report({
           node: discourseComputedDecorator,
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
-          fix: hasNestedProperty ? undefined : function(fixer) {
+          fix: (hasNestedProperty || hasParameterReassignment) ? undefined : function(fixer) {
             const fixes = [];
 
             // 1. Replace @discourseComputed with @computed in the decorator
@@ -469,6 +563,22 @@ export default {
                     return;
                   }
 
+                  // Skip if it's a property in a member expression (e.g., the 'toString' in title.toString())
+                  // But we DO want to replace the object part (e.g., 'title' in title.toString())
+                  if (parent && parent.type === 'MemberExpression' && parent.property === astNode && !parent.computed) {
+                    return;
+                  }
+
+                  // Skip if it's the left side of an assignment expression (assignment target)
+                  if (parent && parent.type === 'AssignmentExpression' && parent.left === astNode) {
+                    return;
+                  }
+
+                  // Skip if it's part of an update expression (++, --)
+                  if (parent && parent.type === 'UpdateExpression') {
+                    return;
+                  }
+
                   // Handle shorthand properties: { userId } -> { userId: this.userId }
                   if (parent && parent.type === 'Property' && parent.shorthand) {
                     const propertyName = paramToProperty[astNode.name];
@@ -514,17 +624,11 @@ export default {
               // This prevents offset issues
               replacements.sort((a, b) => b.range[0] - a.range[0]);
 
-              // Apply replacements
+              // Apply replacements using individual fixer operations
               if (replacements.length > 0) {
-                let bodyText = sourceCode.getText(methodBody);
-
                 replacements.forEach(({ range, text }) => {
-                  const start = range[0] - methodBody.range[0];
-                  const end = range[1] - methodBody.range[0];
-                  bodyText = bodyText.slice(0, start) + text + bodyText.slice(end);
+                  fixes.push(fixer.replaceTextRange(range, text));
                 });
-
-                fixes.push(fixer.replaceText(methodBody, bodyText));
               }
             }
 
