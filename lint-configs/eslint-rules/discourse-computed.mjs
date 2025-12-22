@@ -17,6 +17,8 @@ export default {
     let emberObjectImportNode = null;
     let discourseComputedInfo = null; // Cache info about discourseComputed decorators
     let discourseComputedLocalName = null; // Track the local name used for discourseComputed import
+    let discourseComputedImportNode = null; // Track the discourse/lib/decorators import node
+    let computedImportName = null; // Track what name to use for computed from @ember/object
     let importsAnalyzed = false; // Track if we've scanned all imports
 
     // Helper function to scan all imports in the file
@@ -25,10 +27,17 @@ export default {
         return;
       }
 
+      const allImportedIdentifiers = new Set();
+
       sourceCode.ast.body.forEach(statement => {
         if (statement.type !== 'ImportDeclaration') {
           return;
         }
+
+        // Collect all imported identifiers
+        statement.specifiers.forEach(spec => {
+          allImportedIdentifiers.add(spec.local.name);
+        });
 
         // Check for @ember/object import with computed
         if (statement.source.value === "@ember/object") {
@@ -40,11 +49,13 @@ export default {
           );
           if (computedSpecifier) {
             hasComputedImport = true;
+            computedImportName = computedSpecifier.local.name; // Store the aliased name
           }
         }
 
         // Check for discourse/lib/decorators default import
         if (statement.source.value === "discourse/lib/decorators") {
+          discourseComputedImportNode = statement;
           const defaultSpecifier = statement.specifiers.find(
             (spec) => spec.type === "ImportDefaultSpecifier"
           );
@@ -53,6 +64,21 @@ export default {
           }
         }
       });
+
+      // Determine what name to use for computed import from @ember/object
+      if (!computedImportName) {
+        // computed is not yet imported from @ember/object
+        // Check if 'computed' identifier is already used by something OTHER than discourse import
+        // If discourseComputedLocalName === 'computed', we'll rename it to 'discourseComputed', so 'computed' will be free
+        const isComputedUsedElsewhere = allImportedIdentifiers.has('computed') && discourseComputedLocalName !== 'computed';
+
+        if (isComputedUsedElsewhere) {
+          // 'computed' is used by something else, we'll need an alias
+          computedImportName = 'emberComputed';
+        } else {
+          computedImportName = 'computed';
+        }
+      }
 
       importsAnalyzed = true;
     }
@@ -270,14 +296,19 @@ export default {
                   (spec) => spec.type === "ImportSpecifier"
                 );
 
+                // Determine the import string to use (with alias if needed)
+                const computedImportString = computedImportName === 'computed'
+                  ? 'computed'
+                  : `computed as ${computedImportName}`;
+
                 // If there are nested properties, classic class decorators, or parameter reassignments,
                 // we keep the discourseComputed import. Otherwise, we remove it
                 if (!hasNestedProps && !hasClassicClassDecorators && !hasParameterReassignments) {
                   if (namedSpecifiers.length > 0) {
-                    // Keep named imports, only remove default import
+                    // Keep named imports, remove default import
                     fixes.push(
                       fixImport(fixer, importNode, {
-                        defaultImport: false, // Remove discourseComputed default import
+                        defaultImport: false,
                       })
                     );
 
@@ -287,7 +318,7 @@ export default {
                         // Add computed to existing @ember/object import
                         fixes.push(
                           fixImport(fixer, emberObjectImportNode, {
-                            namedImportsToAdd: ["computed"],
+                            namedImportsToAdd: [computedImportString],
                           })
                         );
                       } else {
@@ -295,13 +326,13 @@ export default {
                         fixes.push(
                           fixer.insertTextAfter(
                             importNode,
-                            '\nimport { computed } from "@ember/object";'
+                            `\nimport { ${computedImportString} } from "@ember/object";`
                           )
                         );
                       }
                     }
                   } else {
-                    // No named imports, remove entire import line
+                    // No named imports, handle entire import line
                     if (!hasComputedImport) {
                       if (emberObjectImportNode) {
                         // Remove discourseComputed import, add computed to @ember/object
@@ -311,7 +342,7 @@ export default {
 
                         fixes.push(
                           fixImport(fixer, emberObjectImportNode, {
-                            namedImportsToAdd: ["computed"],
+                            namedImportsToAdd: [computedImportString],
                           })
                         );
                       } else {
@@ -319,7 +350,7 @@ export default {
                         fixes.push(
                           fixer.replaceText(
                             importNode,
-                            'import { computed } from "@ember/object";'
+                            `import { ${computedImportString} } from "@ember/object";`
                           )
                         );
                       }
@@ -333,12 +364,35 @@ export default {
                 } else {
                   // Has nested props, classic class decorators, or parameter reassignments, but also has fixable decorators
                   // Keep discourseComputed import but add computed for the fixable ones
+
+                  // If the default import is named 'computed', rename it to 'discourseComputed'
+                  if (discourseComputedLocalName === 'computed') {
+                    // fixImport doesn't support renaming, so we need to manually construct
+                    const namedImportStrings = namedSpecifiers.map(spec => {
+                      if (spec.imported.name === spec.local.name) {
+                        return spec.imported.name;
+                      } else {
+                        return `${spec.imported.name} as ${spec.local.name}`;
+                      }
+                    });
+
+                    let newImportStatement = 'import discourseComputed';
+                    if (namedImportStrings.length > 0) {
+                      newImportStatement += `, { ${namedImportStrings.join(', ')} }`;
+                    }
+                    newImportStatement += ` from "${importNode.source.value}";`;
+
+                    fixes.push(
+                      fixer.replaceText(importNode, newImportStatement)
+                    );
+                  }
+
                   if (!hasComputedImport) {
                     if (emberObjectImportNode) {
                       // Add computed to existing @ember/object import
                       fixes.push(
                         fixImport(fixer, emberObjectImportNode, {
-                          namedImportsToAdd: ["computed"],
+                          namedImportsToAdd: [computedImportString],
                         })
                       );
                     } else {
@@ -346,7 +400,7 @@ export default {
                       fixes.push(
                         fixer.insertTextAfter(
                           importNode,
-                          '\nimport { computed } from "@ember/object";'
+                          `\nimport { ${computedImportString} } from "@ember/object";`
                         )
                       );
                     }
@@ -530,12 +584,13 @@ export default {
             const fixes = [];
 
             // 1. Replace @discourseComputed with @computed in the decorator
+            // Use the appropriate name (computed or alias like emberComputed)
             if (decoratorExpression.type === "CallExpression") {
               fixes.push(
-                fixer.replaceText(decoratorExpression.callee, "computed")
+                fixer.replaceText(decoratorExpression.callee, computedImportName)
               );
             } else {
-              fixes.push(fixer.replaceText(decoratorExpression, "computed"));
+              fixes.push(fixer.replaceText(decoratorExpression, computedImportName));
             }
 
             // 2. Convert method to getter and handle parameters

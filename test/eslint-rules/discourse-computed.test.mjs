@@ -653,6 +653,68 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed imported as 'computed' conflicts with needed import",
+      code: [
+        "import computed, { debounce } from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @computed(\"someProperty\")",
+        "  myComputed(someProperty) {",
+        "    return someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { debounce } from \"discourse/lib/decorators\";",
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"someProperty\")",
+        "  get myComputed() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "computed already imported with alias from @ember/object",
+      code: [
+        "import { computed as emberComputed } from \"@ember/object\";",
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"someProperty\")",
+        "  myComputed(someProperty) {",
+        "    return someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed as emberComputed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @emberComputed(\"someProperty\")",
+        "  get myComputed() {",
+        "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
     // needed to parse decorator syntax on object properties. This functionality should be
