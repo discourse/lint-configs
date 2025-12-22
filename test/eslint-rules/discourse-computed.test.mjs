@@ -20,6 +20,18 @@ ruleTester.run("discourse-computed", rule, {
         '}',
       ].join("\n"),
     },
+    {
+      name: "Working computed with nested property",
+      code: [
+        'import { computed } from "@ember/object";',
+        'class MyClass {',
+        '  @computed("model.property")',
+        '  get myComputed() {',
+        '    return this.model.property + 1;',
+        '  }',
+        '}',
+      ].join("\n"),
+    },
   ],
   invalid: [
     {
@@ -113,6 +125,50 @@ ruleTester.run("discourse-computed", rule, {
         '  }',
         '}',
       ].join("\n"),
+    },
+    {
+      name: "discourseComputed with nested property - no auto-fix",
+      code: [
+        'import discourseComputed from "discourse/lib/decorators";',
+        'class MyClass {',
+        '  @discourseComputed("model.property")',
+        '  myComputed(modelProperty) {',
+        '    return modelProperty + 1;',
+        '  }',
+        '}',
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            'Use \'import { computed } from "@ember/object";\' instead of \'import discourseComputed from "discourse/lib/decorators";\'.',
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
+        },
+      ],
+      output: null,
+    },
+    {
+      name: "discourseComputed with multiple properties including nested - no auto-fix",
+      code: [
+        'import discourseComputed from "discourse/lib/decorators";',
+        'class MyClass {',
+        '  @discourseComputed("simpleProperty", "model.nestedProperty")',
+        '  myComputed(simple, nested) {',
+        '    return simple + nested;',
+        '  }',
+        '}',
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            'Use \'import { computed } from "@ember/object";\' instead of \'import discourseComputed from "discourse/lib/decorators";\'.',
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
+        },
+      ],
+      output: null,
     },
   ],
 });

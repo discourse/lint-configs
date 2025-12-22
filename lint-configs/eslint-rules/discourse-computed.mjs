@@ -37,11 +37,20 @@ export default {
             defaultSpecifier &&
             defaultSpecifier.local.name === "discourseComputed"
           ) {
+            // Check if any @discourseComputed usage has nested properties
+            const ast = sourceCode.ast;
+            let hasNestedProps = false;
+
+            // Simple regex check in source code for @discourseComputed with nested properties
+            const sourceText = sourceCode.getText();
+            const decoratorPattern = /@discourseComputed\([^)]*"[^"]*\.[^"]*"[^)]*\)/;
+            hasNestedProps = decoratorPattern.test(sourceText);
+
             context.report({
               node,
               message:
                 'Use \'import { computed } from "@ember/object";\' instead of \'import discourseComputed from "discourse/lib/decorators";\'.',
-              fix(fixer) {
+              fix: hasNestedProps ? undefined : function(fixer) {
                 const fixes = [];
 
                 // Check if there are other named imports
@@ -111,14 +120,30 @@ export default {
           return;
         }
 
+        // Get decorator arguments to check for nested properties
+        const decoratorExpression = discourseComputedDecorator.expression;
+        let decoratorArgs = [];
+        if (decoratorExpression.type === "CallExpression") {
+          decoratorArgs = decoratorExpression.arguments.map((arg) => {
+            if (arg.type === "Literal") {
+              return arg.value;
+            }
+            return null;
+          }).filter(Boolean);
+        }
+
+        // Check if any decorator argument contains a nested property reference (.)
+        const hasNestedProperty = decoratorArgs.some((arg) =>
+          typeof arg === "string" && arg.includes(".")
+        );
+
         context.report({
           node: discourseComputedDecorator,
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
-          fix(fixer) {
+          fix: hasNestedProperty ? undefined : function(fixer) {
             const fixes = [];
 
             // 1. Replace @discourseComputed with @computed in the decorator
-            const decoratorExpression = discourseComputedDecorator.expression;
             if (decoratorExpression.type === "CallExpression") {
               fixes.push(
                 fixer.replaceText(decoratorExpression.callee, "computed")
@@ -134,17 +159,6 @@ export default {
 
             // Get parameter names for replacement
             const paramNames = node.value.params.map((param) => param.name);
-
-            // Get decorator arguments (the property names to observe)
-            let decoratorArgs = [];
-            if (decoratorExpression.type === "CallExpression") {
-              decoratorArgs = decoratorExpression.arguments.map((arg) => {
-                if (arg.type === "Literal") {
-                  return arg.value;
-                }
-                return null;
-              }).filter(Boolean);
-            }
 
             // Add 'get' keyword before method name if not already a getter
             if (node.kind !== "get") {
