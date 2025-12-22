@@ -135,6 +135,17 @@ export default {
               // Get parameter names for replacement
               const paramNames = node.value.params.map((param) => param.name);
 
+              // Get decorator arguments (the property names to observe)
+              let decoratorArgs = [];
+              if (decoratorExpression.type === "CallExpression") {
+                decoratorArgs = decoratorExpression.arguments.map((arg) => {
+                  if (arg.type === "Literal") {
+                    return arg.value;
+                  }
+                  return null;
+                }).filter(Boolean);
+              }
+
               // Replace method signature to remove parameters
               const paramsStart = node.value.params[0].range[0];
               const paramsEnd =
@@ -145,13 +156,16 @@ export default {
               const bodyText = sourceCode.getText(methodBody);
               let newBodyText = bodyText;
 
-              paramNames.forEach((paramName) => {
-                // Replace standalone parameter references with this.paramName
+              paramNames.forEach((paramName, index) => {
+                // Use the corresponding decorator argument if available, otherwise use param name
+                const propertyName = decoratorArgs[index] || paramName;
+
+                // Replace standalone parameter references with this.propertyName
                 // Use word boundaries to avoid replacing parts of other identifiers
                 const regex = new RegExp(`\\b${paramName}\\b`, "g");
                 newBodyText = newBodyText.replace(
                   regex,
-                  `this.${paramName}`
+                  `this.${propertyName}`
                 );
               });
 
