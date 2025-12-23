@@ -1,106 +1,100 @@
-# ESLint Rule Development
+# Rule Development Guide
 
-When asked to create/fix an ESLint rule for the Discourse lint-configs project.
+This guide covers creating and fixing lint rules for the Discourse lint-configs project.
 
-Project Structure
+## Project StructureAdd
 
-- Rule files: ./lint-configs/eslint-rules/
-- Test files: ./lint-configs/test/eslint-rules/
-- Utilities: ./lint-configs/eslint-rules/utils/
+### ESLint
+- Rule files: `lint-configs/eslint-rules/` (often using subdirectories for complex rules)
+- Test files: `test/eslint-rules/`
+- Utilities: `lint-configs/eslint-rules/utils/`
 
-Available Utilities
+### Template Lint (Ember)
+- Rule files: `lint-configs/template-lint-rules/`
+- Test files: `test/template-lint-rules/`
+- Rule index: `lint-configs/template-lint-rules/index.mjs`
 
-- fixImport() from ./utils/fix-import.mjs - Helps add/remove named imports and remove default imports (cannot rename default imports)
-- Check other exported functions in utilities folder for more details about them
+### Stylelint
+- Rule files: `lint-configs/stylelint-rules/`
+- Test files: `test/stylelint-rules/`
+- Rule index: `lint-configs/stylelint-rules/index.js`
 
-Testing Commands
+## Testing Commands
 
-- Run all tests (from root directory): `cd lint-configs && pnpm test`
- 
-- Important: 
-  * Do NOT run test files directly with node
-  * The test command must be run from the lint-configs directory using pnpm 
-  * The test script (from lint-configs/package.json) runs: `cd ../test && node test.js`
+Run all tests from the root directory:
+```bash
+cd lint-configs && pnpm test
+```
 
-Key Development Patterns
+### Individual Rule Testing
+To run tests for a specific type of rule:
+- ESLint: `cd test/eslint-rules && pnpm test`
+- Template Lint: `cd test/template-lint-rules && pnpm test`
+- Stylelint: `cd test/stylelint-rules && pnpm test` (uses Node's native test runner)
 
-1. Prefer AST Over Regex
+To run a single test file (ESLint/Template Lint):
+```bash
+cd test/eslint-rules && npx mocha rule-name.test.mjs
+```
 
-- Always use the Abstract Syntax Tree (AST) for code analysis instead of regular expressions
-- AST analysis is more reliable and understands code structure, not just patterns
-- Avoids false positives (won't match strings/comments that look like code)
-- Handles edge cases better (syntax variations, whitespace, formatting)
-- More maintainable and less brittle when code formatting changes
-- Use node visitors and ESLint context to access the full AST
+## Code Quality and Standards
 
-2. Rule Structure
+After making modifications to the rules or utilities, you must ensure the codebase adheres to the project's quality standards.
 
-- Use context.getSourceCode() to get AST
-- Common handlers: ImportDeclaration, MethodDefinition, Property, CallExpression, Decorator
-- Track state with variables at the top of create()
-- Use analyzeAllImports() pattern to avoid race conditions
+### Linting
+Run the linting command from the `lint-configs` directory:
+```bash
+cd lint-configs && pnpm lint
+```
+This runs ESLint and checks formatting with Prettier.
 
-3. When to Report Errors
+### Formatting
+To automatically fix formatting issues, run:
+```bash
+cd lint-configs && pnpm prettier --write "**/*.{cjs,mjs,js}"
+```
 
-- Report on the most specific node (e.g., defaultSpecifier not entire ImportDeclaration)
-- Provide fix function for auto-fixable issues
-- Return undefined for fix when manual intervention needed
-- Don't provide auto-fixes that could introduce runtime errors or change behavior
-  - Example: spreading with optional chaining (`...this.items?.map()`) is unsafe
-  - Example: adding fallbacks like `|| []` changes the intended behavior
-  - Better to report the error and let developers fix it manually with proper context
-- Provide helpful error messages that explain why auto-fix isn't possible
-  - Include the specific problem (e.g., "parameter 'title' is reassigned")
-  - Show concrete examples of how to fix it manually
-  - Reference the actual code elements (parameter names, property paths)
-  - Example: "Cannot auto-fix @discourseComputed because parameter 'groups' is used in a spread operator. Example: Use '...(this.model.groups || [])' or '...(this.model.groups ?? [])' for safe spreading."
+## Available ESLint Utilities
 
-4. Import Handling
+- `fixImport(fixer, importNode, options)`: Manage named/default imports.
+- `collectImports(sourceCode)`: Returns a Map of imports indexed by source.
+- `getImportedLocalNames(sourceCode)`: Returns a Set of all local names imported in the file.
+- `propertyPathToOptionalChaining(path)`: Converts "a.b.c" to "a?.b?.c".
+- Token utilities (`isTokenOnSameLine`, `isSemicolonToken`, etc.) in `utils/tokens.mjs`.
 
-- Check for naming conflicts across all imports
-- Handle aliases (e.g., import { computed as emberComputed })
-- Track both original and local names for renamed imports
-- Use fixImport() utility when possible, manually construct when needed
+## Key Development Patterns
 
-5. Test Structure
+### 1. Prefer AST Over Regex
+- **ESLint**: Uses `context.getSourceCode().ast`.
+- **Template Lint**: Uses a `visitor()` pattern for Glimmer AST.
+- **Stylelint**: Uses PostCSS AST (`root.walkAtRules`, etc.).
+- AST analysis avoids false positives in comments/strings and handles whitespace automatically.
 
-{                                                                                                                               
-name: "descriptive test name",                                                                                                
-code: ["line 1", "line 2"].join("\n"),                                                                                        
-errors: [                                                                                                                     
-{ message: "error message 1" },                                                                                             
-{ message: "error message 2" }                                                                                              
-],                                                                                                                            
-output: ["expected line 1", "expected line 2"].join("\n")                                                                     
-}
+### 2. Implementation Strategies
 
-6. Common Pitfalls to Avoid
+#### ESLint
+- Track state (like imports) at the top of `create(context)`.
+- Use `ImportDeclaration` visitor to scan all imports at the start to avoid race conditions when fixing.
+- When fixing, use `context.report({ fix(fixer) { ... } })`.
 
-- Don't report same error multiple times (check if handlers overlap)
-- Remember to handle both CallExpression and plain Identifier for decorators
-- Test with renamed/aliased imports
-- Handle mixed scenarios (some fixable, some not)
-- Test import order variations
-- Avoid optional chaining in unsafe contexts (spread operators, arithmetic operations, etc.)
-  - Example: `...this.items?.map()` is unsafe - if items is undefined, spreading undefined throws
-  - Check parent node type (SpreadElement, BinaryExpression) before adding optional chaining
+#### Template Lint
+- Extend `Rule` from `ember-template-lint`.
+- Implement `visitor()` returning an object with node handlers (e.g., `MustacheStatement`, `PathExpression`).
+- For autofix, modify the node directly in the visitor when `this.mode === 'fix'`.
 
-Task Description
+#### Stylelint
+- Use `stylelint.createPlugin(ruleName, ruleFunction)`.
+- Use `stylelint.utils.report` for reporting.
+- Provide a `fix` callback in `report` to modify the PostCSS nodes.
 
-Rule Name: [e.g., no-discourse-computed]
+### 3. Safety and Robustness
+- **Avoid Breaking Changes**: Do not auto-fix if it might change runtime behavior (e.g., spreading `undefined` or `null`).
+- **Mixed Scenarios**: Handle files that have both fixable and non-fixable issues.
+- **Naming Conflicts**: Ensure auto-added imports don't conflict with existing local variables or imports.
+- **Optional Chaining**: When converting to getters or property access, consider if the base object might be null/undefined.
 
-Goal: [What should this rule enforce/transform?]
-
-Examples:                                                                                                                       
-// Before (invalid code)                                                                                                        
-[example]
-
-// After (expected output)                                                                                                      
-[example]
-
-Special Requirements:
-- [Any edge cases or specific behaviors needed]
-
-Files to modify:
-- Rule: lint-configs/eslint-rules/[rule-name].mjs
-- Tests: test/eslint-rules/[rule-name].test.mjs
+## Common Pitfalls
+- **Import Aliases**: `import { computed as c }` means you must look for `c`, not `computed`.
+- **Classic vs. Native Classes**: Some fixes only work in ES6 classes (e.g., converting to getters).
+- **Template Paths**: In Ember templates, `this.property` vs `@arg` vs `helper` can be ambiguous; respect `allow` lists in config.
+- **Stylelint @use**: When adding a new mixin/function, ensure the necessary `@use` statement is added at the top of the file if missing.
