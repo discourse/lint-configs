@@ -9,6 +9,17 @@ export default {
     },
     fixable: "code",
     schema: [], // no options
+    messages: {
+      replaceImport: "Use `import { computed } from \"@ember/object\";` instead of `import discourseComputed from \"discourse/lib/decorators\";`.",
+      replaceDecorator: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
+      cannotAutoFixClassic: "Cannot auto-fix {{name}} in classic Ember classes. Please convert to native ES6 class first.",
+      cannotAutoFixNestedFunction: "Cannot auto-fix @{{name}} because parameter '{{param}}' is used inside a nested function. Inside nested regular functions (not arrow functions), 'this' refers to a different context, so converting '{{param}}' to 'this.{{propertyPath}}' would be incorrect. Convert to getter manually.",
+      cannotAutoFixUnsafeOptionalChaining: "Cannot auto-fix @{{name}} because parameter '{{param}}' with nested property path '{{propertyPath}}' would create unsafe optional chaining. Convert to getter manually and handle the chaining explicitly.",
+      cannotAutoFixUpdateExpression: "Cannot auto-fix @{{name}} because parameter '{{param}}' uses update expressions (++/--). Convert to getter manually and use a local variable with explicit assignment.",
+      cannotAutoFixNestedReassignment: "Cannot auto-fix @{{name}} because parameter '{{param}}' is reassigned inside a nested block (if/loop/etc). Convert to getter manually.",
+      cannotAutoFixSpread: "Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator. Example: Use '...(this.{{propertyPath}} || [])' or '...(this.{{propertyPath}} ?? [])' for safe spreading.",
+      cannotAutoFixGeneric: "Cannot auto-fix @{{name}} because parameter '{{param}}' has complex reassignment patterns. Convert to getter manually and use a local variable."
+    }
   },
 
   create(context) {
@@ -548,8 +559,7 @@ export default {
 
             context.report({
               node: defaultSpecifier,
-              message:
-                'Use \'import { computed } from "@ember/object";\' instead of \'import discourseComputed from "discourse/lib/decorators";\'.',
+              messageId: "replaceImport",
               fix: function(fixer) {
                 const fixes = [];
                 const importNode = node; // Reference to the full ImportDeclaration
@@ -712,7 +722,8 @@ export default {
           if (isClassicClass) {
             context.report({
               node,
-              message: `Cannot auto-fix ${discourseComputedLocalName} in classic Ember classes. Please convert to native ES6 class first.`,
+              messageId: "cannotAutoFixClassic",
+              data: { name: discourseComputedLocalName },
             });
             return;
           }
@@ -760,7 +771,8 @@ export default {
             if (isClassicClass) {
               context.report({
                 node: discourseComputedDecorator,
-                message: `Cannot auto-fix @${discourseComputedLocalName} in classic Ember classes. Please convert to native ES6 class first.`,
+                messageId: "cannotAutoFixClassic",
+                data: { name: `@${discourseComputedLocalName}` },
               });
               return;
             }
@@ -1089,54 +1101,49 @@ export default {
                                      hasParameterReassignments &&
                                      discourseComputedLocalName === 'computed';
 
-        // Build a more descriptive error message for non-fixable cases
-        let errorMessage = "Use '@computed(...)' instead of '@discourseComputed(...)'.";
+        // Choose a specific messageId and data parameters. Messages are defined in meta.messages and use parameter replacement.
+        let messageIdToUse;
+        const reportData = { name: discourseComputedLocalName };
 
-        if (hasParameterInNestedFunction) {
-          // Parameter used in nested function where 'this' has different context
-          const propertyPath = decoratorArgs[paramNames.indexOf(nestedFunctionParam)] || nestedFunctionParam;
-          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${nestedFunctionParam}' is used inside a nested function.\n\n` +
-                        `Inside nested regular functions (not arrow functions), 'this' refers to a different context, so converting '${nestedFunctionParam}' to 'this.${propertyPath}' would be incorrect.\n\n` +
-                        `Convert to getter manually and either:\n` +
-                        `1. Use an arrow function: 'formatter: (votes) => { ... }'\n` +
-                        `2. Capture the value: 'const ${nestedFunctionParam} = this.${propertyPath}; ... formatter(votes) { ... }'`;
+        if (canAutoFix) {
+          // For fixable decorators, use the replace message
+          messageIdToUse = 'replaceDecorator';
+        } else if (hasParameterInNestedFunction) {
+          messageIdToUse = 'cannotAutoFixNestedFunction';
+          reportData.param = nestedFunctionParam;
+          reportData.propertyPath = decoratorArgs[paramNames.indexOf(nestedFunctionParam)] || nestedFunctionParam;
         } else if (hasUnsafeOptionalChaining) {
-          // Unsafe optional chaining case - parameter with nested properties used in member expression
-          const paramIndex = paramNames.indexOf(unsafeOptionalChainingParam);
-          const propertyPath = decoratorArgs[paramIndex] || unsafeOptionalChainingParam;
-          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${unsafeOptionalChainingParam}' with nested property path '${propertyPath}' would create unsafe optional chaining.\n\n` +
-                        `When the parameter is used in an expression that becomes the object of a member access (e.g., '(${unsafeOptionalChainingParam} || other).toLowerCase()'), ` +
-                        `optional chaining can produce undefined, making the method call unsafe.\n\n` +
-                        `Convert to getter manually and handle the chaining explicitly.`;
+          messageIdToUse = 'cannotAutoFixUnsafeOptionalChaining';
+          reportData.param = unsafeOptionalChainingParam;
+          reportData.propertyPath = decoratorArgs[paramNames.indexOf(unsafeOptionalChainingParam)] || unsafeOptionalChainingParam;
         } else if (hasParameterReassignment && !hasSimpleReassignments) {
-          // Complex reassignment case - provide detailed error
           const reassignedParam = Object.keys(parameterReassignmentInfo)[0];
-          const info = parameterReassignmentInfo[reassignedParam];
-          const propertyPath = decoratorArgs[paramNames.indexOf(reassignedParam)] || reassignedParam;
+          const info = parameterReassignmentInfo[reassignedParam] || {};
+          reportData.param = reassignedParam;
+          reportData.propertyPath = decoratorArgs[paramNames.indexOf(reassignedParam)] || reassignedParam;
 
           if (info.hasUpdateExpression) {
-            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' uses update expressions (++/--).\n\n` +
-                          `Convert to getter manually and use a local variable with explicit assignment.\n` +
-                          `Example: 'let ${reassignedParam} = this.${propertyPath}; ${reassignedParam} += 1;'`;
-          } else if (info.assignments.length > 0 && info.assignments[0].depth > 0) {
-            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' is reassigned inside a nested block (if/loop/etc).\n\n` +
-                          `Convert to getter manually.\n` +
-                          `Example: 'let ${reassignedParam} = this.${propertyPath};'`;
+            messageIdToUse = 'cannotAutoFixUpdateExpression';
+          } else if (info.assignments && info.assignments.length > 0 && info.assignments[0].depth > 0) {
+            messageIdToUse = 'cannotAutoFixNestedReassignment';
           } else {
-            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' has complex reassignment patterns.\n\n` +
-                          `Convert to getter manually and use a local variable.\n` +
-                          `Example: 'let ${reassignedParam} = this.${propertyPath};'`;
+            messageIdToUse = 'cannotAutoFixGeneric';
           }
         } else if (hasParameterInSpread) {
-          // Use the spreadParam that was captured during traversal
-          const propertyPath = decoratorArgs[paramNames.indexOf(spreadParam)] || spreadParam;
-          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${spreadParam}' is used in a spread operator.\n\n` +
-                        `Example: Use '...(this.${propertyPath} || [])' or '...(this.${propertyPath} ?? [])' for safe spreading.`;
+          messageIdToUse = 'cannotAutoFixSpread';
+          reportData.param = spreadParam;
+          reportData.propertyPath = decoratorArgs[paramNames.indexOf(spreadParam)] || spreadParam;
+        } else {
+          // Fallback generic message
+          messageIdToUse = 'cannotAutoFixGeneric';
+          reportData.param = paramNames[0] || '';
+          reportData.propertyPath = decoratorArgs[0] || reportData.param;
         }
 
         context.report({
           node: discourseComputedDecorator,
-          message: errorMessage,
+          messageId: messageIdToUse,
+          data: reportData,
           fix: !canAutoFix
             ? (needsDecoratorRename ? function(fixer) {
                 // Just rename the decorator to match the renamed import
