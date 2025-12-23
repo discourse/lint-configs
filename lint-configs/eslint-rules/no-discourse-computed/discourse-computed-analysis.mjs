@@ -343,11 +343,13 @@ export function analyzeDiscourseComputedUsage(
     if (
       hasParameterReassignment &&
       !hasParameterInSpread &&
-      methodNode.value.body.body &&
-      methodNode.value.body.body.length > 0
+      functionNode.body.body &&
+      functionNode.body.body.length > 0
     ) {
-      for (let i = 0; i < methodNode.value.body.body.length; i++) {
-        const statement = methodNode.value.body.body[i];
+      for (let i = 0; i < functionNode.body.body.length; i++) {
+        const statement = functionNode.body.body[i];
+
+        // 1. Handle direct top-level assignment: foo = foo || [];
         if (
           statement.type === "ExpressionStatement" &&
           statement.expression.type === "AssignmentExpression" &&
@@ -363,11 +365,75 @@ export function analyzeDiscourseComputedUsage(
               firstAssignment.depth === 0 &&
               firstAssignment.node === statement.expression
             ) {
-              simpleReassignments.push({ statement, paramName, info: paramInfo });
+              simpleReassignments.push({
+                statement,
+                paramName,
+                info: paramInfo,
+              });
               continue;
             }
           }
         }
+
+        // 2. Handle simple guard clause: if (!foo) { foo = []; }
+        if (
+          statement.type === "IfStatement" &&
+          statement.consequent.type === "BlockStatement" &&
+          statement.consequent.body.length === 1 &&
+          statement.consequent.body[0].type === "ExpressionStatement" &&
+          statement.consequent.body[0].expression.type ===
+            "AssignmentExpression" &&
+          statement.consequent.body[0].expression.left.type === "Identifier" &&
+          paramNames.includes(statement.consequent.body[0].expression.left.name)
+        ) {
+          // Check if the test is a "null check"
+          const test = statement.test;
+          const isUnaryNegation =
+            test.type === "UnaryExpression" &&
+            test.operator === "!" &&
+            test.argument.type === "Identifier" &&
+            paramNames.includes(test.argument.name);
+
+          const isBinaryNullCheck =
+            test.type === "BinaryExpression" &&
+            (test.operator === "==" ||
+              test.operator === "===" ||
+              test.operator === "!=" ||
+              test.operator === "!==") &&
+            ((test.left.type === "Identifier" &&
+              paramNames.includes(test.left.name) &&
+              (test.right.type === "Literal" ||
+                (test.right.type === "Identifier" &&
+                  test.right.name === "undefined"))) ||
+              (test.right.type === "Identifier" &&
+                paramNames.includes(test.right.name) &&
+                (test.left.type === "Literal" ||
+                  (test.left.type === "Identifier" &&
+                    test.left.name === "undefined"))));
+
+          if (isUnaryNegation || isBinaryNullCheck) {
+            const assignment = statement.consequent.body[0].expression;
+            const paramName = assignment.left.name;
+            const paramInfo = parameterReassignmentInfo[paramName];
+
+            if (
+              paramInfo &&
+              !paramInfo.hasUpdateExpression &&
+              paramInfo.assignments.length === 1 &&
+              paramInfo.assignments[0].depth === 1 &&
+              paramInfo.assignments[0].node === assignment
+            ) {
+              simpleReassignments.push({
+                statement,
+                paramName,
+                info: paramInfo,
+                isGuard: true,
+              });
+              continue;
+            }
+          }
+        }
+
         break;
       }
     }

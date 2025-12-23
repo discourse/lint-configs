@@ -1172,6 +1172,29 @@ class MyClass {
 }`
     },
     {
+      name: "discourseComputed with guard clause reassignment - auto-fix with let",
+      code: `import discourseComputed from "discourse/lib/decorators";
+class MyClass {
+  @discourseComputed("items")
+  total(items) {
+    if (!items) { items = []; }
+    return items.length;
+  }
+}`,
+      errors: [
+        { messageId: "replaceImport" },
+        { messageId: "replaceDecorator" }
+      ],
+      output: `import { computed } from "@ember/object";
+class MyClass {
+  @computed("items")
+  get total() {
+    let items = this.items || [];
+    return items.length;
+  }
+}`
+    },
+    {
       name: "discourseComputed with nested property used in method call - optional chaining before method",
       code: `import discourseComputed from "discourse/lib/decorators";
 class MyClass {

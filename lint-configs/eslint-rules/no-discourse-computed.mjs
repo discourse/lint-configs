@@ -173,17 +173,17 @@ export default {
       cannotAutoFixClassic:
         "Cannot auto-fix {{name}} in classic Ember classes. Please convert to native ES6 class first.",
       cannotAutoFixNestedFunction:
-        "Cannot auto-fix @{{name}} because parameter '{{param}}' is used inside a nested function. Inside nested regular functions (not arrow functions), 'this' refers to a different context, so converting '{{param}}' to 'this.{{propertyPath}}' would be incorrect. Convert to getter manually.",
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' is used inside a nested function. Convert to getter manually using 'this.{{propertyPath}}' carefully.",
       cannotAutoFixUnsafeOptionalChaining:
-        "Cannot auto-fix @{{name}} because parameter '{{param}}' with nested property path '{{propertyPath}}' would create unsafe optional chaining. Convert to getter manually and handle the chaining explicitly.",
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' with nested property path '{{propertyPath}}' would create unsafe optional chaining. Convert to getter manually and handle chaining explicitly (e.g. '(this.{{propertyPath}} || \"\").someMethod()').",
       cannotAutoFixUpdateExpression:
-        "Cannot auto-fix @{{name}} because parameter '{{param}}' uses update expressions (++/--). Convert to getter manually and use a local variable with explicit assignment.",
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' uses update expressions (++/--). Convert to getter manually using a local variable (e.g. 'let {{param}} = this.{{propertyPath}}; {{param}}++;').",
       cannotAutoFixNestedReassignment:
-        "Cannot auto-fix @{{name}} because parameter '{{param}}' is reassigned inside a nested block (if/loop/etc). Convert to getter manually.",
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' is reassigned inside a nested block. Convert to getter manually using a local variable (e.g. 'let {{param}} = this.{{propertyPath}}; if (...) { {{param}} = ... }').",
       cannotAutoFixSpread:
-        "Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator. Example: Use '...(this.{{propertyPath}} || [])' or '...(this.{{propertyPath}} ?? [])' for safe spreading.",
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator. Example manual fix: '...(this.{{propertyPath}} || [])'.",
       cannotAutoFixGeneric:
-        "Cannot auto-fix @{{name}} because parameter '{{param}}' has complex reassignment patterns. Convert to getter manually and use a local variable.",
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' has complex patterns. Convert to getter manually using 'this.{{propertyPath}}'.",
     },
   },
 

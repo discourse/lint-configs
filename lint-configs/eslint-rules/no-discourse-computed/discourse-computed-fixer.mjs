@@ -39,7 +39,6 @@ export function createMethodFix(
     }
 
     const methodKey = node.key;
-    const methodBody = node.value.body;
     const hasParams = node.value.params && node.value.params.length > 0;
     const paramNames = node.value.params
       ? node.value.params.map((p) => p.name)
@@ -115,16 +114,39 @@ export function createMethodFix(
       const simpleReassignments = options.simpleReassignments || [];
       if (simpleReassignments.length > 0) {
         for (const reassignment of simpleReassignments) {
-          const { statement, paramName, info } = reassignment;
-          const assignmentExpr = statement.expression;
-          const useConst = info.assignments.length === 1;
-          const keyword = useConst ? "const" : "let";
-          const newRight = replaceIdentifiersInExpression(assignmentExpr.right);
-          // Queue this replacement alongside identifier replacements to be applied in a single pass
-          replacements.push({
-            range: assignmentExpr.range,
-            text: `${keyword} ${paramName} = ${newRight}`,
-          });
+          const { statement, paramName, info, isGuard } = reassignment;
+
+          if (isGuard) {
+            // Guard clause: if (!foo) { foo = []; }
+            const assignmentExpr = statement.consequent.body[0].expression;
+            const access = propertyPathToOptionalChaining(
+              paramToProperty[paramName],
+              true,
+              false
+            );
+            const newRight = replaceIdentifiersInExpression(
+              assignmentExpr.right
+            );
+            // Example: let foo = this.foo || [];
+            // We use 'let' because it was inside an 'if', implying it might be reassigned
+            // (though our analysis ensures it's the ONLY assignment in simple cases)
+            replacements.push({
+              range: statement.range,
+              text: `let ${paramName} = ${access} || ${newRight};`,
+            });
+          } else {
+            // Direct assignment: foo = foo || [];
+            const assignmentExpr = statement.expression;
+            const useConst = info.assignments.length === 1;
+            const keyword = useConst ? "const" : "let";
+            const newRight = replaceIdentifiersInExpression(
+              assignmentExpr.right
+            );
+            replacements.push({
+              range: statement.range,
+              text: `${keyword} ${paramName} = ${newRight};`,
+            });
+          }
           // prevent further replacements for this param
           delete paramToProperty[paramName];
         }
