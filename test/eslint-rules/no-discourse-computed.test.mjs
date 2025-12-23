@@ -1332,6 +1332,80 @@ ruleTester.run("no-discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed with unsafe optional chaining in member expression - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"item.draft_username\", \"item.username\")",
+        "  userUrl(draftUsername, username) {",
+        "    return userPath((draftUsername || username).toLowerCase());",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'draftUsername' with nested property path 'item.draft_username' would create unsafe optional chaining. When the parameter is used in an expression that becomes the object of a member access (e.g., '(draftUsername || other).toLowerCase()'), optional chaining can produce undefined, making the method call unsafe. Convert to getter manually and handle the chaining explicitly."
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed with nested property in conditional expression used in member access - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"model.firstName\", \"model.lastName\")",
+        "  fullName(firstName, lastName) {",
+        "    return (firstName || lastName).toUpperCase();",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'firstName' with nested property path 'model.firstName' would create unsafe optional chaining. When the parameter is used in an expression that becomes the object of a member access (e.g., '(firstName || other).toLowerCase()'), optional chaining can produce undefined, making the method call unsafe. Convert to getter manually and handle the chaining explicitly."
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed with nested property used directly in member expression - auto-fix OK (safe)",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"item.username\")",
+        "  userUrl(username) {",
+        "    return username.toLowerCase();",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"item.username\")",
+        "  get userUrl() {",
+        "    return this.item?.username.toLowerCase();",
+        "  }",
+        "}"
+      ].join("\n")
+    },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
     // needed to parse decorator syntax on object properties. This functionality should be
