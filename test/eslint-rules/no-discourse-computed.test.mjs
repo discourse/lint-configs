@@ -873,7 +873,7 @@ ruleTester.run("no-discourse-computed", rule, {
         "class MyClass {",
         "  @computed(\"user.profile.name\")",
         "  get userName() {",
-        "    return this.user?.profile?.name.toUpperCase();",
+        "    return this.user?.profile?.name?.toUpperCase();",
         "  }",
         "}"
       ].join("\n")
@@ -1185,7 +1185,7 @@ ruleTester.run("no-discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'groups' is used in a spread operator. Example: Use '...(this.model.groups || [])' or '...(this.model.groups ?? [])' for safe spreading."
+          message: "Cannot auto-fix @discourseComputed because parameter 'groups' is used in a spread operator.\n\nExample: Use '...(this.model.groups || [])' or '...(this.model.groups ?? [])' for safe spreading."
         }
       ],
       output: null
@@ -1207,7 +1207,7 @@ ruleTester.run("no-discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'items' is used in a spread operator. Example: Use '...(this.data.items || [])' or '...(this.data.items ?? [])' for safe spreading."
+          message: "Cannot auto-fix @discourseComputed because parameter 'items' is used in a spread operator.\n\nExample: Use '...(this.data.items || [])' or '...(this.data.items ?? [])' for safe spreading."
         }
       ],
       output: null
@@ -1230,7 +1230,7 @@ ruleTester.run("no-discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'count' uses update expressions (++/--). Convert to getter manually and use a local variable with explicit assignment. Example: 'let count = this.count; count += 1;'"
+          message: "Cannot auto-fix @discourseComputed because parameter 'count' uses update expressions (++/--).\n\nConvert to getter manually and use a local variable with explicit assignment.\nExample: 'let count = this.count; count += 1;'"
         }
       ],
       output: null
@@ -1255,7 +1255,7 @@ ruleTester.run("no-discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'value' is reassigned inside a nested block (if/loop/etc). Convert to getter manually. Example: 'let value = this.value;'"
+          message: "Cannot auto-fix @discourseComputed because parameter 'value' is reassigned inside a nested block (if/loop/etc).\n\nConvert to getter manually.\nExample: 'let value = this.value;'"
         }
       ],
       output: null
@@ -1349,7 +1349,7 @@ ruleTester.run("no-discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'draftUsername' with nested property path 'item.draft_username' would create unsafe optional chaining. When the parameter is used in an expression that becomes the object of a member access (e.g., '(draftUsername || other).toLowerCase()'), optional chaining can produce undefined, making the method call unsafe. Convert to getter manually and handle the chaining explicitly."
+          message: "Cannot auto-fix @discourseComputed because parameter 'draftUsername' with nested property path 'item.draft_username' would create unsafe optional chaining.\n\nWhen the parameter is used in an expression that becomes the object of a member access (e.g., '(draftUsername || other).toLowerCase()'), optional chaining can produce undefined, making the method call unsafe.\n\nConvert to getter manually and handle the chaining explicitly."
         }
       ],
       output: null
@@ -1371,10 +1371,70 @@ ruleTester.run("no-discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'firstName' with nested property path 'model.firstName' would create unsafe optional chaining. When the parameter is used in an expression that becomes the object of a member access (e.g., '(firstName || other).toLowerCase()'), optional chaining can produce undefined, making the method call unsafe. Convert to getter manually and handle the chaining explicitly."
+          message: "Cannot auto-fix @discourseComputed because parameter 'firstName' with nested property path 'model.firstName' would create unsafe optional chaining.\n\nWhen the parameter is used in an expression that becomes the object of a member access (e.g., '(firstName || other).toLowerCase()'), optional chaining can produce undefined, making the method call unsafe.\n\nConvert to getter manually and handle the chaining explicitly."
         }
       ],
       output: null
+    },
+    {
+      name: "discourseComputed with nested property and safe literal fallback - auto-fix OK",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"siteSettings.dashboard_general_tab_activity_metrics\")",
+        "  activityMetrics(metrics) {",
+        "    return (metrics || \"\").split(\"|\").filter(Boolean);",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"siteSettings.dashboard_general_tab_activity_metrics\")",
+        "  get activityMetrics() {",
+        "    return (this.siteSettings?.dashboard_general_tab_activity_metrics || \"\").split(\"|\").filter(Boolean);",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with nested property and safe nullish coalescing fallback - auto-fix OK",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"model.value\")",
+        "  formattedValue(value) {",
+        "    return (value ?? 0).toFixed(2);",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"model.value\")",
+        "  get formattedValue() {",
+        "    return (this.model?.value ?? 0).toFixed(2);",
+        "  }",
+        "}"
+      ].join("\n")
     },
     {
       name: "discourseComputed with nested property used directly in member expression - auto-fix OK (safe)",
@@ -1401,7 +1461,110 @@ ruleTester.run("no-discourse-computed", rule, {
         "class MyClass {",
         "  @computed(\"item.username\")",
         "  get userUrl() {",
-        "    return this.item?.username.toLowerCase();",
+        "    return this.item?.username?.toLowerCase();",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with parameter used in nested function - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"displayMode\")",
+        "  chartConfig(displayMode) {",
+        "    return {",
+        "      formatter(value) {",
+        "        if (displayMode === \"percentage\") {",
+        "          return value + \"%\";",
+        "        }",
+        "        return value;",
+        "      }",
+        "    };",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'displayMode' is used inside a nested function.\n\nInside nested regular functions (not arrow functions), 'this' refers to a different context, so converting 'displayMode' to 'this.displayMode' would be incorrect.\n\nConvert to getter manually and either:\n1. Use an arrow function: 'formatter: (votes) => { ... }'\n2. Capture the value: 'const displayMode = this.displayMode; ... formatter(votes) { ... }'"
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed with parameter in arrow function - auto-fix OK",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"displayMode\")",
+        "  chartConfig(displayMode) {",
+        "    return {",
+        "      formatter: (value) => {",
+        "        if (displayMode === \"percentage\") {",
+        "          return value + \"%\";",
+        "        }",
+        "        return value;",
+        "      }",
+        "    };",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"displayMode\")",
+        "  get chartConfig() {",
+        "    return {",
+        "      formatter: (value) => {",
+        "        if (this.displayMode === \"percentage\") {",
+        "          return value + \"%\";",
+        "        }",
+        "        return value;",
+        "      }",
+        "    };",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with nested property used in method call - optional chaining before method",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"model.poll.options\")",
+        "  totalVotes(options) {",
+        "    return options.reduce((sum, option) => sum + option.votes, 0);",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"model.poll.options\")",
+        "  get totalVotes() {",
+        "    return this.model?.poll?.options?.reduce((sum, option) => sum + option.votes, 0);",
         "  }",
         "}"
       ].join("\n")

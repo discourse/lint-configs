@@ -76,10 +76,19 @@ export default {
         }
       }
 
-      // If this was extracted from @each/[] and will be used in a member expression, add trailing ?.
-      // This allows the next property access to complete the optional chain (e.g., "this.items?." + "length" = "this.items?.length")
-      if (wasExtracted && parts.length === 1 && needsTrailingChaining && useOptionalChaining) {
-        result += "?.";
+      // If this will be used in a member expression, add trailing ?.
+      // This allows the next property access to complete the optional chain
+      // Examples:
+      // - "this.items?." + "length" = "this.items?.length" (extracted from "items.@each")
+      // - "this.model?.poll?.options?." + "reduce" = "this.model?.poll?.options?.reduce" (multi-part nested path)
+      // - "this.label" + ".compute" = "this.label.compute" (single-part, no trailing ?.)
+      if (needsTrailingChaining && useOptionalChaining) {
+        // Add trailing ?. for:
+        // - Extracted single-part paths (e.g., "items" from "items.@each.name")
+        // - Non-extracted multi-part paths (e.g., "model.poll.options")
+        if ((wasExtracted && parts.length === 1) || (!wasExtracted && parts.length > 1)) {
+          result += "?.";
+        }
       }
 
       return result;
@@ -159,6 +168,7 @@ export default {
         hasParameterReassignments: false,
         hasParametersInSpread: false,
         hasUnsafeOptionalChaining: false,
+        hasParameterInNestedFunction: false,
       };
 
       // Helper to traverse any node recursively
@@ -243,17 +253,47 @@ export default {
           const parameterReassignmentInfo = {};
           let hasParameterInSpread = false;
           let hasUnsafeOptionalChaining = false;
+          let hasParameterInNestedFunction = false;
 
           if (paramNames.length > 0) {
-            const checkForReassignmentOrSpread = (astNode, depth = 0) => {
+            const checkForReassignmentOrSpread = (astNode, depth = 0, inNestedFunction = false) => {
               if (!astNode || typeof astNode !== 'object') {
                 return;
+              }
+
+              // Check if we're entering a nested regular function (not arrow function)
+              const isNestedFunction = (astNode.type === 'FunctionExpression' || astNode.type === 'FunctionDeclaration') && inNestedFunction === false;
+              const newInNestedFunction = inNestedFunction || isNestedFunction;
+
+              // Check if a parameter is used inside a nested regular function
+              if (newInNestedFunction && astNode.type === 'Identifier' && paramNames.includes(astNode.name)) {
+                const parent = astNode.parent;
+                if (!(parent && parent.type === 'FunctionExpression' && parent.id === astNode)) {
+                  hasParameterInNestedFunction = true;
+                }
               }
 
               // Check for unsafe optional chaining patterns
               if (astNode.type === 'MemberExpression' && astNode.object) {
                 if (astNode.object.type === 'LogicalExpression' ||
                     astNode.object.type === 'ConditionalExpression') {
+
+                  // Check if the expression has a safe literal fallback
+                  const hasSafeLiteralFallback = (expr) => {
+                    if (expr.type === 'LogicalExpression') {
+                      if (expr.operator === '||' || expr.operator === '??') {
+                        return expr.right.type === 'Literal';
+                      }
+                      return false;
+                    }
+                    return false;
+                  };
+
+                  // Skip unsafe check if there's a safe literal fallback
+                  if (hasSafeLiteralFallback(astNode.object)) {
+                    return;
+                  }
+
                   const checkForNestedProps = (node) => {
                     if (!node || typeof node !== 'object') return false;
                     if (node.type === 'Identifier' && paramNames.includes(node.name)) {
@@ -355,14 +395,14 @@ export default {
                 const child = astNode[key];
                 const childDepth = isNestingNode ? depth + 1 : depth;
                 if (Array.isArray(child)) {
-                  child.forEach(item => checkForReassignmentOrSpread(item, childDepth));
+                  child.forEach(item => checkForReassignmentOrSpread(item, childDepth, newInNestedFunction));
                 } else {
-                  checkForReassignmentOrSpread(child, childDepth);
+                  checkForReassignmentOrSpread(child, childDepth, newInNestedFunction);
                 }
               }
             };
 
-            checkForReassignmentOrSpread(member.value.body);
+            checkForReassignmentOrSpread(member.value.body, 0, false);
           }
 
           const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
@@ -390,7 +430,9 @@ export default {
           }
 
           // Categorize this decorator
-          if (hasUnsafeOptionalChaining) {
+          if (hasParameterInNestedFunction) {
+            info.hasParameterInNestedFunction = true;
+          } else if (hasUnsafeOptionalChaining) {
             info.hasUnsafeOptionalChaining = true;
           } else if (hasParameterInSpread) {
             info.hasParametersInSpread = true;
@@ -451,7 +493,7 @@ export default {
 
           if (defaultSpecifier) {
             // Analyze all @discourseComputed usage in the file using AST
-            const { hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments, hasParametersInSpread, hasUnsafeOptionalChaining } = analyzeDiscourseComputedUsage();
+            const { hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments, hasParametersInSpread, hasUnsafeOptionalChaining, hasParameterInNestedFunction } = analyzeDiscourseComputedUsage();
 
             context.report({
               node: defaultSpecifier,
@@ -476,9 +518,9 @@ export default {
                   ? 'computed'
                   : `computed as ${computedImportName}`;
 
-                // If there are classic class decorators, parameter reassignments, parameters in spread, or unsafe optional chaining,
+                // If there are classic class decorators, parameter reassignments, parameters in spread, unsafe optional chaining, or parameters in nested functions,
                 // we keep the discourseComputed import. Otherwise, we remove it
-                if (!hasClassicClassDecorators && !hasParameterReassignments && !hasParametersInSpread && !hasUnsafeOptionalChaining) {
+                if (!hasClassicClassDecorators && !hasParameterReassignments && !hasParametersInSpread && !hasUnsafeOptionalChaining && !hasParameterInNestedFunction) {
                   if (namedSpecifiers.length > 0) {
                     // Keep named imports, remove default import
                     fixes.push(
@@ -711,23 +753,59 @@ export default {
         let hasParameterInSpread = false;
         let hasUnsafeOptionalChaining = false;
         let unsafeOptionalChainingParam = null;
+        let hasParameterInNestedFunction = false;
+        let nestedFunctionParam = null;
         const parameterReassignmentInfo = {}; // Track detailed info per parameter
 
         if (paramNames.length > 0) {
-          const checkForReassignmentOrSpread = (astNode, depth = 0) => {
+          const checkForReassignmentOrSpread = (astNode, depth = 0, inNestedFunction = false) => {
             if (!astNode || typeof astNode !== 'object') {
               return;
             }
 
+            // Check if we're entering a nested regular function (not arrow function)
+            // In nested functions, 'this' has a different context, so we can't safely convert parameter references to this.property
+            const isNestedFunction = (astNode.type === 'FunctionExpression' || astNode.type === 'FunctionDeclaration') && inNestedFunction === false;
+            const newInNestedFunction = inNestedFunction || isNestedFunction;
+
+            // Check if a parameter is used inside a nested regular function
+            if (newInNestedFunction && astNode.type === 'Identifier' && paramNames.includes(astNode.name)) {
+              // Skip if this identifier is the function name itself (for named function expressions)
+              const parent = astNode.parent;
+              if (!(parent && parent.type === 'FunctionExpression' && parent.id === astNode)) {
+                hasParameterInNestedFunction = true;
+                nestedFunctionParam = astNode.name;
+              }
+            }
+
             // Check for parameters with nested properties used in logical/conditional expressions
             // that are then used as object in MemberExpression
-            // This would create unsafe optional chaining like: (this.item?.username || other).toLowerCase()
-            // Logical expressions (||, &&, ??) can produce undefined if both sides are undefined
-            // But arithmetic operations (/, *, +, -) are safe, as are direct accesses like username.toLowerCase()
+            // UNSAFE: (this.item?.username || this.item?.draft_username).toLowerCase() - both could be undefined
+            // SAFE: (this.siteSettings?.value || "default").split() - literal fallback is safe
             if (astNode.type === 'MemberExpression' && astNode.object) {
               // Only check if the object is a logical or conditional expression (NOT binary arithmetic)
               if (astNode.object.type === 'LogicalExpression' ||
                   astNode.object.type === 'ConditionalExpression') {
+
+                // Check if the expression has a safe literal fallback
+                const hasSafeLiteralFallback = (expr) => {
+                  if (expr.type === 'LogicalExpression') {
+                    // For || and ??, the right side is the fallback
+                    if (expr.operator === '||' || expr.operator === '??') {
+                      // Check if right side is a literal (string, number, boolean, null)
+                      return expr.right.type === 'Literal';
+                    }
+                    // For &&, both sides matter - not a safe pattern for fallback
+                    return false;
+                  }
+                  // ConditionalExpression would need both consequent and alternate to be safe
+                  return false;
+                };
+
+                // Skip unsafe check if there's a safe literal fallback
+                if (hasSafeLiteralFallback(astNode.object)) {
+                  return;
+                }
 
                 const checkForNestedPropertiesInExpression = (node) => {
                   if (!node || typeof node !== 'object') return false;
@@ -842,14 +920,14 @@ export default {
               const child = astNode[key];
               const childDepth = isNestingNode ? depth + 1 : depth;
               if (Array.isArray(child)) {
-                child.forEach(item => checkForReassignmentOrSpread(item, childDepth));
+                child.forEach(item => checkForReassignmentOrSpread(item, childDepth, newInNestedFunction));
               } else {
-                checkForReassignmentOrSpread(child, childDepth);
+                checkForReassignmentOrSpread(child, childDepth, newInNestedFunction);
               }
             }
           };
 
-          checkForReassignmentOrSpread(node.value.body);
+          checkForReassignmentOrSpread(node.value.body, 0, false);
         }
 
         const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
@@ -901,7 +979,7 @@ export default {
         const { hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
         // Determine if we can auto-fix or need to provide error message
-        const canAutoFix = !hasUnsafeOptionalChaining && (hasSimpleReassignments || (!hasParameterReassignment && !hasParameterInSpread));
+        const canAutoFix = !hasUnsafeOptionalChaining && !hasParameterInNestedFunction && (hasSimpleReassignments || (!hasParameterReassignment && !hasParameterInSpread));
         const needsDecoratorRename = !canAutoFix &&
                                      hasParameterReassignments &&
                                      discourseComputedLocalName === 'computed';
@@ -909,13 +987,22 @@ export default {
         // Build a more descriptive error message for non-fixable cases
         let errorMessage = "Use '@computed(...)' instead of '@discourseComputed(...)'.";
 
-        if (hasUnsafeOptionalChaining) {
+        if (hasParameterInNestedFunction) {
+          // Parameter used in nested function where 'this' has different context
+          const propertyPath = decoratorArgs[paramNames.indexOf(nestedFunctionParam)] || nestedFunctionParam;
+          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${nestedFunctionParam}' is used inside a nested function.\n\n` +
+                        `Inside nested regular functions (not arrow functions), 'this' refers to a different context, so converting '${nestedFunctionParam}' to 'this.${propertyPath}' would be incorrect.\n\n` +
+                        `Convert to getter manually and either:\n` +
+                        `1. Use an arrow function: 'formatter: (votes) => { ... }'\n` +
+                        `2. Capture the value: 'const ${nestedFunctionParam} = this.${propertyPath}; ... formatter(votes) { ... }'`;
+        } else if (hasUnsafeOptionalChaining) {
           // Unsafe optional chaining case - parameter with nested properties used in member expression
           const paramIndex = paramNames.indexOf(unsafeOptionalChainingParam);
           const propertyPath = decoratorArgs[paramIndex] || unsafeOptionalChainingParam;
-          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${unsafeOptionalChainingParam}' with nested property path '${propertyPath}' would create unsafe optional chaining. ` +
+          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${unsafeOptionalChainingParam}' with nested property path '${propertyPath}' would create unsafe optional chaining.\n\n` +
                         `When the parameter is used in an expression that becomes the object of a member access (e.g., '(${unsafeOptionalChainingParam} || other).toLowerCase()'), ` +
-                        `optional chaining can produce undefined, making the method call unsafe. Convert to getter manually and handle the chaining explicitly.`;
+                        `optional chaining can produce undefined, making the method call unsafe.\n\n` +
+                        `Convert to getter manually and handle the chaining explicitly.`;
         } else if (hasParameterReassignment && !hasSimpleReassignments) {
           // Complex reassignment case - provide detailed error
           const reassignedParam = Object.keys(parameterReassignmentInfo)[0];
@@ -923,14 +1010,17 @@ export default {
           const propertyPath = decoratorArgs[paramNames.indexOf(reassignedParam)] || reassignedParam;
 
           if (info.hasUpdateExpression) {
-            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' uses update expressions (++/--). ` +
-                          `Convert to getter manually and use a local variable with explicit assignment. Example: 'let ${reassignedParam} = this.${propertyPath}; ${reassignedParam} += 1;'`;
+            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' uses update expressions (++/--).\n\n` +
+                          `Convert to getter manually and use a local variable with explicit assignment.\n` +
+                          `Example: 'let ${reassignedParam} = this.${propertyPath}; ${reassignedParam} += 1;'`;
           } else if (info.assignments.length > 0 && info.assignments[0].depth > 0) {
-            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' is reassigned inside a nested block (if/loop/etc). ` +
-                          `Convert to getter manually. Example: 'let ${reassignedParam} = this.${propertyPath};'`;
+            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' is reassigned inside a nested block (if/loop/etc).\n\n` +
+                          `Convert to getter manually.\n` +
+                          `Example: 'let ${reassignedParam} = this.${propertyPath};'`;
           } else {
-            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' has complex reassignment patterns. ` +
-                          `Convert to getter manually and use a local variable. Example: 'let ${reassignedParam} = this.${propertyPath};'`;
+            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' has complex reassignment patterns.\n\n` +
+                          `Convert to getter manually and use a local variable.\n` +
+                          `Example: 'let ${reassignedParam} = this.${propertyPath};'`;
           }
         } else if (hasParameterInSpread) {
           // Find which parameter is used in spread
@@ -972,7 +1062,7 @@ export default {
           });
 
           const propertyPath = decoratorArgs[paramNames.indexOf(spreadParam)] || spreadParam;
-          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${spreadParam}' is used in a spread operator. ` +
+          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${spreadParam}' is used in a spread operator.\n\n` +
                         `Example: Use '...(this.${propertyPath} || [])' or '...(this.${propertyPath} ?? [])' for safe spreading.`;
         }
 
