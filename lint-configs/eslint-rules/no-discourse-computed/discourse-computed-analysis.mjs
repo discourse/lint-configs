@@ -67,7 +67,12 @@ export function analyzeDiscourseComputedUsage(
       node.callee &&
       node.callee.type === "MemberExpression" &&
       node.callee.property &&
-      node.callee.property.name === "extend"
+      node.callee.property.name === "extend" &&
+      node.callee.object &&
+      node.callee.object.type === "Identifier" &&
+      /^(Component|Controller|Route|EmberObject|Service|Object)$/.test(
+        node.callee.object.name
+      )
     ) {
       node.arguments.forEach((arg) => {
         if (arg.type === "ObjectExpression") {
@@ -94,7 +99,12 @@ export function analyzeDiscourseComputedUsage(
             parent.callee &&
             parent.callee.type === "MemberExpression" &&
             parent.callee.property &&
-            parent.callee.property.name === "extend"
+            parent.callee.property.name === "extend" &&
+            parent.callee.object &&
+            parent.callee.object.type === "Identifier" &&
+            /^(Component|Controller|Route|EmberObject|Service|Object)$/.test(
+              parent.callee.object.name
+            )
           ) {
             isClassicClass = true;
             break;
@@ -188,11 +198,15 @@ export function analyzeDiscourseComputedUsage(
         .filter(Boolean);
     }
 
-    const paramNames =
-      methodNode.value && methodNode.value.params
-        ? methodNode.value.params.map((p) => p.name)
-        : [];
+    const functionNode = methodNode.value;
+    const paramNames = functionNode.params.map((p) => p.name);
 
+    if (paramNames.length === 0) {
+      return { canAutoFix: true };
+    }
+
+    // Use ESLint scope analysis to find all references to parameters
+    const scope = sourceCode.getScope(functionNode);
     const parameterReassignmentInfo = {};
     let hasParameterInSpread = false;
     let spreadParam = null;
@@ -201,255 +215,125 @@ export function analyzeDiscourseComputedUsage(
     let hasParameterInNestedFunction = false;
     let nestedFunctionParam = null;
 
-    if (paramNames.length > 0) {
-      const checkForReassignmentOrSpread = (
-        astNode,
-        depth = 0,
-        inNestedFunction = false
-      ) => {
-        if (!astNode || typeof astNode !== "object") {
-          return;
-        }
+    for (const variable of scope.variables) {
+      if (!paramNames.includes(variable.name) || variable.scope !== scope) {
+        continue;
+      }
 
-        const isNestedFunction =
-          (astNode.type === "FunctionExpression" ||
-            astNode.type === "FunctionDeclaration") &&
-          inNestedFunction === false;
-        const newInNestedFunction = inNestedFunction || isNestedFunction;
+      const paramIndex = paramNames.indexOf(variable.name);
+      const propertyPath = decoratorArgs[paramIndex] || variable.name;
 
-        if (
-          newInNestedFunction &&
-          astNode.type === "Identifier" &&
-          paramNames.includes(astNode.name)
-        ) {
-          const parent = astNode.parent;
+      for (const reference of variable.references) {
+        const refNode = reference.identifier;
+        const parent = refNode.parent;
+
+        // 1. Check for nested function usage (non-arrow)
+        // In ESLint scope, reference.from gives the scope where the reference occurs
+        let currentScope = reference.from;
+        while (currentScope && currentScope !== scope) {
           if (
-            !(
-              parent &&
-              parent.type === "FunctionExpression" &&
-              parent.id === astNode
-            )
+            currentScope.type === "function" &&
+            currentScope.block.type !== "ArrowFunctionExpression"
           ) {
             hasParameterInNestedFunction = true;
-            nestedFunctionParam = astNode.name;
+            nestedFunctionParam = variable.name;
+            break;
+          }
+          currentScope = currentScope.upper;
+        }
+
+        // 2. Check for reassignment
+        if (reference.isWrite()) {
+          if (!parameterReassignmentInfo[variable.name]) {
+            parameterReassignmentInfo[variable.name] = {
+              assignments: [],
+              hasUpdateExpression: false,
+            };
+          }
+
+          if (parent.type === "UpdateExpression") {
+            parameterReassignmentInfo[variable.name].hasUpdateExpression = true;
+          } else if (parent.type === "AssignmentExpression") {
+            // Determine nesting depth for reassignment
+            let depth = 0;
+            let ancestor = parent.parent;
+            while (ancestor && ancestor !== functionNode.body) {
+              if (
+                /^(If|For|While|DoWhile|Switch|Try)Statement$/.test(
+                  ancestor.type
+                )
+              ) {
+                depth++;
+              }
+              ancestor = ancestor.parent;
+            }
+
+            parameterReassignmentInfo[variable.name].assignments.push({
+              node: parent,
+              depth,
+            });
           }
         }
 
-        // Unsafe optional chaining checks
-        if (astNode.type === "MemberExpression" && astNode.object) {
-          if (
-            astNode.object.type === "LogicalExpression" ||
-            astNode.object.type === "ConditionalExpression"
+        // 3. Check for spread usage
+        let spreadCheck = parent;
+        while (spreadCheck && spreadCheck !== functionNode.body) {
+          if (spreadCheck.type === "SpreadElement") {
+            // Check if it's a "safe" spread pattern: ...(param || [])
+            const arg = spreadCheck.argument;
+            const isSafe =
+              arg.type === "LogicalExpression" &&
+              (arg.operator === "||" || arg.operator === "??") &&
+              arg.right.type === "ArrayExpression";
+
+            if (!isSafe) {
+              hasParameterInSpread = true;
+              spreadParam = variable.name;
+            }
+            break;
+          }
+          spreadCheck = spreadCheck.parent;
+        }
+
+        // 4. Check for unsafe optional chaining
+        const isNestedProperty =
+          propertyPath.includes(".") ||
+          propertyPath.includes("{") ||
+          propertyPath.includes("@") ||
+          propertyPath.includes("[");
+
+        if (isNestedProperty) {
+          let current = refNode;
+          let inUnsafeLogical = false;
+
+          while (
+            current.parent &&
+            (current.parent.type === "LogicalExpression" ||
+              current.parent.type === "ConditionalExpression" ||
+              current.parent.type === "MemberExpression")
           ) {
-            const hasSafeLiteralFallback = (expr) =>
-              expr.type === "LogicalExpression" &&
-              (expr.operator === "||" || expr.operator === "??") &&
-              expr.right.type === "Literal";
+            const p = current.parent;
 
-            if (!hasSafeLiteralFallback(astNode.object)) {
-              const checkForNestedProps = (childNode) => {
-                if (!childNode || typeof childNode !== "object") {
-                  return false;
-                }
-                if (
-                  childNode.type === "Identifier" &&
-                  paramNames.includes(childNode.name)
-                ) {
-                  const idx = paramNames.indexOf(childNode.name);
-                  const propertyPath = decoratorArgs[idx] || childNode.name;
-                  if (
-                    propertyPath.includes(".") ||
-                    propertyPath.includes("{") ||
-                    propertyPath.includes("@") ||
-                    propertyPath.includes("[")
-                  ) {
-                    hasUnsafeOptionalChaining = true;
-                    unsafeOptionalChainingParam = childNode.name;
-                    return true;
-                  }
-                }
-                if (
-                  childNode.type === "LogicalExpression" ||
-                  childNode.type === "ConditionalExpression"
-                ) {
-                  return (
-                    checkForNestedProps(childNode.left) ||
-                    checkForNestedProps(childNode.right) ||
-                    (childNode.alternate &&
-                      checkForNestedProps(childNode.alternate))
-                  );
-                }
-                return false;
-              };
-              checkForNestedProps(astNode.object);
+            if (p.type === "LogicalExpression") {
+              const isSafeFallback =
+                (p.operator === "||" || p.operator === "??") &&
+                p.right.type === "Literal";
+              if (!isSafeFallback) {
+                inUnsafeLogical = true;
+              }
+            } else if (p.type === "ConditionalExpression") {
+              inUnsafeLogical = true;
+            } else if (p.type === "MemberExpression") {
+              if (inUnsafeLogical && p.object === current) {
+                hasUnsafeOptionalChaining = true;
+                unsafeOptionalChainingParam = variable.name;
+                break;
+              }
             }
+            current = p;
           }
         }
-
-        if (
-          astNode.type === "AssignmentExpression" &&
-          astNode.left &&
-          astNode.left.type === "Identifier" &&
-          paramNames.includes(astNode.left.name)
-        ) {
-          const paramName = astNode.left.name;
-          if (!parameterReassignmentInfo[paramName]) {
-            parameterReassignmentInfo[paramName] = {
-              assignments: [],
-              hasUpdateExpression: false,
-            };
-          }
-          parameterReassignmentInfo[paramName].assignments.push({
-            node: astNode,
-            depth,
-          });
-          return;
-        }
-
-        if (
-          astNode.type === "UpdateExpression" &&
-          astNode.argument &&
-          astNode.argument.type === "Identifier" &&
-          paramNames.includes(astNode.argument.name)
-        ) {
-          const paramName = astNode.argument.name;
-          if (!parameterReassignmentInfo[paramName]) {
-            parameterReassignmentInfo[paramName] = {
-              assignments: [],
-              hasUpdateExpression: false,
-            };
-          }
-          parameterReassignmentInfo[paramName].hasUpdateExpression = true;
-          return;
-        }
-
-        if (astNode.type === "SpreadElement") {
-          const isSafeArrayFallback = (childNode) =>
-            childNode?.type === "ArrayExpression";
-
-          const checkSpreadArgument = (
-            childNode,
-            isTopLevel = true,
-            isInSafeContext = false
-          ) => {
-            if (!childNode) {
-              return;
-            }
-            if (isTopLevel) {
-              if (
-                childNode.type === "LogicalExpression" &&
-                (childNode.operator === "||" ||
-                  childNode.operator === "??") &&
-                isSafeArrayFallback(childNode.right)
-              ) {
-                return;
-              }
-              if (
-                childNode.type === "ConditionalExpression" &&
-                isSafeArrayFallback(childNode.alternate)
-              ) {
-                return;
-              }
-            }
-
-            if (
-              childNode.type === "Identifier" &&
-              paramNames.includes(childNode.name)
-            ) {
-              if (!isInSafeContext) {
-                hasParameterInSpread = true;
-                spreadParam = childNode.name;
-              }
-              return;
-            }
-
-            if (childNode.type === "MemberExpression") {
-              let obj = childNode.object;
-              while (obj) {
-                if (
-                  obj.type === "Identifier" &&
-                  paramNames.includes(obj.name)
-                ) {
-                  if (!isInSafeContext) {
-                    hasParameterInSpread = true;
-                    spreadParam = obj.name;
-                  }
-                  return;
-                }
-                if (obj.type === "MemberExpression") {
-                  obj = obj.object;
-                } else {
-                  break;
-                }
-              }
-            }
-
-            if (childNode.type === "ParenthesizedExpression") {
-              checkSpreadArgument(
-                childNode.expression,
-                isTopLevel,
-                isInSafeContext
-              );
-              return;
-            }
-
-            if (!isTopLevel) {
-              if (childNode.type === "LogicalExpression") {
-                checkSpreadArgument(childNode.left, false, isInSafeContext);
-                checkSpreadArgument(childNode.right, false, isInSafeContext);
-              }
-              if (childNode.type === "ConditionalExpression") {
-                checkSpreadArgument(childNode.test, false, isInSafeContext);
-                checkSpreadArgument(
-                  childNode.consequent,
-                  false,
-                  isInSafeContext
-                );
-                checkSpreadArgument(
-                  childNode.alternate,
-                  false,
-                  isInSafeContext
-                );
-              }
-            }
-          };
-
-          checkSpreadArgument(astNode.argument);
-        }
-
-        const isNestingNode =
-          astNode.type === "IfStatement" ||
-          astNode.type === "ForStatement" ||
-          astNode.type === "WhileStatement" ||
-          astNode.type === "DoWhileStatement" ||
-          astNode.type === "SwitchStatement" ||
-          astNode.type === "TryStatement";
-
-        for (const key in astNode) {
-          if (key === "parent" || key === "range" || key === "loc") {
-            continue;
-          }
-          const child = astNode[key];
-          const childDepth = isNestingNode ? depth + 1 : depth;
-          if (Array.isArray(child)) {
-            child.forEach((item) =>
-              checkForReassignmentOrSpread(
-                item,
-                childDepth,
-                newInNestedFunction
-              )
-            );
-          } else {
-            checkForReassignmentOrSpread(
-              child,
-              childDepth,
-              newInNestedFunction
-            );
-          }
-        }
-      };
-
-      checkForReassignmentOrSpread(methodNode.value.body, 0, false);
+      }
     }
 
     const hasParameterReassignment =

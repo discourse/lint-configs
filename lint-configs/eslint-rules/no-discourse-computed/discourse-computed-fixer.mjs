@@ -130,71 +130,69 @@ export function createMethodFix(
         }
       }
 
-      const traverse = (astNode) => {
-        if (!astNode || typeof astNode !== "object") {
-          return;
+      // Use ESLint scope analysis to find all references to parameters
+      const scope = sourceCode.getScope(node.value);
+      for (const variable of scope.variables) {
+        if (!paramToProperty[variable.name] || variable.scope !== scope) {
+          continue;
         }
 
-        if (astNode.type === "Identifier" && paramToProperty[astNode.name]) {
-          const parent = astNode.parent;
+        const propertyPath = paramToProperty[variable.name];
+
+        for (const reference of variable.references) {
+          const refNode = reference.identifier;
+          const parent = refNode.parent;
 
           // contexts to skip
           if (
             parent &&
             parent.type === "Property" &&
-            parent.key === astNode &&
+            parent.key === refNode &&
             !parent.shorthand
           ) {
-            return;
+            continue;
           }
           if (
             parent &&
             parent.type === "Property" &&
-            parent.key === astNode &&
-            parent.value !== astNode
+            parent.key === refNode &&
+            parent.value !== refNode
           ) {
-            return;
+            continue;
           }
           if (
             parent &&
             parent.type === "MemberExpression" &&
-            parent.property === astNode &&
+            parent.property === refNode &&
             !parent.computed
           ) {
-            return;
+            continue;
           }
-          if (
-            parent &&
-            parent.type === "AssignmentExpression" &&
-            parent.left === astNode
-          ) {
-            return;
-          }
-          if (parent && parent.type === "UpdateExpression") {
-            return;
+          if (reference.isWrite()) {
+            continue;
           }
 
           // shorthand property: { foo } -> { foo: this.foo }
           if (parent && parent.type === "Property" && parent.shorthand) {
             const access = propertyPathToOptionalChaining(
-              paramToProperty[astNode.name],
+              propertyPath,
               true,
               false
             );
             replacements.push({
-              range: astNode.range,
-              text: `${astNode.name}: ${access}`,
+              range: refNode.range,
+              text: `${refNode.name}: ${access}`,
             });
-            return;
+            continue;
           }
 
           const isInMemberExpression =
             parent &&
             parent.type === "MemberExpression" &&
-            parent.object === astNode;
+            parent.object === refNode;
 
           const access = propertyPathToOptionalChaining(
-            paramToProperty[astNode.name],
+            propertyPath,
             true,
             isInMemberExpression
           );
@@ -202,13 +200,13 @@ export function createMethodFix(
           if (isInMemberExpression && access.endsWith("?.")) {
             // Replace identifier with access without trailing '?.'
             replacements.push({
-              range: astNode.range,
+              range: refNode.range,
               text: access.slice(0, -2),
             });
 
             // adjust following punctuation to avoid '?..' (replace '.' with '?.' or insert '?.' before '[')
             const fullText = sourceCode.getText();
-            let pos = astNode.range[1];
+            let pos = refNode.range[1];
             while (pos < fullText.length && /\s/.test(fullText.charAt(pos))) {
               pos++;
             }
@@ -247,9 +245,7 @@ export function createMethodFix(
             }
 
             // Additionally, propagate optional chaining to chained call/member sequences.
-            // e.g. this.foo?.map(...).filter(...) -> after replacing object, we also want to turn
-            // the '.' before 'filter' into '?.'. Walk up through call->member chains and replace dots.
-            let ancestor = parent.parent; // parent is MemberExpression, parent.parent might be CallExpression
+            let ancestor = parent.parent;
             while (ancestor) {
               if (
                 ancestor.type === "CallExpression" &&
@@ -264,37 +260,16 @@ export function createMethodFix(
                 if (fullText.charAt(p) === ".") {
                   replacements.push({ range: [p, p + 1], text: "?." });
                 }
-                // move up: ancestor.parent is MemberExpression; check if that MemberExpression is then used in another CallExpression
                 ancestor = ancestor.parent.parent;
                 continue;
               }
               break;
             }
           } else {
-            replacements.push({ range: astNode.range, text: access });
+            replacements.push({ range: refNode.range, text: access });
           }
         }
-
-        for (const key in astNode) {
-          if (key === "parent" || key === "range" || key === "loc") {
-            continue;
-          }
-          const child = astNode[key];
-          if (Array.isArray(child)) {
-            child.forEach((c) => {
-              if (c && typeof c === "object") {
-                c.parent = astNode;
-                traverse(c);
-              }
-            });
-          } else if (child && typeof child === "object") {
-            child.parent = astNode;
-            traverse(child);
-          }
-        }
-      };
-
-      traverse(methodBody);
+      }
 
       // Apply replacements from end to start in a single pass so fixes don't overlap
       replacements.sort((a, b) => b.range[0] - a.range[0]);
