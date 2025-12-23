@@ -21,6 +21,65 @@ export default {
     let computedImportName = null; // Track what name to use for computed from @ember/object
     let importsAnalyzed = false; // Track if we've scanned all imports
 
+    // Helper function to extract the clean attribute path before special tokens
+    function niceAttr(attr) {
+      const parts = attr.split(".");
+      let i;
+
+      for (i = 0; i < parts.length; i++) {
+        if (parts[i] === "@each" || parts[i] === "[]" || parts[i].includes("{")) {
+          break;
+        }
+      }
+
+      return parts.slice(0, i).join(".");
+    }
+
+    // Helper function to convert property path to optional chaining with this
+    // e.g., "model.poll.title" -> "this.model?.poll?.title"
+    // e.g., "data.0.value" -> "this.data?.[0]?.value"
+    // e.g., "items.@each.value" -> "this.items?" (uses niceAttr, adds trailing ?)
+    function propertyPathToOptionalChaining(propertyPath) {
+      // First, apply niceAttr to handle @each, [], and {} cases
+      const cleanPath = niceAttr(propertyPath);
+      const wasExtracted = cleanPath !== propertyPath;
+
+      if (!cleanPath) {
+        return "this";
+      }
+
+      const parts = cleanPath.split(".");
+      let result = "this";
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+
+        // Check if this part is a numeric index
+        if (/^\d+$/.test(part)) {
+          // Use bracket notation for numeric indices with optional chaining
+          result += `?.[${part}]`;
+        } else {
+          // First property uses . (since this is always defined)
+          // Subsequent properties use ?. for optional chaining
+          if (i === 0) {
+            result += `.${part}`;
+          } else {
+            result += `?.${part}`;
+          }
+        }
+      }
+
+      // If the path was extracted (had special tokens) and has only one part,
+      // add optional chaining to the end
+      // This handles cases like "items.@each.value" -> "this.items?"
+      // But not "user.posts.@each.likes" -> "this.user?.posts" (already has optional chaining)
+      if (wasExtracted && parts.length === 1) {
+        result += "?";
+      }
+
+      return result;
+    }
+
     // Helper function to scan all imports in the file
     function analyzeAllImports() {
       if (importsAnalyzed) {
@@ -90,7 +149,6 @@ export default {
       }
 
       const info = {
-        hasNestedProps: false,
         hasFixableDecorators: false,
         hasClassicClassDecorators: false,
         hasParameterReassignments: false,
@@ -161,17 +219,6 @@ export default {
         });
 
         if (discourseDecorator) {
-          // Extract decorator arguments
-          let hasNestedProperty = false;
-          if (discourseDecorator.expression.type === 'CallExpression') {
-            const args = discourseDecorator.expression.arguments;
-            hasNestedProperty = args.some(arg => {
-              return arg.type === 'Literal' &&
-                     typeof arg.value === 'string' &&
-                     arg.value.includes('.');
-            });
-          }
-
           // Check if any parameters are reassigned
           const paramNames = member.value.params.map((param) => param.name);
           let hasParameterReassignment = false;
@@ -217,9 +264,7 @@ export default {
             checkForReassignment(member.value.body);
           }
 
-          if (hasNestedProperty) {
-            info.hasNestedProps = true;
-          } else if (hasParameterReassignment) {
+          if (hasParameterReassignment) {
             info.hasParameterReassignments = true;
           } else {
             info.hasFixableDecorators = true;
@@ -276,7 +321,7 @@ export default {
 
           if (defaultSpecifier) {
             // Analyze all @discourseComputed usage in the file using AST
-            const { hasNestedProps, hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments } = analyzeDiscourseComputedUsage();
+            const { hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
             context.report({
               node: defaultSpecifier,
@@ -301,9 +346,9 @@ export default {
                   ? 'computed'
                   : `computed as ${computedImportName}`;
 
-                // If there are nested properties, classic class decorators, or parameter reassignments,
+                // If there are classic class decorators or parameter reassignments,
                 // we keep the discourseComputed import. Otherwise, we remove it
-                if (!hasNestedProps && !hasClassicClassDecorators && !hasParameterReassignments) {
+                if (!hasClassicClassDecorators && !hasParameterReassignments) {
                   if (namedSpecifiers.length > 0) {
                     // Keep named imports, remove default import
                     fixes.push(
@@ -362,7 +407,7 @@ export default {
                     }
                   }
                 } else {
-                  // Has nested props, classic class decorators, or parameter reassignments, but also has fixable decorators
+                  // Has classic class decorators or parameter reassignments, but also has fixable decorators
                   // Keep discourseComputed import but add computed for the fixable ones
 
                   // If the default import is named 'computed', rename it to 'discourseComputed'
@@ -519,7 +564,7 @@ export default {
           return;
         }
 
-        // Get decorator arguments to check for nested properties
+        // Get decorator arguments
         const decoratorExpression = discourseComputedDecorator.expression;
         let decoratorArgs = [];
         if (decoratorExpression.type === "CallExpression") {
@@ -530,11 +575,6 @@ export default {
             return null;
           }).filter(Boolean);
         }
-
-        // Check if any decorator argument contains a nested property reference (.)
-        const hasNestedProperty = decoratorArgs.some((arg) =>
-          typeof arg === "string" && arg.includes(".")
-        );
 
         // Check if any parameters are reassigned in the method body
         // This requires manual intervention, so we skip auto-fix
@@ -585,15 +625,15 @@ export default {
         // Check if we need to rename non-fixable decorators
         // This happens when: import was originally named 'computed', we're keeping it (mixed scenario),
         // and we renamed it to 'discourseComputed'
-        const { hasNestedProps } = analyzeDiscourseComputedUsage();
-        const needsDecoratorRename = (hasNestedProperty || hasParameterReassignment) &&
-                                     hasNestedProps &&
+        const { hasParameterReassignments } = analyzeDiscourseComputedUsage();
+        const needsDecoratorRename = hasParameterReassignment &&
+                                     hasParameterReassignments &&
                                      discourseComputedLocalName === 'computed';
 
         context.report({
           node: discourseComputedDecorator,
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
-          fix: (hasNestedProperty || hasParameterReassignment)
+          fix: hasParameterReassignment
             ? (needsDecoratorRename ? function(fixer) {
                 // Just rename the decorator to match the renamed import
                 if (decoratorExpression.type === "CallExpression") {
@@ -687,19 +727,21 @@ export default {
 
                   // Handle shorthand properties: { userId } -> { userId: this.userId }
                   if (parent && parent.type === 'Property' && parent.shorthand) {
-                    const propertyName = paramToProperty[astNode.name];
+                    const propertyPath = paramToProperty[astNode.name];
+                    const optionalChainingAccess = propertyPathToOptionalChaining(propertyPath);
                     replacements.push({
                       range: astNode.range,
-                      text: `${astNode.name}: this.${propertyName}`
+                      text: `${astNode.name}: ${optionalChainingAccess}`
                     });
                     return;
                   }
 
                   // This identifier should be replaced
-                  const propertyName = paramToProperty[astNode.name];
+                  const propertyPath = paramToProperty[astNode.name];
+                  const optionalChainingAccess = propertyPathToOptionalChaining(propertyPath);
                   replacements.push({
                     range: astNode.range,
-                    text: `this.${propertyName}`
+                    text: optionalChainingAccess
                   });
                 }
 

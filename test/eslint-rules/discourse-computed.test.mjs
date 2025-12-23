@@ -158,7 +158,7 @@ ruleTester.run("discourse-computed", rule, {
       ].join("\n")
     },
     {
-      name: "discourseComputed with nested property - no auto-fix",
+      name: "discourseComputed with nested property - auto-fix with optional chaining",
       code: [
         "import discourseComputed from \"discourse/lib/decorators\";",
         "class MyClass {",
@@ -177,10 +177,18 @@ ruleTester.run("discourse-computed", rule, {
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
         }
       ],
-      output: null
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"model.property\")",
+        "  get myComputed() {",
+        "    return this.model?.property + 1;",
+        "  }",
+        "}"
+      ].join("\n")
     },
     {
-      name: "discourseComputed with multiple properties including nested - no auto-fix",
+      name: "discourseComputed with multiple properties including nested - auto-fix with optional chaining",
       code: [
         "import discourseComputed from \"discourse/lib/decorators\";",
         "class MyClass {",
@@ -199,10 +207,18 @@ ruleTester.run("discourse-computed", rule, {
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
         }
       ],
-      output: null
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"simpleProperty\", \"model.nestedProperty\")",
+        "  get myComputed() {",
+        "    return this.simpleProperty + this.model?.nestedProperty;",
+        "  }",
+        "}"
+      ].join("\n")
     },
     {
-      name: "mixing will fix / won't fix examples",
+      name: "mixing fixable examples with parameter reassignments",
       code: [
         "import { action } from \"@ember/object\";",
         "import discourseComputed from \"discourse/lib/decorators\";",
@@ -217,9 +233,10 @@ ruleTester.run("discourse-computed", rule, {
         "    return someProperty + 1;",
         "  }",
         "",
-        "  @discourseComputed(\"model.property\")",
-        "  myDiscourseComputed(modelProperty) {",
-        "    return modelProperty + 1;",
+        "  @discourseComputed(\"title\")",
+        "  titleLength(title) {",
+        "    title = title || \"\";",
+        "    return title.length;",
         "  }",
         "}"
       ].join("\n"),
@@ -252,9 +269,10 @@ ruleTester.run("discourse-computed", rule, {
         "    return this.someProperty + 1;",
         "  }",
         "",
-        "  @discourseComputed(\"model.property\")",
-        "  myDiscourseComputed(modelProperty) {",
-        "    return modelProperty + 1;",
+        "  @discourseComputed(\"title\")",
+        "  titleLength(title) {",
+        "    title = title || \"\";",
+        "    return title.length;",
         "  }",
         "}"
       ].join("\n")
@@ -715,7 +733,7 @@ ruleTester.run("discourse-computed", rule, {
       ].join("\n")
     },
     {
-      name: "mixed fixable and non-fixable with computed name conflict",
+      name: "multiple fixable decorators with computed name conflict",
       code: [
         "import computed, { debounce } from \"discourse/lib/decorators\";",
         "class MyClass {",
@@ -743,12 +761,12 @@ ruleTester.run("discourse-computed", rule, {
         }
       ],
       output: [
-        "import discourseComputed, { debounce } from \"discourse/lib/decorators\";",
+        "import { debounce } from \"discourse/lib/decorators\";",
         "import { computed } from \"@ember/object\";",
         "class MyClass {",
-        "  @discourseComputed(\"foo.{bar,baz}\")",
-        "  nestedComputed(foo) {",
-        "    return foo.bar + foo.baz;",
+        "  @computed(\"foo.{bar,baz}\")",
+        "  get nestedComputed() {",
+        "    return this.foo?.bar + this.foo?.baz;",
         "  }",
         "",
         "  @computed(\"someProperty\")",
@@ -785,6 +803,248 @@ ruleTester.run("discourse-computed", rule, {
         "  @emberComputed(\"someProperty\")",
         "  get myComputed() {",
         "    return this.someProperty + 1;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with nested properties - auto-fix with optional chaining",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"model.poll.title\", \"model.post.topic.title\")",
+        "  title(pollTitle, topicTitle) {",
+        "    return pollTitle ? htmlSafe(pollTitle) : topicTitle;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"model.poll.title\", \"model.post.topic.title\")",
+        "  get title() {",
+        "    return this.model?.poll?.title ? htmlSafe(this.model?.poll?.title) : this.model?.post?.topic?.title;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with single nested property - auto-fix with optional chaining",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"user.profile.name\")",
+        "  userName(name) {",
+        "    return name.toUpperCase();",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"user.profile.name\")",
+        "  get userName() {",
+        "    return this.user?.profile?.name.toUpperCase();",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with @each - auto-fix with optional chaining to extracted path",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"items.@each.value\")",
+        "  totalValue(items) {",
+        "    return items.reduce((sum, item) => sum + item.value, 0);",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"items.@each.value\")",
+        "  get totalValue() {",
+        "    return this.items?.reduce((sum, item) => sum + item.value, 0);",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with [] - auto-fix with optional chaining to extracted path",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"categories.[]\")",
+        "  categoryCount(categories) {",
+        "    return categories.length;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"categories.[]\")",
+        "  get categoryCount() {",
+        "    return this.categories?.length;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with {} - auto-fix with optional chaining to extracted path",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"foo.{bar,baz}\")",
+        "  combined(foo) {",
+        "    return foo.bar + foo.baz;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"foo.{bar,baz}\")",
+        "  get combined() {",
+        "    return this.foo?.bar + this.foo?.baz;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with array element access - auto-fix with bracket notation",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"totalsForSample.1.value\", \"model.data.length\")",
+        "  averageForSample(totals, count) {",
+        "    const averageLabel = this.model.computedLabels.at(-1);",
+        "    return averageLabel.compute({ y: (totals / count).toFixed(0) }).formattedValue;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"totalsForSample.1.value\", \"model.data.length\")",
+        "  get averageForSample() {",
+        "    const averageLabel = this.model.computedLabels.at(-1);",
+        "    return averageLabel.compute({ y: (this.totalsForSample?.[1]?.value / this.model?.data?.length).toFixed(0) }).formattedValue;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with mixed nested and @each - auto-fix both with optional chaining",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"user.posts.@each.likes\", \"user.profile.totalLikes\")",
+        "  likesInfo(posts, totalLikes) {",
+        "    return { posts, totalLikes };",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"user.posts.@each.likes\", \"user.profile.totalLikes\")",
+        "  get likesInfo() {",
+        "    return { posts: this.user?.posts, totalLikes: this.user?.profile?.totalLikes };",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with deeply nested array access",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"data.results.0.items.1.value\")",
+        "  specificValue(value) {",
+        "    return value * 2;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"data.results.0.items.1.value\")",
+        "  get specificValue() {",
+        "    return this.data?.results?.[0]?.items?.[1]?.value * 2;",
         "  }",
         "}"
       ].join("\n")
