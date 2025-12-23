@@ -1213,6 +1213,118 @@ ruleTester.run("no-discourse-computed", rule, {
       output: null
     },
     {
+      name: "discourseComputed with parameter in spread with logical fallback - auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"parentCategory.ancestors\")",
+        "  ancestors(parentAncestors) {",
+        "    return [...(parentAncestors || []), this];",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"parentCategory.ancestors\")",
+        "  get ancestors() {",
+        "    return [...(this.parentCategory?.ancestors || []), this];",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with parameter in spread with nullish coalescing fallback - auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"model.items\")",
+        "  allItems(items) {",
+        "    return [...(items ?? []), this.defaultItem];",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"model.items\")",
+        "  get allItems() {",
+        "    return [...(this.model?.items ?? []), this.defaultItem];",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with parameter in spread with ternary fallback - auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"user.tags\")",
+        "  displayTags(tags) {",
+        "    return [...(tags ? tags : [])];",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"user.tags\")",
+        "  get displayTags() {",
+        "    return [...(this.user?.tags ? this.user?.tags : [])];",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with parameter in unsafe spread (no fallback) - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"items\")",
+        "  allItems(items) {",
+        "    return [...items, this.defaultItem];",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'items' is used in a spread operator.\n\nExample: Use '...(this.items || [])' or '...(this.items ?? [])' for safe spreading."
+        }
+      ],
+      output: null
+    },
+    {
       name: "discourseComputed with update expression - no auto-fix",
       code: [
         "import discourseComputed from \"discourse/lib/decorators\";",

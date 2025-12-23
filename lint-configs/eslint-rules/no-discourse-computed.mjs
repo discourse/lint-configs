@@ -352,11 +352,38 @@ export default {
 
               // Check for spread elements containing parameters
               if (astNode.type === 'SpreadElement') {
-                const checkSpreadArgument = (node) => {
+                const isSafeArrayFallback = (node) => {
+                  // Check if node is an array literal or array expression
+                  return node?.type === 'ArrayExpression';
+                };
+
+                const checkSpreadArgument = (node, isTopLevel = true, isInSafeContext = false) => {
                   if (!node) return;
 
+                  // At the top level, check for safe fallback patterns first
+                  if (isTopLevel) {
+                    // Safe pattern: ...(param || []) or ...(param ?? [])
+                    if (node.type === 'LogicalExpression' &&
+                        (node.operator === '||' || node.operator === '??') &&
+                        isSafeArrayFallback(node.right)) {
+                      // This is a safe pattern, don't mark as unsafe
+                      // We can safely skip this - parameters will be replaced normally in the body
+                      return;
+                    }
+
+                    // Safe pattern: ...(condition ? param : []) or similar with safe alternate
+                    if (node.type === 'ConditionalExpression' &&
+                        isSafeArrayFallback(node.alternate)) {
+                      // This is a safe pattern, don't mark as unsafe
+                      // We can safely skip this - parameters will be replaced normally in the body
+                      return;
+                    }
+                  }
+
                   if (node.type === 'Identifier' && paramNames.includes(node.name)) {
-                    hasParameterInSpread = true;
+                    if (!isInSafeContext) {
+                      hasParameterInSpread = true;
+                    }
                     return;
                   }
 
@@ -364,7 +391,9 @@ export default {
                     let obj = node.object;
                     while (obj) {
                       if (obj.type === 'Identifier' && paramNames.includes(obj.name)) {
-                        hasParameterInSpread = true;
+                        if (!isInSafeContext) {
+                          hasParameterInSpread = true;
+                        }
                         return;
                       }
                       if (obj.type === 'MemberExpression') {
@@ -372,6 +401,28 @@ export default {
                       } else {
                         break;
                       }
+                    }
+                  }
+
+                  // Check inside parenthesized expressions
+                  if (node.type === 'ParenthesizedExpression') {
+                    checkSpreadArgument(node.expression, isTopLevel, isInSafeContext);
+                    return;
+                  }
+
+                  // For nested contexts (not at top level), recursively check
+                  if (!isTopLevel) {
+                    if (node.type === 'LogicalExpression') {
+                      checkSpreadArgument(node.left, false, isInSafeContext);
+                      checkSpreadArgument(node.right, false, isInSafeContext);
+                      return;
+                    }
+
+                    if (node.type === 'ConditionalExpression') {
+                      checkSpreadArgument(node.test, false, isInSafeContext);
+                      checkSpreadArgument(node.consequent, false, isInSafeContext);
+                      checkSpreadArgument(node.alternate, false, isInSafeContext);
+                      return;
                     }
                   }
                 };
@@ -751,6 +802,7 @@ export default {
         // Check if any parameters are reassigned in the method body
         const paramNames = node.value.params.map((param) => param.name);
         let hasParameterInSpread = false;
+        let spreadParam = null;
         let hasUnsafeOptionalChaining = false;
         let unsafeOptionalChainingParam = null;
         let hasParameterInNestedFunction = false;
@@ -874,12 +926,40 @@ export default {
 
             // Check for spread elements containing parameters or their properties
             if (astNode.type === 'SpreadElement') {
-              const checkSpreadArgument = (node) => {
+              const isSafeArrayFallback = (node) => {
+                // Check if node is an array literal or array expression
+                return node?.type === 'ArrayExpression';
+              };
+
+              const checkSpreadArgument = (node, isTopLevel = true, isInSafeContext = false) => {
                 if (!node) return;
+
+                // At the top level, check for safe fallback patterns first
+                if (isTopLevel) {
+                  // Safe pattern: ...(param || []) or ...(param ?? [])
+                  if (node.type === 'LogicalExpression' &&
+                      (node.operator === '||' || node.operator === '??') &&
+                      isSafeArrayFallback(node.right)) {
+                    // This is a safe pattern, don't mark as unsafe
+                    // We can safely skip this - parameters will be replaced normally in the body
+                    return;
+                  }
+
+                  // Safe pattern: ...(condition ? param : []) or similar with safe alternate
+                  if (node.type === 'ConditionalExpression' &&
+                      isSafeArrayFallback(node.alternate)) {
+                    // This is a safe pattern, don't mark as unsafe
+                    // We can safely skip this - parameters will be replaced normally in the body
+                    return;
+                  }
+                }
 
                 // Direct parameter: ...param
                 if (node.type === 'Identifier' && paramNames.includes(node.name)) {
-                  hasParameterInSpread = true;
+                  if (!isInSafeContext) {
+                    hasParameterInSpread = true;
+                    spreadParam = node.name;
+                  }
                   return;
                 }
 
@@ -888,7 +968,10 @@ export default {
                   let obj = node.object;
                   while (obj) {
                     if (obj.type === 'Identifier' && paramNames.includes(obj.name)) {
-                      hasParameterInSpread = true;
+                      if (!isInSafeContext) {
+                        hasParameterInSpread = true;
+                        spreadParam = obj.name;
+                      }
                       return;
                     }
                     if (obj.type === 'MemberExpression') {
@@ -896,6 +979,28 @@ export default {
                     } else {
                       break;
                     }
+                  }
+                }
+
+                // Check inside parenthesized expressions
+                if (node.type === 'ParenthesizedExpression') {
+                  checkSpreadArgument(node.expression, isTopLevel, isInSafeContext);
+                  return;
+                }
+
+                // For nested contexts (not at top level), recursively check
+                if (!isTopLevel) {
+                  if (node.type === 'LogicalExpression') {
+                    checkSpreadArgument(node.left, false, isInSafeContext);
+                    checkSpreadArgument(node.right, false, isInSafeContext);
+                    return;
+                  }
+
+                  if (node.type === 'ConditionalExpression') {
+                    checkSpreadArgument(node.test, false, isInSafeContext);
+                    checkSpreadArgument(node.consequent, false, isInSafeContext);
+                    checkSpreadArgument(node.alternate, false, isInSafeContext);
+                    return;
                   }
                 }
               };
@@ -1023,44 +1128,7 @@ export default {
                           `Example: 'let ${reassignedParam} = this.${propertyPath};'`;
           }
         } else if (hasParameterInSpread) {
-          // Find which parameter is used in spread
-          const spreadParam = paramNames.find(paramName => {
-            let found = false;
-            const checkNode = (astNode) => {
-              if (!astNode || typeof astNode !== 'object' || found) return;
-
-              if (astNode.type === 'SpreadElement') {
-                const arg = astNode.argument;
-                if (arg?.type === 'Identifier' && arg.name === paramName) {
-                  found = true;
-                  return;
-                }
-                if (arg?.type === 'MemberExpression') {
-                  let obj = arg.object;
-                  while (obj) {
-                    if (obj.type === 'Identifier' && obj.name === paramName) {
-                      found = true;
-                      return;
-                    }
-                    obj = obj.type === 'MemberExpression' ? obj.object : null;
-                  }
-                }
-              }
-
-              for (const key in astNode) {
-                if (key === 'parent' || key === 'range' || key === 'loc') continue;
-                const child = astNode[key];
-                if (Array.isArray(child)) {
-                  child.forEach(item => checkNode(item));
-                } else {
-                  checkNode(child);
-                }
-              }
-            };
-            checkNode(node.value.body);
-            return found;
-          });
-
+          // Use the spreadParam that was captured during traversal
           const propertyPath = decoratorArgs[paramNames.indexOf(spreadParam)] || spreadParam;
           errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${spreadParam}' is used in a spread operator.\n\n` +
                         `Example: Use '...(this.${propertyPath} || [])' or '...(this.${propertyPath} ?? [])' for safe spreading.`;
@@ -1160,6 +1228,11 @@ export default {
                   const consequent = replaceIdentifiersInExpression(expr.consequent);
                   const alternate = replaceIdentifiersInExpression(expr.alternate);
                   return `${test} ? ${consequent} : ${alternate}`;
+                }
+
+                if (expr.type === 'SpreadElement') {
+                  const argument = replaceIdentifiersInExpression(expr.argument);
+                  return `...${argument}`;
                 }
 
                 if (expr.type === 'ArrayExpression') {
@@ -1270,10 +1343,21 @@ export default {
                   // Check if this identifier or its member expression is used in a spread element
                   // Walk up to see if we're anywhere in a spread element's argument
                   let isInSpreadElement = false;
+                  let isInSafeSpread = false;
                   let checkNode = astNode;
                   while (checkNode && checkNode.parent) {
                     if (checkNode.parent.type === 'SpreadElement' && checkNode.parent.argument === checkNode) {
                       isInSpreadElement = true;
+                      // Check if this spread has a safe fallback pattern
+                      const spreadArg = checkNode.parent.argument;
+                      if (spreadArg.type === 'LogicalExpression' &&
+                          (spreadArg.operator === '||' || spreadArg.operator === '??') &&
+                          spreadArg.right.type === 'ArrayExpression') {
+                        isInSafeSpread = true;
+                      } else if (spreadArg.type === 'ConditionalExpression' &&
+                                 spreadArg.alternate.type === 'ArrayExpression') {
+                        isInSafeSpread = true;
+                      }
                       break;
                     }
                     // Stop if we've gone beyond the immediate expression context
@@ -1286,8 +1370,8 @@ export default {
                     checkNode = checkNode.parent;
                   }
 
-                  // If in a spread element, we can't safely auto-fix (would need fallback like || [])
-                  if (isInSpreadElement) {
+                  // If in an unsafe spread element, we can't safely auto-fix (would need fallback like || [])
+                  if (isInSpreadElement && !isInSafeSpread) {
                     // Skip this replacement - will be handled by not providing a fix at the method level
                     return;
                   }
