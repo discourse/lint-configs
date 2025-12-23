@@ -227,11 +227,11 @@ export default {
         if (discourseDecorator) {
           // Check if any parameters are reassigned or used in spread
           const paramNames = member.value.params.map((param) => param.name);
-          let hasParameterReassignment = false;
+          const parameterReassignmentInfo = {};
           let hasParameterInSpread = false;
 
           if (paramNames.length > 0) {
-            const checkForReassignmentOrSpread = (astNode) => {
+            const checkForReassignmentOrSpread = (astNode, depth = 0) => {
               if (!astNode || typeof astNode !== 'object') {
                 return;
               }
@@ -241,7 +241,17 @@ export default {
                   astNode.left &&
                   astNode.left.type === 'Identifier' &&
                   paramNames.includes(astNode.left.name)) {
-                hasParameterReassignment = true;
+                const paramName = astNode.left.name;
+                if (!parameterReassignmentInfo[paramName]) {
+                  parameterReassignmentInfo[paramName] = {
+                    assignments: [],
+                    hasUpdateExpression: false
+                  };
+                }
+                parameterReassignmentInfo[paramName].assignments.push({
+                  node: astNode,
+                  depth: depth
+                });
                 return;
               }
 
@@ -250,7 +260,14 @@ export default {
                   astNode.argument &&
                   astNode.argument.type === 'Identifier' &&
                   paramNames.includes(astNode.argument.name)) {
-                hasParameterReassignment = true;
+                const paramName = astNode.argument.name;
+                if (!parameterReassignmentInfo[paramName]) {
+                  parameterReassignmentInfo[paramName] = {
+                    assignments: [],
+                    hasUpdateExpression: false
+                  };
+                }
+                parameterReassignmentInfo[paramName].hasUpdateExpression = true;
                 return;
               }
 
@@ -283,16 +300,25 @@ export default {
                 checkSpreadArgument(astNode.argument);
               }
 
+              // Track depth for nested structures
+              const isNestingNode = astNode.type === 'IfStatement' ||
+                                    astNode.type === 'ForStatement' ||
+                                    astNode.type === 'WhileStatement' ||
+                                    astNode.type === 'DoWhileStatement' ||
+                                    astNode.type === 'SwitchStatement' ||
+                                    astNode.type === 'TryStatement';
+
               // Recursively check children
               for (const key in astNode) {
                 if (key === 'parent' || key === 'range' || key === 'loc') {
                   continue;
                 }
                 const child = astNode[key];
+                const childDepth = isNestingNode ? depth + 1 : depth;
                 if (Array.isArray(child)) {
-                  child.forEach(item => checkForReassignmentOrSpread(item));
+                  child.forEach(item => checkForReassignmentOrSpread(item, childDepth));
                 } else {
-                  checkForReassignmentOrSpread(child);
+                  checkForReassignmentOrSpread(child, childDepth);
                 }
               }
             };
@@ -300,10 +326,35 @@ export default {
             checkForReassignmentOrSpread(member.value.body);
           }
 
-          if (hasParameterReassignment) {
-            info.hasParameterReassignments = true;
-          } else if (hasParameterInSpread) {
+          const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
+
+          // Check if it's a simple reassignment (can be auto-fixed)
+          let isSimpleReassignment = false;
+          if (hasParameterReassignment && !hasParameterInSpread && member.value.body.body && member.value.body.body.length > 0) {
+            const firstStatement = member.value.body.body[0];
+
+            if (firstStatement.type === 'ExpressionStatement' &&
+                firstStatement.expression.type === 'AssignmentExpression' &&
+                firstStatement.expression.left.type === 'Identifier' &&
+                paramNames.includes(firstStatement.expression.left.name)) {
+
+              const paramName = firstStatement.expression.left.name;
+              const info = parameterReassignmentInfo[paramName];
+
+              if (!info.hasUpdateExpression) {
+                const firstAssignment = info.assignments[0];
+                if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === firstStatement.expression) {
+                  isSimpleReassignment = true;
+                }
+              }
+            }
+          }
+
+          // Categorize this decorator
+          if (hasParameterInSpread) {
             info.hasParametersInSpread = true;
+          } else if (hasParameterReassignment && !isSimpleReassignment) {
+            info.hasParameterReassignments = true;
           } else {
             info.hasFixableDecorators = true;
           }
@@ -615,13 +666,12 @@ export default {
         }
 
         // Check if any parameters are reassigned in the method body
-        // This requires manual intervention, so we skip auto-fix
         const paramNames = node.value.params.map((param) => param.name);
-        let hasParameterReassignment = false;
         let hasParameterInSpread = false;
+        const parameterReassignmentInfo = {}; // Track detailed info per parameter
 
         if (paramNames.length > 0) {
-          const checkForReassignmentOrSpread = (astNode) => {
+          const checkForReassignmentOrSpread = (astNode, depth = 0) => {
             if (!astNode || typeof astNode !== 'object') {
               return;
             }
@@ -631,16 +681,33 @@ export default {
                 astNode.left &&
                 astNode.left.type === 'Identifier' &&
                 paramNames.includes(astNode.left.name)) {
-              hasParameterReassignment = true;
+              const paramName = astNode.left.name;
+              if (!parameterReassignmentInfo[paramName]) {
+                parameterReassignmentInfo[paramName] = {
+                  assignments: [],
+                  hasUpdateExpression: false
+                };
+              }
+              parameterReassignmentInfo[paramName].assignments.push({
+                node: astNode,
+                depth: depth
+              });
               return;
             }
 
-            // Check for update expressions (++, --)
+            // Check for update expressions (++, --) - these can't be auto-fixed
             if (astNode.type === 'UpdateExpression' &&
                 astNode.argument &&
                 astNode.argument.type === 'Identifier' &&
                 paramNames.includes(astNode.argument.name)) {
-              hasParameterReassignment = true;
+              const paramName = astNode.argument.name;
+              if (!parameterReassignmentInfo[paramName]) {
+                parameterReassignmentInfo[paramName] = {
+                  assignments: [],
+                  hasUpdateExpression: false
+                };
+              }
+              parameterReassignmentInfo[paramName].hasUpdateExpression = true;
               return;
             }
 
@@ -675,16 +742,26 @@ export default {
               checkSpreadArgument(astNode.argument);
             }
 
+            // Track depth for nested structures
+            // Only increment depth for actual control flow structures, not function bodies
+            const isNestingNode = astNode.type === 'IfStatement' ||
+                                  astNode.type === 'ForStatement' ||
+                                  astNode.type === 'WhileStatement' ||
+                                  astNode.type === 'DoWhileStatement' ||
+                                  astNode.type === 'SwitchStatement' ||
+                                  astNode.type === 'TryStatement';
+
             // Recursively check children
             for (const key in astNode) {
               if (key === 'parent' || key === 'range' || key === 'loc') {
                 continue;
               }
               const child = astNode[key];
+              const childDepth = isNestingNode ? depth + 1 : depth;
               if (Array.isArray(child)) {
-                child.forEach(item => checkForReassignmentOrSpread(item));
+                child.forEach(item => checkForReassignmentOrSpread(item, childDepth));
               } else {
-                checkForReassignmentOrSpread(child);
+                checkForReassignmentOrSpread(child, childDepth);
               }
             }
           };
@@ -692,51 +769,68 @@ export default {
           checkForReassignmentOrSpread(node.value.body);
         }
 
+        const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
+
+        // Check if this is a "simple" reassignment case we can auto-fix:
+        // - First statement in method body is an ExpressionStatement with AssignmentExpression
+        // - No update expressions
+        // - Assignment is at depth 0 (not nested in if/loop/etc)
+        let isSimpleReassignment = false;
+        let simpleReassignmentParam = null;
+
+        if (hasParameterReassignment && !hasParameterInSpread && node.value.body.body && node.value.body.body.length > 0) {
+          const firstStatement = node.value.body.body[0];
+
+          if (firstStatement.type === 'ExpressionStatement' &&
+              firstStatement.expression.type === 'AssignmentExpression' &&
+              firstStatement.expression.left.type === 'Identifier' &&
+              paramNames.includes(firstStatement.expression.left.name)) {
+
+            const paramName = firstStatement.expression.left.name;
+            const info = parameterReassignmentInfo[paramName];
+
+            // Check if this parameter has update expressions
+            if (!info.hasUpdateExpression) {
+              // Check if the first assignment is at depth 0
+              const firstAssignment = info.assignments[0];
+              if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === firstStatement.expression) {
+                isSimpleReassignment = true;
+                simpleReassignmentParam = paramName;
+              }
+            }
+          }
+        }
+
         // Check if we need to rename non-fixable decorators
         // This happens when: import was originally named 'computed', we're keeping it (mixed scenario),
         // and we renamed it to 'discourseComputed'
         const { hasParameterReassignments } = analyzeDiscourseComputedUsage();
-        const needsDecoratorRename = hasParameterReassignment &&
+
+        // Determine if we can auto-fix or need to provide error message
+        const canAutoFix = isSimpleReassignment || (!hasParameterReassignment && !hasParameterInSpread);
+        const needsDecoratorRename = !canAutoFix &&
                                      hasParameterReassignments &&
                                      discourseComputedLocalName === 'computed';
 
         // Build a more descriptive error message for non-fixable cases
         let errorMessage = "Use '@computed(...)' instead of '@discourseComputed(...)'.";
 
-        if (hasParameterReassignment) {
-          // Find the parameter that's being reassigned to show in the message
-          const reassignedParam = paramNames.find(paramName => {
-            let found = false;
-            const checkNode = (astNode) => {
-              if (!astNode || typeof astNode !== 'object' || found) return;
-
-              if ((astNode.type === 'AssignmentExpression' &&
-                   astNode.left?.type === 'Identifier' &&
-                   astNode.left.name === paramName) ||
-                  (astNode.type === 'UpdateExpression' &&
-                   astNode.argument?.type === 'Identifier' &&
-                   astNode.argument.name === paramName)) {
-                found = true;
-                return;
-              }
-
-              for (const key in astNode) {
-                if (key === 'parent' || key === 'range' || key === 'loc') continue;
-                const child = astNode[key];
-                if (Array.isArray(child)) {
-                  child.forEach(item => checkNode(item));
-                } else {
-                  checkNode(child);
-                }
-              }
-            };
-            checkNode(node.value.body);
-            return found;
-          });
-
+        if (hasParameterReassignment && !isSimpleReassignment) {
+          // Complex reassignment case - provide detailed error
+          const reassignedParam = Object.keys(parameterReassignmentInfo)[0];
+          const info = parameterReassignmentInfo[reassignedParam];
           const propertyPath = decoratorArgs[paramNames.indexOf(reassignedParam)] || reassignedParam;
-          errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' is reassigned. ` +
-                        `Convert to getter manually and use a local variable instead. Example: 'let ${reassignedParam} = this.${propertyPath} || defaultValue;'`;
+
+          if (info.hasUpdateExpression) {
+            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' uses update expressions (++/--). ` +
+                          `Convert to getter manually and use a local variable with explicit assignment. Example: 'let ${reassignedParam} = this.${propertyPath}; ${reassignedParam} += 1;'`;
+          } else if (info.assignments.length > 0 && info.assignments[0].depth > 0) {
+            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' is reassigned inside a nested block (if/loop/etc). ` +
+                          `Convert to getter manually. Example: 'let ${reassignedParam} = this.${propertyPath};'`;
+          } else {
+            errorMessage = `Cannot auto-fix @${discourseComputedLocalName} because parameter '${reassignedParam}' has complex reassignment patterns. ` +
+                          `Convert to getter manually and use a local variable. Example: 'let ${reassignedParam} = this.${propertyPath};'`;
+          }
         } else if (hasParameterInSpread) {
           // Find which parameter is used in spread
           const spreadParam = paramNames.find(paramName => {
@@ -784,7 +878,7 @@ export default {
         context.report({
           node: discourseComputedDecorator,
           message: errorMessage,
-          fix: (hasParameterReassignment || hasParameterInSpread)
+          fix: !canAutoFix
             ? (needsDecoratorRename ? function(fixer) {
                 // Just rename the decorator to match the renamed import
                 if (decoratorExpression.type === "CallExpression") {
@@ -828,6 +922,43 @@ export default {
                 node.value.params[node.value.params.length - 1].range[1];
               fixes.push(fixer.removeRange([paramsStart, paramsEnd]));
 
+              // Handle simple reassignment case: convert first assignment to variable declaration
+              if (isSimpleReassignment && simpleReassignmentParam) {
+                const firstStatement = node.value.body.body[0];
+                const assignmentExpr = firstStatement.expression;
+                const propertyPath = decoratorArgs[paramNames.indexOf(simpleReassignmentParam)] || simpleReassignmentParam;
+                const thisAccess = propertyPathToOptionalChaining(propertyPath, true, false);
+
+                // Determine whether to use const or let
+                const info = parameterReassignmentInfo[simpleReassignmentParam];
+                const useConst = info.assignments.length === 1;
+                const keyword = useConst ? 'const' : 'let';
+
+                // Convert "param = ..." to "const/let param = ..."
+                // We need to replace the entire assignment expression with the declaration
+                const rightSide = sourceCode.getText(assignmentExpr.right);
+
+                // Replace the first occurrence of the parameter on the right side with this.property
+                // But only if it's a simple reference, not part of a larger expression
+                let newRightSide = rightSide;
+                if (assignmentExpr.right.type === 'Identifier' && assignmentExpr.right.name === simpleReassignmentParam) {
+                  newRightSide = thisAccess;
+                } else if (assignmentExpr.right.type === 'LogicalExpression') {
+                  // Handle cases like: title = title || ""
+                  const rightText = sourceCode.getText(assignmentExpr.right);
+                  // Replace exact parameter name with this.property (word boundary)
+                  const regex = new RegExp(`\\b${simpleReassignmentParam}\\b`, 'g');
+                  newRightSide = rightText.replace(regex, thisAccess);
+                }
+
+                fixes.push(
+                  fixer.replaceText(
+                    assignmentExpr,
+                    `${keyword} ${simpleReassignmentParam} = ${newRightSide}`
+                  )
+                );
+              }
+
               // Replace parameter references with this.propertyName in method body
               // Use AST traversal to find identifiers and check their context
               const replacements = [];
@@ -835,6 +966,10 @@ export default {
               // Create a map of param names to property names
               const paramToProperty = {};
               paramNames.forEach((paramName, index) => {
+                // Skip the simple reassignment param - it's already handled
+                if (paramName === simpleReassignmentParam) {
+                  return;
+                }
                 paramToProperty[paramName] = decoratorArgs[index] || paramName;
               });
 

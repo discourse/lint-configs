@@ -252,12 +252,11 @@ ruleTester.run("discourse-computed", rule, {
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'title' is reassigned. Convert to getter manually and use a local variable instead. Example: 'let title = this.title || defaultValue;'"
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
         }
       ],
       output: [
         "import { action, computed } from \"@ember/object\";",
-        "import discourseComputed from \"discourse/lib/decorators\";",
         "class MyClass {",
         "  @computed",
         "  get myComputed() {",
@@ -269,9 +268,9 @@ ruleTester.run("discourse-computed", rule, {
         "    return this.someProperty + 1;",
         "  }",
         "",
-        "  @discourseComputed(\"title\")",
-        "  titleLength(title) {",
-        "    title = title || \"\";",
+        "  @computed(\"title\")",
+        "  get titleLength() {",
+        "    const title = this.title || \"\";",
         "    return title.length;",
         "  }",
         "}"
@@ -571,7 +570,7 @@ ruleTester.run("discourse-computed", rule, {
       output: null
     },
     {
-      name: "discourseComputed with parameter reassignment - no auto-fix",
+      name: "discourseComputed with simple parameter reassignment - auto-fix with const",
       code: [
         "import discourseComputed from \"discourse/lib/decorators\";",
         "class MyClass {",
@@ -591,10 +590,22 @@ ruleTester.run("discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Cannot auto-fix @discourseComputed because parameter 'title' is reassigned. Convert to getter manually and use a local variable instead. Example: 'let title = this.title || defaultValue;'"
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
         }
       ],
-      output: null
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"title\")",
+        "  get titleLength() {",
+        "    const title = this.title || \"\";",
+        "    if (isHTMLSafe(title)) {",
+        "      return title.toString().length;",
+        "    }",
+        "    return title.replace(/\\s+/gim, \" \").trim().length;",
+        "  }",
+        "}"
+      ].join("\n")
     },
     {
       name: "discourseComputed imported with different name in classic class - no auto-fix",
@@ -1200,6 +1211,92 @@ ruleTester.run("discourse-computed", rule, {
         }
       ],
       output: null
+    },
+    {
+      name: "discourseComputed with update expression - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"count\")",
+        "  incrementCount(count) {",
+        "    count++;",
+        "    return count;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'count' uses update expressions (++/--). Convert to getter manually and use a local variable with explicit assignment. Example: 'let count = this.count; count += 1;'"
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed with nested reassignment - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"value\")",
+        "  processValue(value) {",
+        "    if (someCondition) {",
+        "      value = value || 0;",
+        "    }",
+        "    return value * 2;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'value' is reassigned inside a nested block (if/loop/etc). Convert to getter manually. Example: 'let value = this.value;'"
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed with multiple simple reassignments - auto-fix with let",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"status\")",
+        "  statusMessage(status) {",
+        "    status = status || \"pending\";",
+        "    if (status === \"pending\") {",
+        "      status = \"waiting\";",
+        "    }",
+        "    return status;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"status\")",
+        "  get statusMessage() {",
+        "    let status = this.status || \"pending\";",
+        "    if (status === \"pending\") {",
+        "      status = \"waiting\";",
+        "    }",
+        "    return status;",
+        "  }",
+        "}"
+      ].join("\n")
     },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
