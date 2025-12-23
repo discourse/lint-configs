@@ -54,6 +54,27 @@ To automatically fix formatting issues, run:
 cd lint-configs && pnpm prettier --write "**/*.{cjs,mjs,js}"
 ```
 
+## Style Guidelines
+
+The following guidelines ensure the codebase is readable, maintainable, and easy to follow for humans.
+
+### 1. Readable and Maintainable Code
+- **Self-Documenting Code**: Choose clear, descriptive names for variables, functions, and parameters.
+- **Complexity Management**: Break down complex logic into smaller, focused helper functions. Avoid deep nesting.
+- **Intent over Implementation**: Write code that expresses *what* it is doing, making the high-level flow easy to follow.
+
+### 2. Organization and Modularization
+- **Separation of Concerns**: Separate analysis (detecting patterns), fixing (transforming code), and reporting (ESLint/Lint integration).
+- **Subdirectories for Complex Rules**: If a rule requires significant supporting logic, place it in a subdirectory named after the rule (e.g., `eslint-rules/rule-name/`) and split it into:
+  - `rule-name-analysis.mjs`: Read-only AST traversal and pattern detection.
+  - `rule-name-fixer.mjs`: Logic for generating fixer commands.
+- **Shared Utilities**: Move generic logic (like import handling or property path manipulation) to the `utils/` directory to promote reuse.
+
+### 3. Documentation
+- **Clear Comments**: Use comments to explain *why* complex logic is necessary, especially for edge cases or non-obvious AST patterns.
+- **JSDoc Types**: Provide JSDoc headers for all exported functions and complex data structures (using `@typedef`). This improves editor tooling and helps other developers understand the data flow.
+- **Consistent Rule Metadata**: Ensure every rule has a comprehensive `meta` object with a clear description and descriptive message IDs.
+
 ## Available ESLint Utilities
 
 - `fixImport(fixer, importNode, options)`: Manage named/default imports.
