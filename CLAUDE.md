@@ -45,6 +45,15 @@ Key Development Patterns
 - Report on the most specific node (e.g., defaultSpecifier not entire ImportDeclaration)
 - Provide fix function for auto-fixable issues
 - Return undefined for fix when manual intervention needed
+- Don't provide auto-fixes that could introduce runtime errors or change behavior
+  - Example: spreading with optional chaining (`...this.items?.map()`) is unsafe
+  - Example: adding fallbacks like `|| []` changes the intended behavior
+  - Better to report the error and let developers fix it manually with proper context
+- Provide helpful error messages that explain why auto-fix isn't possible
+  - Include the specific problem (e.g., "parameter 'title' is reassigned")
+  - Show concrete examples of how to fix it manually
+  - Reference the actual code elements (parameter names, property paths)
+  - Example: "Cannot auto-fix @discourseComputed because parameter 'groups' is used in a spread operator. Example: Use '...(this.model.groups || [])' or '...(this.model.groups ?? [])' for safe spreading."
 
 4. Import Handling
 
@@ -72,6 +81,9 @@ output: ["expected line 1", "expected line 2"].join("\n")
 - Test with renamed/aliased imports
 - Handle mixed scenarios (some fixable, some not)
 - Test import order variations
+- Avoid optional chaining in unsafe contexts (spread operators, arithmetic operations, etc.)
+  - Example: `...this.items?.map()` is unsafe - if items is undefined, spreading undefined throws
+  - Check parent node type (SpreadElement, BinaryExpression) before adding optional chaining
 
 Task Description
 
