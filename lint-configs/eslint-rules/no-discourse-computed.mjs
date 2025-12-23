@@ -1,4 +1,6 @@
+import { collectImports, getImportedLocalNames } from "./utils/analyze-imports.mjs";
 import { fixImport } from "./utils/fix-import.mjs";
+import { propertyPathToOptionalChaining } from "./utils/property-path.mjs";
 
 export default {
   meta: {
@@ -28,146 +30,54 @@ export default {
     let emberObjectImportNode = null;
     let discourseComputedInfo = null; // Cache info about discourseComputed decorators
     let discourseComputedLocalName = null; // Track the local name used for discourseComputed import
-    let discourseComputedImportNode = null; // Track the discourse/lib/decorators import node
     let computedImportName = null; // Track what name to use for computed from @ember/object
     let importsAnalyzed = false; // Track if we've scanned all imports
 
-    // Helper function to extract the clean attribute path before special tokens
-    function niceAttr(attr) {
-      const parts = attr.split(".");
-      let i;
+    // We now use utilities in ./utils to keep this file focused on the rule logic.
 
-      for (i = 0; i < parts.length; i++) {
-        if (parts[i] === "@each" || parts[i] === "[]" || parts[i].includes("{")) {
-          break;
-        }
-      }
-
-      return parts.slice(0, i).join(".");
-    }
-
-    // Helper function to convert property path to optional chaining with this
-    // e.g., "model.poll.title" -> "this.model?.poll?.title" (with optional chaining)
-    // e.g., "model.poll.title" -> "this.model.poll.title" (without optional chaining, when unsafe)
-    // e.g., "data.0.value" -> "this.data?.[0]?.value"
-    // e.g., "items.@each.value" with member access -> "this.items" (for use with optional chaining in member expression)
-    // useOptionalChaining: if true, uses optional chaining for nested properties; false for contexts where it's unsafe (e.g., spread operator)
-    // needsTrailingChaining: if true and path was extracted, indicates this will be used with member expression and should add trailing ?.
-    function propertyPathToOptionalChaining(propertyPath, useOptionalChaining = true, needsTrailingChaining = false) {
-      // First, apply niceAttr to handle @each, [], and {} cases
-      const cleanPath = niceAttr(propertyPath);
-      const wasExtracted = cleanPath !== propertyPath;
-
-      if (!cleanPath) {
-        return "this";
-      }
-
-      const parts = cleanPath.split(".");
-      let result = "this";
-
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-
-        // Check if this part is a numeric index
-        if (/^\d+$/.test(part)) {
-          // Use bracket notation for numeric indices
-          if (useOptionalChaining) {
-            result += `?.[${part}]`;
-          } else {
-            result += `[${part}]`;
-          }
-        } else {
-          // First property uses . (since this is always defined)
-          // Subsequent properties use ?. for optional chaining (if enabled)
-          if (i === 0) {
-            result += `.${part}`;
-          } else {
-            result += useOptionalChaining ? `?.${part}` : `.${part}`;
-          }
-        }
-      }
-
-      // If this will be used in a member expression, add trailing ?.
-      // This allows the next property access to complete the optional chain
-      // Examples:
-      // - "this.items?." + "length" = "this.items?.length" (extracted from "items.@each")
-      // - "this.model?.poll?.options?." + "reduce" = "this.model?.poll?.options?.reduce" (multi-part nested path)
-      // - "this.label" + ".compute" = "this.label.compute" (single-part, no trailing ?.)
-      if (needsTrailingChaining && useOptionalChaining) {
-        // Add trailing ?. for:
-        // - Extracted single-part paths (e.g., "items" from "items.@each.name")
-        // - Non-extracted multi-part paths (e.g., "model.poll.options")
-        if ((wasExtracted && parts.length === 1) || (!wasExtracted && parts.length > 1)) {
-          result += "?.";
-        }
-      }
-
-      return result;
-    }
-
-    // Helper function to scan all imports in the file
-    function analyzeAllImports() {
+    // Wrapper that uses the generic helpers to populate rule-specific import state.
+    // We intentionally compute the specific values here (instead of in the utils
+    // module) so `utils/analyze-imports.mjs` remains generic and reusable.
+    function analyzeAllImportsWrapper() {
       if (importsAnalyzed) {
         return;
       }
 
-      const allImportedIdentifiers = new Set();
+      const imports = collectImports(sourceCode);
+      const allImportedIdentifiers = getImportedLocalNames(sourceCode);
 
-      sourceCode.ast.body.forEach(statement => {
-        if (statement.type !== 'ImportDeclaration') {
-          return;
+      // @ember/object import
+      const emberNode = imports.get('@ember/object');
+      if (emberNode) {
+        emberObjectImportNode = emberNode.node;
+        const computedSpecifier = emberNode.specifiers.find(spec => spec.type === 'ImportSpecifier' && spec.imported && spec.imported.name === 'computed');
+        if (computedSpecifier) {
+          hasComputedImport = true;
+          computedImportName = computedSpecifier.local.name;
         }
+      }
 
-        // Collect all imported identifiers
-        statement.specifiers.forEach(spec => {
-          allImportedIdentifiers.add(spec.local.name);
-        });
-
-        // Check for @ember/object import with computed
-        if (statement.source.value === "@ember/object") {
-          emberObjectImportNode = statement;
-          const computedSpecifier = statement.specifiers.find(
-            (spec) =>
-              spec.type === "ImportSpecifier" &&
-              spec.imported.name === "computed"
-          );
-          if (computedSpecifier) {
-            hasComputedImport = true;
-            computedImportName = computedSpecifier.local.name; // Store the aliased name
-          }
+      // discourse default import
+      const discourseNode = imports.get('discourse/lib/decorators');
+      if (discourseNode) {
+        const defaultSpecifier = discourseNode.specifiers.find(spec => spec.type === 'ImportDefaultSpecifier');
+        if (defaultSpecifier) {
+          discourseComputedLocalName = defaultSpecifier.local.name;
         }
+      }
 
-        // Check for discourse/lib/decorators default import
-        if (statement.source.value === "discourse/lib/decorators") {
-          discourseComputedImportNode = statement;
-          const defaultSpecifier = statement.specifiers.find(
-            (spec) => spec.type === "ImportDefaultSpecifier"
-          );
-          if (defaultSpecifier) {
-            discourseComputedLocalName = defaultSpecifier.local.name;
-          }
-        }
-      });
-
-      // Determine what name to use for computed import from @ember/object
       if (!computedImportName) {
-        // computed is not yet imported from @ember/object
-        // Check if 'computed' identifier is already used by something OTHER than discourse import
-        // If discourseComputedLocalName === 'computed', we'll rename it to 'discourseComputed', so 'computed' will be free
         const isComputedUsedElsewhere = allImportedIdentifiers.has('computed') && discourseComputedLocalName !== 'computed';
-
-        if (isComputedUsedElsewhere) {
-          // 'computed' is used by something else, we'll need an alias
-          computedImportName = 'emberComputed';
-        } else {
-          computedImportName = 'computed';
-        }
+        computedImportName = isComputedUsedElsewhere ? 'emberComputed' : 'computed';
       }
 
       importsAnalyzed = true;
     }
 
-    // Helper function to scan all discourseComputed decorators in the file
+    // The rest of the rule is unchanged except where helper functions were
+    // previously defined in this file. Those have been replaced with imports
+    // from the utils directory to promote reuse and readability.
+
     function analyzeDiscourseComputedUsage() {
       if (discourseComputedInfo !== null) {
         return discourseComputedInfo;
@@ -544,7 +454,7 @@ export default {
     return {
       ImportDeclaration(node) {
         // Analyze all imports first to avoid race conditions
-        analyzeAllImports();
+        analyzeAllImportsWrapper();
 
         // Handle import from "discourse/lib/decorators"
         // The default export is discourseComputed, but it could be imported with any name
