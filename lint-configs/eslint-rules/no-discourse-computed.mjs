@@ -183,11 +183,13 @@ export default {
               }
 
               // Check if we're entering a nested regular function (not arrow function)
+              // In nested functions, 'this' has a different context, so we can't safely convert parameter references to this.property
               const isNestedFunction = (astNode.type === 'FunctionExpression' || astNode.type === 'FunctionDeclaration') && inNestedFunction === false;
               const newInNestedFunction = inNestedFunction || isNestedFunction;
 
               // Check if a parameter is used inside a nested regular function
               if (newInNestedFunction && astNode.type === 'Identifier' && paramNames.includes(astNode.name)) {
+                // Skip if this Identifier is the function name itself (for named function expressions)
                 const parent = astNode.parent;
                 if (!(parent && parent.type === 'FunctionExpression' && parent.id === astNode)) {
                   hasParameterInNestedFunction = true;
@@ -215,20 +217,22 @@ export default {
                     return;
                   }
 
-                  const checkForNestedProps = (node) => {
-                    if (!node || typeof node !== 'object') return false;
-                    if (node.type === 'Identifier' && paramNames.includes(node.name)) {
-                      const paramIndex = paramNames.indexOf(node.name);
-                      const propertyPath = decoratorArgs[paramIndex] || node.name;
+                  const checkForNestedProps = (childNode) => {
+                    if (!childNode || typeof childNode !== 'object') {
+                      return false;
+                    }
+                    if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
+                      const paramIndex = paramNames.indexOf(childNode.name);
+                      const propertyPath = decoratorArgs[paramIndex] || childNode.name;
                       if (propertyPath.includes('.') || propertyPath.includes('{') ||
                           propertyPath.includes('@') || propertyPath.includes('[')) {
                         hasUnsafeOptionalChaining = true;
                         return true;
                       }
                     }
-                    if (node.type === 'LogicalExpression' || node.type === 'ConditionalExpression') {
-                      return checkForNestedProps(node.left) || checkForNestedProps(node.right) ||
-                             (node.alternate && checkForNestedProps(node.alternate));
+                    if (childNode.type === 'LogicalExpression' || childNode.type === 'ConditionalExpression') {
+                      return checkForNestedProps(childNode.left) || checkForNestedProps(childNode.right) ||
+                             (childNode.alternate && checkForNestedProps(childNode.alternate));
                     }
                     return false;
                   };
@@ -250,7 +254,7 @@ export default {
                 }
                 parameterReassignmentInfo[paramName].assignments.push({
                   node: astNode,
-                  depth: depth
+                  depth
                 });
                 return;
               }
@@ -273,43 +277,47 @@ export default {
 
               // Check for spread elements containing parameters
               if (astNode.type === 'SpreadElement') {
-                const isSafeArrayFallback = (node) => {
+                const isSafeArrayFallback = (childNode) => {
                   // Check if node is an array literal or array expression
-                  return node?.type === 'ArrayExpression';
+                  return childNode?.type === 'ArrayExpression';
                 };
 
-                const checkSpreadArgument = (node, isTopLevel = true, isInSafeContext = false) => {
-                  if (!node) return;
+                const checkSpreadArgument = (childNode, isTopLevel = true, isInSafeContext = false) => {
+                  if (!childNode) {
+                    return;
+                  }
 
                   // At the top level, check for safe fallback patterns first
                   if (isTopLevel) {
                     // Safe pattern: ...(param || []) or ...(param ?? [])
-                    if (node.type === 'LogicalExpression' &&
-                        (node.operator === '||' || node.operator === '??') &&
-                        isSafeArrayFallback(node.right)) {
+                    if (childNode.type === 'LogicalExpression' &&
+                        (childNode.operator === '||' || childNode.operator === '??') &&
+                        isSafeArrayFallback(childNode.right)) {
                       // This is a safe pattern, don't mark as unsafe
                       // We can safely skip this - parameters will be replaced normally in the body
                       return;
                     }
 
                     // Safe pattern: ...(condition ? param : []) or similar with safe alternate
-                    if (node.type === 'ConditionalExpression' &&
-                        isSafeArrayFallback(node.alternate)) {
+                    if (childNode.type === 'ConditionalExpression' &&
+                        isSafeArrayFallback(childNode.alternate)) {
                       // This is a safe pattern, don't mark as unsafe
                       // We can safely skip this - parameters will be replaced normally in the body
                       return;
                     }
                   }
 
-                  if (node.type === 'Identifier' && paramNames.includes(node.name)) {
+                  // Direct parameter: ...param
+                  if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
                     if (!isInSafeContext) {
                       hasParameterInSpread = true;
                     }
                     return;
                   }
 
-                  if (node.type === 'MemberExpression') {
-                    let obj = node.object;
+                  // Member expression: ...param.property
+                  if (childNode.type === 'MemberExpression') {
+                    let obj = childNode.object;
                     while (obj) {
                       if (obj.type === 'Identifier' && paramNames.includes(obj.name)) {
                         if (!isInSafeContext) {
@@ -326,24 +334,22 @@ export default {
                   }
 
                   // Check inside parenthesized expressions
-                  if (node.type === 'ParenthesizedExpression') {
-                    checkSpreadArgument(node.expression, isTopLevel, isInSafeContext);
+                  if (childNode.type === 'ParenthesizedExpression') {
+                    checkSpreadArgument(childNode.expression, isTopLevel, isInSafeContext);
                     return;
                   }
 
                   // For nested contexts (not at top level), recursively check
                   if (!isTopLevel) {
-                    if (node.type === 'LogicalExpression') {
-                      checkSpreadArgument(node.left, false, isInSafeContext);
-                      checkSpreadArgument(node.right, false, isInSafeContext);
-                      return;
+                    if (childNode.type === 'LogicalExpression') {
+                      checkSpreadArgument(childNode.left, false, isInSafeContext);
+                      checkSpreadArgument(childNode.right, false, isInSafeContext);
                     }
 
-                    if (node.type === 'ConditionalExpression') {
-                      checkSpreadArgument(node.test, false, isInSafeContext);
-                      checkSpreadArgument(node.consequent, false, isInSafeContext);
-                      checkSpreadArgument(node.alternate, false, isInSafeContext);
-                      return;
+                    if (childNode.type === 'ConditionalExpression') {
+                      checkSpreadArgument(childNode.test, false, isInSafeContext);
+                      checkSpreadArgument(childNode.consequent, false, isInSafeContext);
+                      checkSpreadArgument(childNode.alternate, false, isInSafeContext);
                     }
                   }
                 };
@@ -390,10 +396,10 @@ export default {
                 paramNames.includes(firstStatement.expression.left.name)) {
 
               const paramName = firstStatement.expression.left.name;
-              const info = parameterReassignmentInfo[paramName];
+              const paramInfo = parameterReassignmentInfo[paramName];
 
-              if (!info.hasUpdateExpression) {
-                const firstAssignment = info.assignments[0];
+              if (!paramInfo.hasUpdateExpression) {
+                const firstAssignment = paramInfo.assignments[0];
                 if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === firstStatement.expression) {
                   isSimpleReassignment = true;
                 }
@@ -635,12 +641,11 @@ export default {
               messageId: "cannotAutoFixClassic",
               data: { name: discourseComputedLocalName },
             });
-            return;
           }
         }
       },
 
-      Property(node) {
+      Property: function(node) {
         // Handle classic Ember classes with decorator syntax (e.g., Component.extend({ @discourseComputed ... }))
         if (!node.decorators || node.decorators.length === 0) {
           return;
@@ -684,13 +689,12 @@ export default {
                 messageId: "cannotAutoFixClassic",
                 data: { name: `@${discourseComputedLocalName}` },
               });
-              return;
             }
           }
         }
       },
 
-      MethodDefinition(node) {
+      MethodDefinition: function(node) {
         if (!node.decorators || node.decorators.length === 0) {
           return;
         }
@@ -724,11 +728,11 @@ export default {
         // Check if any parameters are reassigned in the method body
         const paramNames = node.value.params.map((param) => param.name);
         let hasParameterInSpread = false;
-        let spreadParam = null;
         let hasUnsafeOptionalChaining = false;
-        let unsafeOptionalChainingParam = null;
         let hasParameterInNestedFunction = false;
         let nestedFunctionParam = null;
+        let spreadParam = null;
+        let unsafeOptionalChainingParam = null;
         const parameterReassignmentInfo = {}; // Track detailed info per parameter
 
         if (paramNames.length > 0) {
@@ -744,7 +748,7 @@ export default {
 
             // Check if a parameter is used inside a nested regular function
             if (newInNestedFunction && astNode.type === 'Identifier' && paramNames.includes(astNode.name)) {
-              // Skip if this identifier is the function name itself (for named function expressions)
+              // Skip if this Identifier is the function name itself (for named function expressions)
               const parent = astNode.parent;
               if (!(parent && parent.type === 'FunctionExpression' && parent.id === astNode)) {
                 hasParameterInNestedFunction = true;
@@ -781,27 +785,29 @@ export default {
                   return;
                 }
 
-                const checkForNestedPropertiesInExpression = (node) => {
-                  if (!node || typeof node !== 'object') return false;
+                const checkForNestedPropertiesInExpression = (childNode) => {
+                  if (!childNode || typeof childNode !== 'object') {
+                    return false;
+                  }
 
                   // Check if it's a parameter identifier with nested properties
-                  if (node.type === 'Identifier' && paramNames.includes(node.name)) {
-                    const paramIndex = paramNames.indexOf(node.name);
-                    const propertyPath = decoratorArgs[paramIndex] || node.name;
+                  if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
+                    const paramIndex = paramNames.indexOf(childNode.name);
+                    const propertyPath = decoratorArgs[paramIndex] || childNode.name;
                     // Check if it's a nested property (contains a dot)
                     if (propertyPath.includes('.') || propertyPath.includes('{') ||
                         propertyPath.includes('@') || propertyPath.includes('[')) {
                       hasUnsafeOptionalChaining = true;
-                      unsafeOptionalChainingParam = node.name;
+                      unsafeOptionalChainingParam = childNode.name;
                       return true;
                     }
                   }
 
                   // Recursively check in nested expressions
-                  if (node.type === 'LogicalExpression' || node.type === 'ConditionalExpression') {
-                    return checkForNestedPropertiesInExpression(node.left) ||
-                           checkForNestedPropertiesInExpression(node.right) ||
-                           (node.alternate && checkForNestedPropertiesInExpression(node.alternate));
+                  if (childNode.type === 'LogicalExpression' || childNode.type === 'ConditionalExpression') {
+                    return checkForNestedPropertiesInExpression(childNode.left) ||
+                           checkForNestedPropertiesInExpression(childNode.right) ||
+                           (childNode.alternate && checkForNestedPropertiesInExpression(childNode.alternate));
                   }
 
                   return false;
@@ -825,7 +831,7 @@ export default {
               }
               parameterReassignmentInfo[paramName].assignments.push({
                 node: astNode,
-                depth: depth
+                depth
               });
               return;
             }
@@ -848,28 +854,30 @@ export default {
 
             // Check for spread elements containing parameters or their properties
             if (astNode.type === 'SpreadElement') {
-              const isSafeArrayFallback = (node) => {
+              const isSafeArrayFallback = (childNode) => {
                 // Check if node is an array literal or array expression
-                return node?.type === 'ArrayExpression';
+                return childNode?.type === 'ArrayExpression';
               };
 
-              const checkSpreadArgument = (node, isTopLevel = true, isInSafeContext = false) => {
-                if (!node) return;
+              const checkSpreadArgument = (childNode, isTopLevel = true, isInSafeContext = false) => {
+                if (!childNode) {
+                  return;
+                }
 
                 // At the top level, check for safe fallback patterns first
                 if (isTopLevel) {
                   // Safe pattern: ...(param || []) or ...(param ?? [])
-                  if (node.type === 'LogicalExpression' &&
-                      (node.operator === '||' || node.operator === '??') &&
-                      isSafeArrayFallback(node.right)) {
+                  if (childNode.type === 'LogicalExpression' &&
+                      (childNode.operator === '||' || childNode.operator === '??') &&
+                      isSafeArrayFallback(childNode.right)) {
                     // This is a safe pattern, don't mark as unsafe
                     // We can safely skip this - parameters will be replaced normally in the body
                     return;
                   }
 
                   // Safe pattern: ...(condition ? param : []) or similar with safe alternate
-                  if (node.type === 'ConditionalExpression' &&
-                      isSafeArrayFallback(node.alternate)) {
+                  if (childNode.type === 'ConditionalExpression' &&
+                      isSafeArrayFallback(childNode.alternate)) {
                     // This is a safe pattern, don't mark as unsafe
                     // We can safely skip this - parameters will be replaced normally in the body
                     return;
@@ -877,22 +885,20 @@ export default {
                 }
 
                 // Direct parameter: ...param
-                if (node.type === 'Identifier' && paramNames.includes(node.name)) {
+                if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
                   if (!isInSafeContext) {
                     hasParameterInSpread = true;
-                    spreadParam = node.name;
                   }
                   return;
                 }
 
                 // Member expression: ...param.property
-                if (node.type === 'MemberExpression') {
-                  let obj = node.object;
+                if (childNode.type === 'MemberExpression') {
+                  let obj = childNode.object;
                   while (obj) {
                     if (obj.type === 'Identifier' && paramNames.includes(obj.name)) {
                       if (!isInSafeContext) {
                         hasParameterInSpread = true;
-                        spreadParam = obj.name;
                       }
                       return;
                     }
@@ -905,24 +911,22 @@ export default {
                 }
 
                 // Check inside parenthesized expressions
-                if (node.type === 'ParenthesizedExpression') {
-                  checkSpreadArgument(node.expression, isTopLevel, isInSafeContext);
+                if (childNode.type === 'ParenthesizedExpression') {
+                  checkSpreadArgument(childNode.expression, isTopLevel, isInSafeContext);
                   return;
                 }
 
                 // For nested contexts (not at top level), recursively check
                 if (!isTopLevel) {
-                  if (node.type === 'LogicalExpression') {
-                    checkSpreadArgument(node.left, false, isInSafeContext);
-                    checkSpreadArgument(node.right, false, isInSafeContext);
-                    return;
+                  if (childNode.type === 'LogicalExpression') {
+                    checkSpreadArgument(childNode.left, false, isInSafeContext);
+                    checkSpreadArgument(childNode.right, false, isInSafeContext);
                   }
 
-                  if (node.type === 'ConditionalExpression') {
-                    checkSpreadArgument(node.test, false, isInSafeContext);
-                    checkSpreadArgument(node.consequent, false, isInSafeContext);
-                    checkSpreadArgument(node.alternate, false, isInSafeContext);
-                    return;
+                  if (childNode.type === 'ConditionalExpression') {
+                    checkSpreadArgument(childNode.test, false, isInSafeContext);
+                    checkSpreadArgument(childNode.consequent, false, isInSafeContext);
+                    checkSpreadArgument(childNode.alternate, false, isInSafeContext);
                   }
                 }
               };
@@ -976,17 +980,17 @@ export default {
                 paramNames.includes(statement.expression.left.name)) {
 
               const paramName = statement.expression.left.name;
-              const info = parameterReassignmentInfo[paramName];
+              const paramInfo = parameterReassignmentInfo[paramName];
 
               // Check if this parameter has update expressions
-              if (info && !info.hasUpdateExpression) {
+              if (paramInfo && !paramInfo.hasUpdateExpression) {
                 // Check if the first assignment is at depth 0
-                const firstAssignment = info.assignments[0];
+                const firstAssignment = paramInfo.assignments[0];
                 if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === statement.expression) {
                   simpleReassignments.push({
                     statement,
                     paramName,
-                    info
+                    info: paramInfo
                   });
                   continue; // Continue checking next statement
                 }
@@ -1028,13 +1032,13 @@ export default {
           reportData.propertyPath = decoratorArgs[paramNames.indexOf(unsafeOptionalChainingParam)] || unsafeOptionalChainingParam;
         } else if (hasParameterReassignment && !hasSimpleReassignments) {
           const reassignedParam = Object.keys(parameterReassignmentInfo)[0];
-          const info = parameterReassignmentInfo[reassignedParam] || {};
+          const reassignedInfo = parameterReassignmentInfo[reassignedParam] || {};
           reportData.param = reassignedParam;
           reportData.propertyPath = decoratorArgs[paramNames.indexOf(reassignedParam)] || reassignedParam;
 
-          if (info.hasUpdateExpression) {
+          if (reassignedInfo.hasUpdateExpression) {
             messageIdToUse = 'cannotAutoFixUpdateExpression';
-          } else if (info.assignments && info.assignments.length > 0 && info.assignments[0].depth > 0) {
+          } else if (reassignedInfo.assignments && reassignedInfo.assignments.length > 0 && reassignedInfo.assignments[0].depth > 0) {
             messageIdToUse = 'cannotAutoFixNestedReassignment';
           } else {
             messageIdToUse = 'cannotAutoFixGeneric';
@@ -1082,7 +1086,7 @@ export default {
             const hasParams = node.value.params.length > 0;
 
             // Get parameter names for replacement
-            const paramNames = node.value.params.map((param) => param.name);
+            const methodParamNames = node.value.params.map((param) => param.name);
 
             // Add 'get' keyword before method name if not already a getter
             if (node.kind !== "get") {
@@ -1100,7 +1104,7 @@ export default {
 
               // Create a map of param names to property names (needed for both simple and normal replacement)
               const paramToProperty = {};
-              paramNames.forEach((paramName, index) => {
+              methodParamNames.forEach((paramName, index) => {
                 paramToProperty[paramName] = decoratorArgs[index] || paramName;
               });
 
@@ -1296,8 +1300,7 @@ export default {
                   // This identifier should be replaced
                   const propertyPath = paramToProperty[astNode.name];
 
-                  const needsTrailingChaining = isInMemberExpression;
-                  const optionalChainingAccess = propertyPathToOptionalChaining(propertyPath, true, needsTrailingChaining);
+                  const optionalChainingAccess = propertyPathToOptionalChaining(propertyPath, true, isInMemberExpression);
 
                   // If it's in a member expression and we added "?.", we need to replace the "." with "?." after it
                   if (isInMemberExpression && !isInSpreadElement && optionalChainingAccess.endsWith("?.")) {
