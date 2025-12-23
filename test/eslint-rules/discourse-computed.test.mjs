@@ -1,12 +1,12 @@
 import EmberESLintParser from "ember-eslint-parser";
 import { RuleTester } from "eslint";
-import rule from "../../lint-configs/eslint-rules/discourse-computed.mjs";
+import rule from "../../lint-configs/eslint-rules/no-discourse-computed.mjs";
 
 const ruleTester = new RuleTester({
   languageOptions: { parser: EmberESLintParser }
 });
 
-ruleTester.run("discourse-computed", rule, {
+ruleTester.run("no-discourse-computed", rule, {
   valid: [
     {
       name: "Working computed",

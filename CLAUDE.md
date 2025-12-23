@@ -87,7 +87,7 @@ output: ["expected line 1", "expected line 2"].join("\n")
 
 Task Description
 
-Rule Name: [e.g., discourse-computed]
+Rule Name: [e.g., no-discourse-computed]
 
 Goal: [What should this rule enforce/transform?]
 

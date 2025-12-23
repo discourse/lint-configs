@@ -15,7 +15,7 @@ import deprecatedImports from "./eslint-rules/deprecated-imports.mjs";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
-import discourseComputed from "./eslint-rules/discourse-computed.mjs";
+import discourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
@@ -140,7 +140,7 @@ export default [
           "no-route-template": noRouteTemplate,
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
-          "discourse-computed": discourseComputed,
+          "no-discourse-computed": discourseComputed,
         },
       },
     },
@@ -318,7 +318,7 @@ export default [
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
-      "discourse/discourse-computed": ["error"],
+      "discourse/no-discourse-computed": ["error"],
       // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
       // "discourse/moved-packages-import-paths": ["error"], // Enable when the package move commits are released
     },
