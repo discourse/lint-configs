@@ -1298,6 +1298,40 @@ ruleTester.run("discourse-computed", rule, {
         "}"
       ].join("\n")
     },
+    {
+      name: "discourseComputed with multiple consecutive reassignments - auto-fix all",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"suspended_till\", \"suspended_at\")",
+        "  suspendDuration(suspendedTill, suspendedAt) {",
+        "    suspendedAt = moment(suspendedAt);",
+        "    suspendedTill = moment(suspendedTill);",
+        "    return suspendedAt.format(\"L\") + \" - \" + suspendedTill.format(\"L\");",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"suspended_till\", \"suspended_at\")",
+        "  get suspendDuration() {",
+        "    const suspendedAt = moment(this.suspended_at);",
+        "    const suspendedTill = moment(this.suspended_till);",
+        "    return suspendedAt.format(\"L\") + \" - \" + suspendedTill.format(\"L\");",
+        "  }",
+        "}"
+      ].join("\n")
+    },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
     // needed to parse decorator syntax on object properties. This functionality should be

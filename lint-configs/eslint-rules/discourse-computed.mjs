@@ -771,35 +771,46 @@ export default {
 
         const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
 
-        // Check if this is a "simple" reassignment case we can auto-fix:
-        // - First statement in method body is an ExpressionStatement with AssignmentExpression
+        // Check for "simple" reassignment cases we can auto-fix:
+        // - Consecutive statements at the beginning are ExpressionStatement with AssignmentExpression
         // - No update expressions
-        // - Assignment is at depth 0 (not nested in if/loop/etc)
-        let isSimpleReassignment = false;
-        let simpleReassignmentParam = null;
+        // - Assignments are at depth 0 (not nested in if/loop/etc)
+        const simpleReassignments = [];
 
         if (hasParameterReassignment && !hasParameterInSpread && node.value.body.body && node.value.body.body.length > 0) {
-          const firstStatement = node.value.body.body[0];
+          // Check consecutive statements from the beginning
+          for (let i = 0; i < node.value.body.body.length; i++) {
+            const statement = node.value.body.body[i];
 
-          if (firstStatement.type === 'ExpressionStatement' &&
-              firstStatement.expression.type === 'AssignmentExpression' &&
-              firstStatement.expression.left.type === 'Identifier' &&
-              paramNames.includes(firstStatement.expression.left.name)) {
+            if (statement.type === 'ExpressionStatement' &&
+                statement.expression.type === 'AssignmentExpression' &&
+                statement.expression.left.type === 'Identifier' &&
+                paramNames.includes(statement.expression.left.name)) {
 
-            const paramName = firstStatement.expression.left.name;
-            const info = parameterReassignmentInfo[paramName];
+              const paramName = statement.expression.left.name;
+              const info = parameterReassignmentInfo[paramName];
 
-            // Check if this parameter has update expressions
-            if (!info.hasUpdateExpression) {
-              // Check if the first assignment is at depth 0
-              const firstAssignment = info.assignments[0];
-              if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === firstStatement.expression) {
-                isSimpleReassignment = true;
-                simpleReassignmentParam = paramName;
+              // Check if this parameter has update expressions
+              if (info && !info.hasUpdateExpression) {
+                // Check if the first assignment is at depth 0
+                const firstAssignment = info.assignments[0];
+                if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === statement.expression) {
+                  simpleReassignments.push({
+                    statement,
+                    paramName,
+                    info
+                  });
+                  continue; // Continue checking next statement
+                }
               }
             }
+
+            // If we hit a non-simple-reassignment statement, stop checking
+            break;
           }
         }
+
+        const hasSimpleReassignments = simpleReassignments.length > 0;
 
         // Check if we need to rename non-fixable decorators
         // This happens when: import was originally named 'computed', we're keeping it (mixed scenario),
@@ -807,7 +818,7 @@ export default {
         const { hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
         // Determine if we can auto-fix or need to provide error message
-        const canAutoFix = isSimpleReassignment || (!hasParameterReassignment && !hasParameterInSpread);
+        const canAutoFix = hasSimpleReassignments || (!hasParameterReassignment && !hasParameterInSpread);
         const needsDecoratorRename = !canAutoFix &&
                                      hasParameterReassignments &&
                                      discourseComputedLocalName === 'computed';
@@ -815,7 +826,7 @@ export default {
         // Build a more descriptive error message for non-fixable cases
         let errorMessage = "Use '@computed(...)' instead of '@discourseComputed(...)'.";
 
-        if (hasParameterReassignment && !isSimpleReassignment) {
+        if (hasParameterReassignment && !hasSimpleReassignments) {
           // Complex reassignment case - provide detailed error
           const reassignedParam = Object.keys(parameterReassignmentInfo)[0];
           const info = parameterReassignmentInfo[reassignedParam];
@@ -922,60 +933,111 @@ export default {
                 node.value.params[node.value.params.length - 1].range[1];
               fixes.push(fixer.removeRange([paramsStart, paramsEnd]));
 
-              // Handle simple reassignment case: convert first assignment to variable declaration
-              if (isSimpleReassignment && simpleReassignmentParam) {
-                const firstStatement = node.value.body.body[0];
-                const assignmentExpr = firstStatement.expression;
-                const propertyPath = decoratorArgs[paramNames.indexOf(simpleReassignmentParam)] || simpleReassignmentParam;
-                const thisAccess = propertyPathToOptionalChaining(propertyPath, true, false);
+              // Create a map of param names to property names (needed for both simple and normal replacement)
+              const paramToProperty = {};
+              paramNames.forEach((paramName, index) => {
+                paramToProperty[paramName] = decoratorArgs[index] || paramName;
+              });
 
-                // Determine whether to use const or let
-                const info = parameterReassignmentInfo[simpleReassignmentParam];
-                const useConst = info.assignments.length === 1;
-                const keyword = useConst ? 'const' : 'let';
-
-                // Convert "param = ..." to "const/let param = ..."
-                // We need to replace the entire assignment expression with the declaration
-                const rightSide = sourceCode.getText(assignmentExpr.right);
-
-                // Replace the first occurrence of the parameter on the right side with this.property
-                // But only if it's a simple reference, not part of a larger expression
-                let newRightSide = rightSide;
-                if (assignmentExpr.right.type === 'Identifier' && assignmentExpr.right.name === simpleReassignmentParam) {
-                  newRightSide = thisAccess;
-                } else if (assignmentExpr.right.type === 'LogicalExpression') {
-                  // Handle cases like: title = title || ""
-                  const rightText = sourceCode.getText(assignmentExpr.right);
-                  // Replace exact parameter name with this.property (word boundary)
-                  const regex = new RegExp(`\\b${simpleReassignmentParam}\\b`, 'g');
-                  newRightSide = rightText.replace(regex, thisAccess);
+              // Recursive function to replace all parameter identifiers in an expression
+              const replaceIdentifiersInExpression = (expr) => {
+                if (!expr || typeof expr !== 'object') {
+                  return sourceCode.getText(expr);
                 }
 
-                fixes.push(
-                  fixer.replaceText(
-                    assignmentExpr,
-                    `${keyword} ${simpleReassignmentParam} = ${newRightSide}`
-                  )
-                );
+                if (expr.type === 'Identifier') {
+                  if (paramToProperty[expr.name]) {
+                    const propertyPath = paramToProperty[expr.name];
+                    return propertyPathToOptionalChaining(propertyPath, true, false);
+                  }
+                  return expr.name;
+                }
+
+                if (expr.type === 'CallExpression') {
+                  const callee = replaceIdentifiersInExpression(expr.callee);
+                  const args = expr.arguments.map(arg => replaceIdentifiersInExpression(arg)).join(', ');
+                  return `${callee}(${args})`;
+                }
+
+                if (expr.type === 'MemberExpression') {
+                  const object = replaceIdentifiersInExpression(expr.object);
+                  if (expr.computed) {
+                    const property = replaceIdentifiersInExpression(expr.property);
+                    return `${object}[${property}]`;
+                  } else {
+                    return `${object}.${expr.property.name}`;
+                  }
+                }
+
+                if (expr.type === 'LogicalExpression' || expr.type === 'BinaryExpression') {
+                  const left = replaceIdentifiersInExpression(expr.left);
+                  const right = replaceIdentifiersInExpression(expr.right);
+                  return `${left} ${expr.operator} ${right}`;
+                }
+
+                if (expr.type === 'ConditionalExpression') {
+                  const test = replaceIdentifiersInExpression(expr.test);
+                  const consequent = replaceIdentifiersInExpression(expr.consequent);
+                  const alternate = replaceIdentifiersInExpression(expr.alternate);
+                  return `${test} ? ${consequent} : ${alternate}`;
+                }
+
+                if (expr.type === 'ArrayExpression') {
+                  const elements = expr.elements.map(el => el ? replaceIdentifiersInExpression(el) : '').join(', ');
+                  return `[${elements}]`;
+                }
+
+                if (expr.type === 'ObjectExpression') {
+                  // For objects, use the original text to preserve formatting
+                  return sourceCode.getText(expr);
+                }
+
+                // For other expressions, just use the original text
+                return sourceCode.getText(expr);
+              };
+
+              // Handle simple reassignment cases: convert assignments to variable declarations
+              if (hasSimpleReassignments) {
+                for (const reassignment of simpleReassignments) {
+                  const { statement, paramName, info } = reassignment;
+                  const assignmentExpr = statement.expression;
+
+                  // Determine whether to use const or let
+                  const useConst = info.assignments.length === 1;
+                  const keyword = useConst ? 'const' : 'let';
+
+                  // Replace all parameter identifiers in the right-hand side
+                  const newRightSide = replaceIdentifiersInExpression(assignmentExpr.right);
+
+                  fixes.push(
+                    fixer.replaceText(
+                      assignmentExpr,
+                      `${keyword} ${paramName} = ${newRightSide}`
+                    )
+                  );
+
+                  // Remove this parameter from paramToProperty since it's already handled
+                  delete paramToProperty[paramName];
+                }
               }
 
               // Replace parameter references with this.propertyName in method body
               // Use AST traversal to find identifiers and check their context
               const replacements = [];
 
-              // Create a map of param names to property names
-              const paramToProperty = {};
-              paramNames.forEach((paramName, index) => {
-                // Skip the simple reassignment param - it's already handled
-                if (paramName === simpleReassignmentParam) {
-                  return;
-                }
-                paramToProperty[paramName] = decoratorArgs[index] || paramName;
-              });
+              // Collect statements to skip (already handled in simple reassignments)
+              const statementsToSkipInTraversal = hasSimpleReassignments
+                ? new Set(simpleReassignments.map(r => r.statement))
+                : new Set();
 
-              // Traverse the method body AST to find identifier references
               const traverse = (astNode) => {
                 if (!astNode || typeof astNode !== 'object') {
+                  return;
+                }
+
+                // Skip statements that were already handled as simple reassignments
+                // (we already handled them above and don't want overlapping fixes)
+                if (statementsToSkipInTraversal.has(astNode)) {
                   return;
                 }
 
