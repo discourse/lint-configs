@@ -417,6 +417,11 @@ export default {
       CallExpression(node) {
         // Check if this is a discourseComputed function call (using the tracked local name)
         if (node.callee && node.callee.name === discourseComputedLocalName) {
+          // Skip if this CallExpression is part of a decorator - those are handled by the Property/MethodDefinition handlers
+          if (node.parent && node.parent.type === 'Decorator') {
+            return;
+          }
+
           // Check if we're inside a .extend() call (classic class)
           let parent = node.parent;
           let isClassicClass = false;
