@@ -15,38 +15,45 @@ Available Utilities
 
 Testing Commands
 
-# Run specific test file
-pnpm test <test-filename>.test.mjs
-
-# Run all tests
-pnpm test
-
-# View test output with filtering
-pnpm test <test-filename>.test.mjs 2>&1 | grep -A <lines> "<test-name>"
+- Run all tests (from root directory): `cd lint-configs && pnpm test`
+ 
+- Important: 
+  * Do NOT run test files directly with node
+  * The test command must be run from the lint-configs directory using pnpm 
+  * The test script (from lint-configs/package.json) runs: `cd ../test && node test.js`
 
 Key Development Patterns
 
-1. Rule Structure
+1. Prefer AST Over Regex
+
+- Always use the Abstract Syntax Tree (AST) for code analysis instead of regular expressions
+- AST analysis is more reliable and understands code structure, not just patterns
+- Avoids false positives (won't match strings/comments that look like code)
+- Handles edge cases better (syntax variations, whitespace, formatting)
+- More maintainable and less brittle when code formatting changes
+- Use node visitors and ESLint context to access the full AST
+
+2. Rule Structure
 
 - Use context.getSourceCode() to get AST
 - Common handlers: ImportDeclaration, MethodDefinition, Property, CallExpression, Decorator
 - Track state with variables at the top of create()
 - Use analyzeAllImports() pattern to avoid race conditions
 
-2. When to Report Errors
+3. When to Report Errors
 
 - Report on the most specific node (e.g., defaultSpecifier not entire ImportDeclaration)
 - Provide fix function for auto-fixable issues
 - Return undefined for fix when manual intervention needed
 
-3. Import Handling
+4. Import Handling
 
 - Check for naming conflicts across all imports
 - Handle aliases (e.g., import { computed as emberComputed })
 - Track both original and local names for renamed imports
 - Use fixImport() utility when possible, manually construct when needed
 
-4. Test Structure
+5. Test Structure
 
 {                                                                                                                               
 name: "descriptive test name",                                                                                                
@@ -58,7 +65,7 @@ errors: [
 output: ["expected line 1", "expected line 2"].join("\n")                                                                     
 }
 
-5. Common Pitfalls to Avoid
+6. Common Pitfalls to Avoid
 
 - Don't report same error multiple times (check if handlers overlap)
 - Remember to handle both CallExpression and plain Identifier for decorators
