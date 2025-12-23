@@ -252,7 +252,7 @@ ruleTester.run("discourse-computed", rule, {
           message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
         },
         {
-          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+          message: "Cannot auto-fix @discourseComputed because parameter 'title' is reassigned. Convert to getter manually and use a local variable instead. Example: 'let title = this.title || defaultValue;'"
         }
       ],
       output: [
@@ -591,7 +591,7 @@ ruleTester.run("discourse-computed", rule, {
             "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
         },
         {
-          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+          message: "Cannot auto-fix @discourseComputed because parameter 'title' is reassigned. Convert to getter manually and use a local variable instead. Example: 'let title = this.title || defaultValue;'"
         }
       ],
       output: null
@@ -1048,6 +1048,158 @@ ruleTester.run("discourse-computed", rule, {
         "  }",
         "}"
       ].join("\n")
+    },
+    {
+      name: "discourseComputed with .[] returning parameter directly",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"sortedData.[]\", \"perPage\", \"page\")",
+        "  paginatedData(data, perPage, page) {",
+        "    if (perPage < data.length) {",
+        "      const start = perPage * page;",
+        "      return data.slice(start, start + perPage);",
+        "    }",
+        "    return data;",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"sortedData.[]\", \"perPage\", \"page\")",
+        "  get paginatedData() {",
+        "    if (this.perPage < this.sortedData?.length) {",
+        "      const start = this.perPage * this.page;",
+        "      return this.sortedData?.slice(start, start + this.perPage);",
+        "    }",
+        "    return this.sortedData;",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with .[] in filter callback",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"choices.[]\", \"collection.[]\")",
+        "  filteredChoices(choices, collection) {",
+        "    return makeArray(choices).filter((i) => !collection.includes(i));",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"choices.[]\", \"collection.[]\")",
+        "  get filteredChoices() {",
+        "    return makeArray(this.choices).filter((i) => !this.collection?.includes(i));",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with .[] and multiline member expression",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"words.[]\")",
+        "  processedWords(words) {",
+        "    return words",
+        "      .map((w) => w.toLowerCase())",
+        "      .filter((w) => w.length > 3);",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Use '@computed(...)' instead of '@discourseComputed(...)'."
+        }
+      ],
+      output: [
+        "import { computed } from \"@ember/object\";",
+        "class MyClass {",
+        "  @computed(\"words.[]\")",
+        "  get processedWords() {",
+        "    return this.words",
+        "      ?.map((w) => w.toLowerCase())",
+        "      ?.filter((w) => w.length > 3);",
+        "  }",
+        "}"
+      ].join("\n")
+    },
+    {
+      name: "discourseComputed with spread operator - no auto-fix (requires manual intervention)",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"model.groups\")",
+        "  availableGroups(groups) {",
+        "    return [",
+        "      {",
+        "        id: null,",
+        "        name: \"no-group\",",
+        "      },",
+        "      ...groups,",
+        "    ];",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'groups' is used in a spread operator. Example: Use '...(this.model.groups || [])' or '...(this.model.groups ?? [])' for safe spreading."
+        }
+      ],
+      output: null
+    },
+    {
+      name: "discourseComputed with spread operator on nested property - no auto-fix",
+      code: [
+        "import discourseComputed from \"discourse/lib/decorators\";",
+        "class MyClass {",
+        "  @discourseComputed(\"data.items\")",
+        "  allItems(items) {",
+        "    return [...items, \"extra\"];",
+        "  }",
+        "}"
+      ].join("\n"),
+      errors: [
+        {
+          message:
+            "Use 'import { computed } from \"@ember/object\";' instead of 'import discourseComputed from \"discourse/lib/decorators\";'."
+        },
+        {
+          message: "Cannot auto-fix @discourseComputed because parameter 'items' is used in a spread operator. Example: Use '...(this.data.items || [])' or '...(this.data.items ?? [])' for safe spreading."
+        }
+      ],
+      output: null
     },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
