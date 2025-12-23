@@ -15,7 +15,6 @@ import deprecatedImports from "./eslint-rules/deprecated-imports.mjs";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
 import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
-import discourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
@@ -23,6 +22,7 @@ import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.m
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
+import discourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";

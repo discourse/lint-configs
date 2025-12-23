@@ -1,6 +1,10 @@
-import { collectImports, getImportedLocalNames } from "./utils/analyze-imports.mjs";
+import { analyzeDiscourseComputedUsage as analyzeDiscourseComputedUsageUtil } from "./no-discourse-computed/discourse-computed-analysis.mjs";
+import { createMethodFix } from "./no-discourse-computed/discourse-computed-fixer.mjs";
+import {
+  collectImports,
+  getImportedLocalNames,
+} from "./utils/analyze-imports.mjs";
 import { fixImport } from "./utils/fix-import.mjs";
-import { propertyPathToOptionalChaining } from "./utils/property-path.mjs";
 
 export default {
   meta: {
@@ -12,16 +16,25 @@ export default {
     fixable: "code",
     schema: [], // no options
     messages: {
-      replaceImport: "Use `import { computed } from \"@ember/object\";` instead of `import discourseComputed from \"discourse/lib/decorators\";`.",
-      replaceDecorator: "Use '@computed(...)' instead of '@discourseComputed(...)'.",
-      cannotAutoFixClassic: "Cannot auto-fix {{name}} in classic Ember classes. Please convert to native ES6 class first.",
-      cannotAutoFixNestedFunction: "Cannot auto-fix @{{name}} because parameter '{{param}}' is used inside a nested function. Inside nested regular functions (not arrow functions), 'this' refers to a different context, so converting '{{param}}' to 'this.{{propertyPath}}' would be incorrect. Convert to getter manually.",
-      cannotAutoFixUnsafeOptionalChaining: "Cannot auto-fix @{{name}} because parameter '{{param}}' with nested property path '{{propertyPath}}' would create unsafe optional chaining. Convert to getter manually and handle the chaining explicitly.",
-      cannotAutoFixUpdateExpression: "Cannot auto-fix @{{name}} because parameter '{{param}}' uses update expressions (++/--). Convert to getter manually and use a local variable with explicit assignment.",
-      cannotAutoFixNestedReassignment: "Cannot auto-fix @{{name}} because parameter '{{param}}' is reassigned inside a nested block (if/loop/etc). Convert to getter manually.",
-      cannotAutoFixSpread: "Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator. Example: Use '...(this.{{propertyPath}} || [])' or '...(this.{{propertyPath}} ?? [])' for safe spreading.",
-      cannotAutoFixGeneric: "Cannot auto-fix @{{name}} because parameter '{{param}}' has complex reassignment patterns. Convert to getter manually and use a local variable."
-    }
+      replaceImport:
+        'Use `import { computed } from "@ember/object";` instead of `import discourseComputed from "discourse/lib/decorators";`.',
+      replaceDecorator:
+        "Use '@computed(...)' instead of '@discourseComputed(...)'.",
+      cannotAutoFixClassic:
+        "Cannot auto-fix {{name}} in classic Ember classes. Please convert to native ES6 class first.",
+      cannotAutoFixNestedFunction:
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' is used inside a nested function. Inside nested regular functions (not arrow functions), 'this' refers to a different context, so converting '{{param}}' to 'this.{{propertyPath}}' would be incorrect. Convert to getter manually.",
+      cannotAutoFixUnsafeOptionalChaining:
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' with nested property path '{{propertyPath}}' would create unsafe optional chaining. Convert to getter manually and handle the chaining explicitly.",
+      cannotAutoFixUpdateExpression:
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' uses update expressions (++/--). Convert to getter manually and use a local variable with explicit assignment.",
+      cannotAutoFixNestedReassignment:
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' is reassigned inside a nested block (if/loop/etc). Convert to getter manually.",
+      cannotAutoFixSpread:
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator. Example: Use '...(this.{{propertyPath}} || [])' or '...(this.{{propertyPath}} ?? [])' for safe spreading.",
+      cannotAutoFixGeneric:
+        "Cannot auto-fix @{{name}} because parameter '{{param}}' has complex reassignment patterns. Convert to getter manually and use a local variable.",
+    },
   },
 
   create(context) {
@@ -38,7 +51,7 @@ export default {
     // Wrapper that uses the generic helpers to populate rule-specific import state.
     // We intentionally compute the specific values here (instead of in the utils
     // module) so `utils/analyze-imports.mjs` remains generic and reusable.
-    function analyzeAllImportsWrapper() {
+    function analyzeAllDiscourseComputedImports() {
       if (importsAnalyzed) {
         return;
       }
@@ -47,10 +60,15 @@ export default {
       const allImportedIdentifiers = getImportedLocalNames(sourceCode);
 
       // @ember/object import
-      const emberNode = imports.get('@ember/object');
+      const emberNode = imports.get("@ember/object");
       if (emberNode) {
         emberObjectImportNode = emberNode.node;
-        const computedSpecifier = emberNode.specifiers.find(spec => spec.type === 'ImportSpecifier' && spec.imported && spec.imported.name === 'computed');
+        const computedSpecifier = emberNode.specifiers.find(
+          (spec) =>
+            spec.type === "ImportSpecifier" &&
+            spec.imported &&
+            spec.imported.name === "computed"
+        );
         if (computedSpecifier) {
           hasComputedImport = true;
           computedImportName = computedSpecifier.local.name;
@@ -58,409 +76,44 @@ export default {
       }
 
       // discourse default import
-      const discourseNode = imports.get('discourse/lib/decorators');
+      const discourseNode = imports.get("discourse/lib/decorators");
       if (discourseNode) {
-        const defaultSpecifier = discourseNode.specifiers.find(spec => spec.type === 'ImportDefaultSpecifier');
+        const defaultSpecifier = discourseNode.specifiers.find(
+          (spec) => spec.type === "ImportDefaultSpecifier"
+        );
         if (defaultSpecifier) {
           discourseComputedLocalName = defaultSpecifier.local.name;
         }
       }
 
       if (!computedImportName) {
-        const isComputedUsedElsewhere = allImportedIdentifiers.has('computed') && discourseComputedLocalName !== 'computed';
-        computedImportName = isComputedUsedElsewhere ? 'emberComputed' : 'computed';
+        const isComputedUsedElsewhere =
+          allImportedIdentifiers.has("computed") &&
+          discourseComputedLocalName !== "computed";
+        computedImportName = isComputedUsedElsewhere
+          ? "emberComputed"
+          : "computed";
       }
 
       importsAnalyzed = true;
     }
 
-    // The rest of the rule is unchanged except where helper functions were
-    // previously defined in this file. Those have been replaced with imports
-    // from the utils directory to promote reuse and readability.
-
     function analyzeDiscourseComputedUsage() {
       if (discourseComputedInfo !== null) {
         return discourseComputedInfo;
       }
-
-      const info = {
-        hasFixableDecorators: false,
-        hasClassicClassDecorators: false,
-        hasParameterReassignments: false,
-        hasParametersInSpread: false,
-        hasUnsafeOptionalChaining: false,
-        hasParameterInNestedFunction: false,
-      };
-
-      // Helper to traverse any node recursively
-      function traverseNode(node) {
-        if (!node || typeof node !== 'object') {
-          return;
-        }
-
-        // Check ES6 class declarations
-        if (node.type === 'ClassDeclaration' || node.type === 'ClassExpression') {
-          analyzeClassBody(node.body, info);
-        }
-
-        // Check for classic Ember classes (e.g., Component.extend({ ... }))
-        if (node.type === 'CallExpression' &&
-            node.callee &&
-            node.callee.type === 'MemberExpression' &&
-            node.callee.property &&
-            node.callee.property.name === 'extend') {
-          // This is a .extend() call - check its arguments for decorated properties
-          node.arguments.forEach(arg => {
-            if (arg.type === 'ObjectExpression') {
-              analyzeObjectExpression(arg, info);
-            }
-          });
-        }
-
-        // Recursively traverse all child nodes
-        for (const key in node) {
-          if (key === 'parent' || key === 'range' || key === 'loc') {
-            continue;
-          }
-          const child = node[key];
-          if (Array.isArray(child)) {
-            child.forEach(item => traverseNode(item));
-          } else {
-            traverseNode(child);
-          }
-        }
-      }
-
-      // Traverse the AST starting from the body
-      sourceCode.ast.body.forEach(statement => traverseNode(statement));
-
-      discourseComputedInfo = info;
-      return info;
-    }
-
-    function analyzeClassBody(classBody, info) {
-      if (!classBody || !classBody.body) {
-        return;
-      }
-
-      classBody.body.forEach(member => {
-        if (member.type !== 'MethodDefinition' || !member.decorators) {
-          return;
-        }
-
-        // Check if this method has @discourseComputed decorator (using the tracked local name)
-        const discourseDecorator = member.decorators.find(decorator => {
-          if (decorator.expression.type === 'CallExpression') {
-            return decorator.expression.callee.name === discourseComputedLocalName;
-          }
-          return decorator.expression.name === discourseComputedLocalName;
-        });
-
-        if (discourseDecorator) {
-          // Get decorator arguments to check property paths
-          const decoratorExpression = discourseDecorator.expression;
-          let decoratorArgs = [];
-          if (decoratorExpression.type === "CallExpression") {
-            decoratorArgs = decoratorExpression.arguments.map((arg) => {
-              if (arg.type === "Literal") {
-                return arg.value;
-              }
-              return null;
-            }).filter(Boolean);
-          }
-
-          // Check if any parameters are reassigned, used in spread, or create unsafe optional chaining
-          const paramNames = member.value.params.map((param) => param.name);
-          const parameterReassignmentInfo = {};
-          let hasParameterInSpread = false;
-          let hasUnsafeOptionalChaining = false;
-          let hasParameterInNestedFunction = false;
-
-          if (paramNames.length > 0) {
-            const checkForReassignmentOrSpread = (astNode, depth = 0, inNestedFunction = false) => {
-              if (!astNode || typeof astNode !== 'object') {
-                return;
-              }
-
-              // Check if we're entering a nested regular function (not arrow function)
-              // In nested functions, 'this' has a different context, so we can't safely convert parameter references to this.property
-              const isNestedFunction = (astNode.type === 'FunctionExpression' || astNode.type === 'FunctionDeclaration') && inNestedFunction === false;
-              const newInNestedFunction = inNestedFunction || isNestedFunction;
-
-              // Check if a parameter is used inside a nested regular function
-              if (newInNestedFunction && astNode.type === 'Identifier' && paramNames.includes(astNode.name)) {
-                // Skip if this Identifier is the function name itself (for named function expressions)
-                const parent = astNode.parent;
-                if (!(parent && parent.type === 'FunctionExpression' && parent.id === astNode)) {
-                  hasParameterInNestedFunction = true;
-                }
-              }
-
-              // Check for unsafe optional chaining patterns
-              if (astNode.type === 'MemberExpression' && astNode.object) {
-                if (astNode.object.type === 'LogicalExpression' ||
-                    astNode.object.type === 'ConditionalExpression') {
-
-                  // Check if the expression has a safe literal fallback
-                  const hasSafeLiteralFallback = (expr) => {
-                    if (expr.type === 'LogicalExpression') {
-                      if (expr.operator === '||' || expr.operator === '??') {
-                        return expr.right.type === 'Literal';
-                      }
-                      return false;
-                    }
-                    return false;
-                  };
-
-                  // Skip unsafe check if there's a safe literal fallback
-                  if (hasSafeLiteralFallback(astNode.object)) {
-                    return;
-                  }
-
-                  const checkForNestedProps = (childNode) => {
-                    if (!childNode || typeof childNode !== 'object') {
-                      return false;
-                    }
-                    if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
-                      const paramIndex = paramNames.indexOf(childNode.name);
-                      const propertyPath = decoratorArgs[paramIndex] || childNode.name;
-                      if (propertyPath.includes('.') || propertyPath.includes('{') ||
-                          propertyPath.includes('@') || propertyPath.includes('[')) {
-                        hasUnsafeOptionalChaining = true;
-                        return true;
-                      }
-                    }
-                    if (childNode.type === 'LogicalExpression' || childNode.type === 'ConditionalExpression') {
-                      return checkForNestedProps(childNode.left) || checkForNestedProps(childNode.right) ||
-                             (childNode.alternate && checkForNestedProps(childNode.alternate));
-                    }
-                    return false;
-                  };
-                  checkForNestedProps(astNode.object);
-                }
-              }
-
-              // Check for assignment to a parameter
-              if (astNode.type === 'AssignmentExpression' &&
-                  astNode.left &&
-                  astNode.left.type === 'Identifier' &&
-                  paramNames.includes(astNode.left.name)) {
-                const paramName = astNode.left.name;
-                if (!parameterReassignmentInfo[paramName]) {
-                  parameterReassignmentInfo[paramName] = {
-                    assignments: [],
-                    hasUpdateExpression: false
-                  };
-                }
-                parameterReassignmentInfo[paramName].assignments.push({
-                  node: astNode,
-                  depth
-                });
-                return;
-              }
-
-              // Check for update expressions (++, --)
-              if (astNode.type === 'UpdateExpression' &&
-                  astNode.argument &&
-                  astNode.argument.type === 'Identifier' &&
-                  paramNames.includes(astNode.argument.name)) {
-                const paramName = astNode.argument.name;
-                if (!parameterReassignmentInfo[paramName]) {
-                  parameterReassignmentInfo[paramName] = {
-                    assignments: [],
-                    hasUpdateExpression: false
-                  };
-                }
-                parameterReassignmentInfo[paramName].hasUpdateExpression = true;
-                return;
-              }
-
-              // Check for spread elements containing parameters
-              if (astNode.type === 'SpreadElement') {
-                const isSafeArrayFallback = (childNode) => {
-                  // Check if node is an array literal or array expression
-                  return childNode?.type === 'ArrayExpression';
-                };
-
-                const checkSpreadArgument = (childNode, isTopLevel = true, isInSafeContext = false) => {
-                  if (!childNode) {
-                    return;
-                  }
-
-                  // At the top level, check for safe fallback patterns first
-                  if (isTopLevel) {
-                    // Safe pattern: ...(param || []) or ...(param ?? [])
-                    if (childNode.type === 'LogicalExpression' &&
-                        (childNode.operator === '||' || childNode.operator === '??') &&
-                        isSafeArrayFallback(childNode.right)) {
-                      // This is a safe pattern, don't mark as unsafe
-                      // We can safely skip this - parameters will be replaced normally in the body
-                      return;
-                    }
-
-                    // Safe pattern: ...(condition ? param : []) or similar with safe alternate
-                    if (childNode.type === 'ConditionalExpression' &&
-                        isSafeArrayFallback(childNode.alternate)) {
-                      // This is a safe pattern, don't mark as unsafe
-                      // We can safely skip this - parameters will be replaced normally in the body
-                      return;
-                    }
-                  }
-
-                  // Direct parameter: ...param
-                  if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
-                    if (!isInSafeContext) {
-                      hasParameterInSpread = true;
-                    }
-                    return;
-                  }
-
-                  // Member expression: ...param.property
-                  if (childNode.type === 'MemberExpression') {
-                    let obj = childNode.object;
-                    while (obj) {
-                      if (obj.type === 'Identifier' && paramNames.includes(obj.name)) {
-                        if (!isInSafeContext) {
-                          hasParameterInSpread = true;
-                        }
-                        return;
-                      }
-                      if (obj.type === 'MemberExpression') {
-                        obj = obj.object;
-                      } else {
-                        break;
-                      }
-                    }
-                  }
-
-                  // Check inside parenthesized expressions
-                  if (childNode.type === 'ParenthesizedExpression') {
-                    checkSpreadArgument(childNode.expression, isTopLevel, isInSafeContext);
-                    return;
-                  }
-
-                  // For nested contexts (not at top level), recursively check
-                  if (!isTopLevel) {
-                    if (childNode.type === 'LogicalExpression') {
-                      checkSpreadArgument(childNode.left, false, isInSafeContext);
-                      checkSpreadArgument(childNode.right, false, isInSafeContext);
-                    }
-
-                    if (childNode.type === 'ConditionalExpression') {
-                      checkSpreadArgument(childNode.test, false, isInSafeContext);
-                      checkSpreadArgument(childNode.consequent, false, isInSafeContext);
-                      checkSpreadArgument(childNode.alternate, false, isInSafeContext);
-                    }
-                  }
-                };
-
-                checkSpreadArgument(astNode.argument);
-              }
-
-              // Track depth for nested structures
-              const isNestingNode = astNode.type === 'IfStatement' ||
-                                    astNode.type === 'ForStatement' ||
-                                    astNode.type === 'WhileStatement' ||
-                                    astNode.type === 'DoWhileStatement' ||
-                                    astNode.type === 'SwitchStatement' ||
-                                    astNode.type === 'TryStatement';
-
-              // Recursively check children
-              for (const key in astNode) {
-                if (key === 'parent' || key === 'range' || key === 'loc') {
-                  continue;
-                }
-                const child = astNode[key];
-                const childDepth = isNestingNode ? depth + 1 : depth;
-                if (Array.isArray(child)) {
-                  child.forEach(item => checkForReassignmentOrSpread(item, childDepth, newInNestedFunction));
-                } else {
-                  checkForReassignmentOrSpread(child, childDepth, newInNestedFunction);
-                }
-              }
-            };
-
-            checkForReassignmentOrSpread(member.value.body, 0, false);
-          }
-
-          const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
-
-          // Check if it's a simple reassignment (can be auto-fixed)
-          let isSimpleReassignment = false;
-          if (hasParameterReassignment && !hasParameterInSpread && member.value.body.body && member.value.body.body.length > 0) {
-            const firstStatement = member.value.body.body[0];
-
-            if (firstStatement.type === 'ExpressionStatement' &&
-                firstStatement.expression.type === 'AssignmentExpression' &&
-                firstStatement.expression.left.type === 'Identifier' &&
-                paramNames.includes(firstStatement.expression.left.name)) {
-
-              const paramName = firstStatement.expression.left.name;
-              const paramInfo = parameterReassignmentInfo[paramName];
-
-              if (!paramInfo.hasUpdateExpression) {
-                const firstAssignment = paramInfo.assignments[0];
-                if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === firstStatement.expression) {
-                  isSimpleReassignment = true;
-                }
-              }
-            }
-          }
-
-          // Categorize this decorator
-          if (hasParameterInNestedFunction) {
-            info.hasParameterInNestedFunction = true;
-          } else if (hasUnsafeOptionalChaining) {
-            info.hasUnsafeOptionalChaining = true;
-          } else if (hasParameterInSpread) {
-            info.hasParametersInSpread = true;
-          } else if (hasParameterReassignment && !isSimpleReassignment) {
-            info.hasParameterReassignments = true;
-          } else {
-            info.hasFixableDecorators = true;
-          }
-        }
-      });
-    }
-
-    function analyzeObjectExpression(objExpr, info) {
-      if (!objExpr || !objExpr.properties) {
-        return;
-      }
-
-      objExpr.properties.forEach(prop => {
-        // Check if this property has decorators (classic class with decorator syntax)
-        if (prop.type === 'Property' && prop.decorators && prop.decorators.length > 0) {
-          const discourseDecorator = prop.decorators.find(decorator => {
-            if (decorator.expression.type === 'CallExpression') {
-              return decorator.expression.callee.name === discourseComputedLocalName;
-            }
-            return decorator.expression.name === discourseComputedLocalName;
-          });
-
-          if (discourseDecorator) {
-            // Classic classes with decorators cannot be auto-fixed
-            info.hasClassicClassDecorators = true;
-          }
-        }
-
-        // Check if this property uses discourseComputed as a function call
-        // e.g., { text: discourseComputed("name", function(name) { ... }) }
-        if (prop.type === 'Property' &&
-            prop.value &&
-            prop.value.type === 'CallExpression' &&
-            prop.value.callee &&
-            prop.value.callee.name === discourseComputedLocalName) {
-          // Classic classes with discourseComputed function calls cannot be auto-fixed
-          info.hasClassicClassDecorators = true;
-        }
-      });
+      // Delegate to the reusable analyzer; keep result cached locally
+      discourseComputedInfo = analyzeDiscourseComputedUsageUtil(
+        sourceCode,
+        discourseComputedLocalName
+      );
+      return discourseComputedInfo;
     }
 
     return {
       ImportDeclaration(node) {
         // Analyze all imports first to avoid race conditions
-        analyzeAllImportsWrapper();
+        analyzeAllDiscourseComputedImports();
 
         // Handle import from "discourse/lib/decorators"
         // The default export is discourseComputed, but it could be imported with any name
@@ -471,12 +124,19 @@ export default {
 
           if (defaultSpecifier) {
             // Analyze all @discourseComputed usage in the file using AST
-            const { hasFixableDecorators, hasClassicClassDecorators, hasParameterReassignments, hasParametersInSpread, hasUnsafeOptionalChaining, hasParameterInNestedFunction } = analyzeDiscourseComputedUsage();
+            const {
+              hasFixableDecorators,
+              hasClassicClassDecorators,
+              hasParameterReassignments,
+              hasParametersInSpread,
+              hasUnsafeOptionalChaining,
+              hasParameterInNestedFunction,
+            } = analyzeDiscourseComputedUsage();
 
             context.report({
               node: defaultSpecifier,
               messageId: "replaceImport",
-              fix: function(fixer) {
+              fix: function (fixer) {
                 const fixes = [];
                 const importNode = node; // Reference to the full ImportDeclaration
 
@@ -491,13 +151,20 @@ export default {
                 );
 
                 // Determine the import string to use (with alias if needed)
-                const computedImportString = computedImportName === 'computed'
-                  ? 'computed'
-                  : `computed as ${computedImportName}`;
+                const computedImportString =
+                  computedImportName === "computed"
+                    ? "computed"
+                    : `computed as ${computedImportName}`;
 
                 // If there are classic class decorators, parameter reassignments, parameters in spread, unsafe optional chaining, or parameters in nested functions,
                 // we keep the discourseComputed import. Otherwise, we remove it
-                if (!hasClassicClassDecorators && !hasParameterReassignments && !hasParametersInSpread && !hasUnsafeOptionalChaining && !hasParameterInNestedFunction) {
+                if (
+                  !hasClassicClassDecorators &&
+                  !hasParameterReassignments &&
+                  !hasParametersInSpread &&
+                  !hasUnsafeOptionalChaining &&
+                  !hasParameterInNestedFunction
+                ) {
                   if (namedSpecifiers.length > 0) {
                     // Keep named imports, remove default import
                     fixes.push(
@@ -530,9 +197,16 @@ export default {
                     if (!hasComputedImport) {
                       if (emberObjectImportNode) {
                         // Remove discourseComputed import, add computed to @ember/object
-                        const nextChar = sourceCode.getText().charAt(importNode.range[1]);
-                        const rangeEnd = nextChar === '\n' ? importNode.range[1] + 1 : importNode.range[1];
-                        fixes.push(fixer.removeRange([importNode.range[0], rangeEnd]));
+                        const nextChar = sourceCode
+                          .getText()
+                          .charAt(importNode.range[1]);
+                        const rangeEnd =
+                          nextChar === "\n"
+                            ? importNode.range[1] + 1
+                            : importNode.range[1];
+                        fixes.push(
+                          fixer.removeRange([importNode.range[0], rangeEnd])
+                        );
 
                         fixes.push(
                           fixImport(fixer, emberObjectImportNode, {
@@ -550,9 +224,16 @@ export default {
                       }
                     } else {
                       // computed already imported, just remove discourseComputed
-                      const nextChar = sourceCode.getText().charAt(importNode.range[1]);
-                      const rangeEnd = nextChar === '\n' ? importNode.range[1] + 1 : importNode.range[1];
-                      fixes.push(fixer.removeRange([importNode.range[0], rangeEnd]));
+                      const nextChar = sourceCode
+                        .getText()
+                        .charAt(importNode.range[1]);
+                      const rangeEnd =
+                        nextChar === "\n"
+                          ? importNode.range[1] + 1
+                          : importNode.range[1];
+                      fixes.push(
+                        fixer.removeRange([importNode.range[0], rangeEnd])
+                      );
                     }
                   }
                 } else {
@@ -560,9 +241,9 @@ export default {
                   // Keep discourseComputed import but add computed for the fixable ones
 
                   // If the default import is named 'computed', rename it to 'discourseComputed'
-                  if (discourseComputedLocalName === 'computed') {
+                  if (discourseComputedLocalName === "computed") {
                     // fixImport doesn't support renaming, so we need to manually construct
-                    const namedImportStrings = namedSpecifiers.map(spec => {
+                    const namedImportStrings = namedSpecifiers.map((spec) => {
                       if (spec.imported.name === spec.local.name) {
                         return spec.imported.name;
                       } else {
@@ -570,9 +251,9 @@ export default {
                       }
                     });
 
-                    let newImportStatement = 'import discourseComputed';
+                    let newImportStatement = "import discourseComputed";
                     if (namedImportStrings.length > 0) {
-                      newImportStatement += `, { ${namedImportStrings.join(', ')} }`;
+                      newImportStatement += `, { ${namedImportStrings.join(", ")} }`;
                     }
                     newImportStatement += ` from "${importNode.source.value}";`;
 
@@ -612,7 +293,7 @@ export default {
         // Check if this is a discourseComputed function call (using the tracked local name)
         if (node.callee && node.callee.name === discourseComputedLocalName) {
           // Skip if this CallExpression is part of a decorator - those are handled by the Property/MethodDefinition handlers
-          if (node.parent && node.parent.type === 'Decorator') {
+          if (node.parent && node.parent.type === "Decorator") {
             return;
           }
 
@@ -645,7 +326,7 @@ export default {
         }
       },
 
-      Property: function(node) {
+      Property: function (node) {
         // Handle classic Ember classes with decorator syntax (e.g., Component.extend({ @discourseComputed ... }))
         if (!node.decorators || node.decorators.length === 0) {
           return;
@@ -657,7 +338,10 @@ export default {
           const discourseComputedDecorator = node.decorators.find(
             (decorator) => {
               if (decorator.expression.type === "CallExpression") {
-                return decorator.expression.callee.name === discourseComputedLocalName;
+                return (
+                  decorator.expression.callee.name ===
+                  discourseComputedLocalName
+                );
               }
               return decorator.expression.name === discourseComputedLocalName;
             }
@@ -694,20 +378,20 @@ export default {
         }
       },
 
-      MethodDefinition: function(node) {
+      MethodDefinition: function (node) {
         if (!node.decorators || node.decorators.length === 0) {
           return;
         }
 
         // Find decorator using the tracked local name
-        const discourseComputedDecorator = node.decorators.find(
-          (decorator) => {
-            if (decorator.expression.type === "CallExpression") {
-              return decorator.expression.callee.name === discourseComputedLocalName;
-            }
-            return decorator.expression.name === discourseComputedLocalName;
+        const discourseComputedDecorator = node.decorators.find((decorator) => {
+          if (decorator.expression.type === "CallExpression") {
+            return (
+              decorator.expression.callee.name === discourseComputedLocalName
+            );
           }
-        );
+          return decorator.expression.name === discourseComputedLocalName;
+        });
 
         if (!discourseComputedDecorator) {
           return;
@@ -717,12 +401,14 @@ export default {
         const decoratorExpression = discourseComputedDecorator.expression;
         let decoratorArgs = [];
         if (decoratorExpression.type === "CallExpression") {
-          decoratorArgs = decoratorExpression.arguments.map((arg) => {
-            if (arg.type === "Literal") {
-              return arg.value;
-            }
-            return null;
-          }).filter(Boolean);
+          decoratorArgs = decoratorExpression.arguments
+            .map((arg) => {
+              if (arg.type === "Literal") {
+                return arg.value;
+              }
+              return null;
+            })
+            .filter(Boolean);
         }
 
         // Check if any parameters are reassigned in the method body
@@ -736,21 +422,38 @@ export default {
         const parameterReassignmentInfo = {}; // Track detailed info per parameter
 
         if (paramNames.length > 0) {
-          const checkForReassignmentOrSpread = (astNode, depth = 0, inNestedFunction = false) => {
-            if (!astNode || typeof astNode !== 'object') {
+          const checkForReassignmentOrSpread = (
+            astNode,
+            depth = 0,
+            inNestedFunction = false
+          ) => {
+            if (!astNode || typeof astNode !== "object") {
               return;
             }
 
             // Check if we're entering a nested regular function (not arrow function)
             // In nested functions, 'this' has a different context, so we can't safely convert parameter references to this.property
-            const isNestedFunction = (astNode.type === 'FunctionExpression' || astNode.type === 'FunctionDeclaration') && inNestedFunction === false;
+            const isNestedFunction =
+              (astNode.type === "FunctionExpression" ||
+                astNode.type === "FunctionDeclaration") &&
+              inNestedFunction === false;
             const newInNestedFunction = inNestedFunction || isNestedFunction;
 
             // Check if a parameter is used inside a nested regular function
-            if (newInNestedFunction && astNode.type === 'Identifier' && paramNames.includes(astNode.name)) {
+            if (
+              newInNestedFunction &&
+              astNode.type === "Identifier" &&
+              paramNames.includes(astNode.name)
+            ) {
               // Skip if this Identifier is the function name itself (for named function expressions)
               const parent = astNode.parent;
-              if (!(parent && parent.type === 'FunctionExpression' && parent.id === astNode)) {
+              if (
+                !(
+                  parent &&
+                  parent.type === "FunctionExpression" &&
+                  parent.id === astNode
+                )
+              ) {
                 hasParameterInNestedFunction = true;
                 nestedFunctionParam = astNode.name;
               }
@@ -760,18 +463,19 @@ export default {
             // that are then used as object in MemberExpression
             // UNSAFE: (this.item?.username || this.item?.draft_username).toLowerCase() - both could be undefined
             // SAFE: (this.siteSettings?.value || "default").split() - literal fallback is safe
-            if (astNode.type === 'MemberExpression' && astNode.object) {
+            if (astNode.type === "MemberExpression" && astNode.object) {
               // Only check if the object is a logical or conditional expression (NOT binary arithmetic)
-              if (astNode.object.type === 'LogicalExpression' ||
-                  astNode.object.type === 'ConditionalExpression') {
-
+              if (
+                astNode.object.type === "LogicalExpression" ||
+                astNode.object.type === "ConditionalExpression"
+              ) {
                 // Check if the expression has a safe literal fallback
                 const hasSafeLiteralFallback = (expr) => {
-                  if (expr.type === 'LogicalExpression') {
+                  if (expr.type === "LogicalExpression") {
                     // For || and ??, the right side is the fallback
-                    if (expr.operator === '||' || expr.operator === '??') {
+                    if (expr.operator === "||" || expr.operator === "??") {
                       // Check if right side is a literal (string, number, boolean, null)
-                      return expr.right.type === 'Literal';
+                      return expr.right.type === "Literal";
                     }
                     // For &&, both sides matter - not a safe pattern for fallback
                     return false;
@@ -786,17 +490,25 @@ export default {
                 }
 
                 const checkForNestedPropertiesInExpression = (childNode) => {
-                  if (!childNode || typeof childNode !== 'object') {
+                  if (!childNode || typeof childNode !== "object") {
                     return false;
                   }
 
                   // Check if it's a parameter identifier with nested properties
-                  if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
+                  if (
+                    childNode.type === "Identifier" &&
+                    paramNames.includes(childNode.name)
+                  ) {
                     const paramIndex = paramNames.indexOf(childNode.name);
-                    const propertyPath = decoratorArgs[paramIndex] || childNode.name;
+                    const propertyPath =
+                      decoratorArgs[paramIndex] || childNode.name;
                     // Check if it's a nested property (contains a dot)
-                    if (propertyPath.includes('.') || propertyPath.includes('{') ||
-                        propertyPath.includes('@') || propertyPath.includes('[')) {
+                    if (
+                      propertyPath.includes(".") ||
+                      propertyPath.includes("{") ||
+                      propertyPath.includes("@") ||
+                      propertyPath.includes("[")
+                    ) {
                       hasUnsafeOptionalChaining = true;
                       unsafeOptionalChainingParam = childNode.name;
                       return true;
@@ -804,10 +516,18 @@ export default {
                   }
 
                   // Recursively check in nested expressions
-                  if (childNode.type === 'LogicalExpression' || childNode.type === 'ConditionalExpression') {
-                    return checkForNestedPropertiesInExpression(childNode.left) ||
-                           checkForNestedPropertiesInExpression(childNode.right) ||
-                           (childNode.alternate && checkForNestedPropertiesInExpression(childNode.alternate));
+                  if (
+                    childNode.type === "LogicalExpression" ||
+                    childNode.type === "ConditionalExpression"
+                  ) {
+                    return (
+                      checkForNestedPropertiesInExpression(childNode.left) ||
+                      checkForNestedPropertiesInExpression(childNode.right) ||
+                      (childNode.alternate &&
+                        checkForNestedPropertiesInExpression(
+                          childNode.alternate
+                        ))
+                    );
                   }
 
                   return false;
@@ -818,34 +538,38 @@ export default {
             }
 
             // Check for assignment to a parameter
-            if (astNode.type === 'AssignmentExpression' &&
-                astNode.left &&
-                astNode.left.type === 'Identifier' &&
-                paramNames.includes(astNode.left.name)) {
+            if (
+              astNode.type === "AssignmentExpression" &&
+              astNode.left &&
+              astNode.left.type === "Identifier" &&
+              paramNames.includes(astNode.left.name)
+            ) {
               const paramName = astNode.left.name;
               if (!parameterReassignmentInfo[paramName]) {
                 parameterReassignmentInfo[paramName] = {
                   assignments: [],
-                  hasUpdateExpression: false
+                  hasUpdateExpression: false,
                 };
               }
               parameterReassignmentInfo[paramName].assignments.push({
                 node: astNode,
-                depth
+                depth,
               });
               return;
             }
 
             // Check for update expressions (++, --) - these can't be auto-fixed
-            if (astNode.type === 'UpdateExpression' &&
-                astNode.argument &&
-                astNode.argument.type === 'Identifier' &&
-                paramNames.includes(astNode.argument.name)) {
+            if (
+              astNode.type === "UpdateExpression" &&
+              astNode.argument &&
+              astNode.argument.type === "Identifier" &&
+              paramNames.includes(astNode.argument.name)
+            ) {
               const paramName = astNode.argument.name;
               if (!parameterReassignmentInfo[paramName]) {
                 parameterReassignmentInfo[paramName] = {
                   assignments: [],
-                  hasUpdateExpression: false
+                  hasUpdateExpression: false,
                 };
               }
               parameterReassignmentInfo[paramName].hasUpdateExpression = true;
@@ -853,13 +577,17 @@ export default {
             }
 
             // Check for spread elements containing parameters or their properties
-            if (astNode.type === 'SpreadElement') {
+            if (astNode.type === "SpreadElement") {
               const isSafeArrayFallback = (childNode) => {
                 // Check if node is an array literal or array expression
-                return childNode?.type === 'ArrayExpression';
+                return childNode?.type === "ArrayExpression";
               };
 
-              const checkSpreadArgument = (childNode, isTopLevel = true, isInSafeContext = false) => {
+              const checkSpreadArgument = (
+                childNode,
+                isTopLevel = true,
+                isInSafeContext = false
+              ) => {
                 if (!childNode) {
                   return;
                 }
@@ -867,17 +595,22 @@ export default {
                 // At the top level, check for safe fallback patterns first
                 if (isTopLevel) {
                   // Safe pattern: ...(param || []) or ...(param ?? [])
-                  if (childNode.type === 'LogicalExpression' &&
-                      (childNode.operator === '||' || childNode.operator === '??') &&
-                      isSafeArrayFallback(childNode.right)) {
+                  if (
+                    childNode.type === "LogicalExpression" &&
+                    (childNode.operator === "||" ||
+                      childNode.operator === "??") &&
+                    isSafeArrayFallback(childNode.right)
+                  ) {
                     // This is a safe pattern, don't mark as unsafe
                     // We can safely skip this - parameters will be replaced normally in the body
                     return;
                   }
 
                   // Safe pattern: ...(condition ? param : []) or similar with safe alternate
-                  if (childNode.type === 'ConditionalExpression' &&
-                      isSafeArrayFallback(childNode.alternate)) {
+                  if (
+                    childNode.type === "ConditionalExpression" &&
+                    isSafeArrayFallback(childNode.alternate)
+                  ) {
                     // This is a safe pattern, don't mark as unsafe
                     // We can safely skip this - parameters will be replaced normally in the body
                     return;
@@ -885,7 +618,10 @@ export default {
                 }
 
                 // Direct parameter: ...param
-                if (childNode.type === 'Identifier' && paramNames.includes(childNode.name)) {
+                if (
+                  childNode.type === "Identifier" &&
+                  paramNames.includes(childNode.name)
+                ) {
                   if (!isInSafeContext) {
                     hasParameterInSpread = true;
                   }
@@ -893,16 +629,19 @@ export default {
                 }
 
                 // Member expression: ...param.property
-                if (childNode.type === 'MemberExpression') {
+                if (childNode.type === "MemberExpression") {
                   let obj = childNode.object;
                   while (obj) {
-                    if (obj.type === 'Identifier' && paramNames.includes(obj.name)) {
+                    if (
+                      obj.type === "Identifier" &&
+                      paramNames.includes(obj.name)
+                    ) {
                       if (!isInSafeContext) {
                         hasParameterInSpread = true;
                       }
                       return;
                     }
-                    if (obj.type === 'MemberExpression') {
+                    if (obj.type === "MemberExpression") {
                       obj = obj.object;
                     } else {
                       break;
@@ -911,22 +650,38 @@ export default {
                 }
 
                 // Check inside parenthesized expressions
-                if (childNode.type === 'ParenthesizedExpression') {
-                  checkSpreadArgument(childNode.expression, isTopLevel, isInSafeContext);
+                if (childNode.type === "ParenthesizedExpression") {
+                  checkSpreadArgument(
+                    childNode.expression,
+                    isTopLevel,
+                    isInSafeContext
+                  );
                   return;
                 }
 
                 // For nested contexts (not at top level), recursively check
                 if (!isTopLevel) {
-                  if (childNode.type === 'LogicalExpression') {
+                  if (childNode.type === "LogicalExpression") {
                     checkSpreadArgument(childNode.left, false, isInSafeContext);
-                    checkSpreadArgument(childNode.right, false, isInSafeContext);
+                    checkSpreadArgument(
+                      childNode.right,
+                      false,
+                      isInSafeContext
+                    );
                   }
 
-                  if (childNode.type === 'ConditionalExpression') {
+                  if (childNode.type === "ConditionalExpression") {
                     checkSpreadArgument(childNode.test, false, isInSafeContext);
-                    checkSpreadArgument(childNode.consequent, false, isInSafeContext);
-                    checkSpreadArgument(childNode.alternate, false, isInSafeContext);
+                    checkSpreadArgument(
+                      childNode.consequent,
+                      false,
+                      isInSafeContext
+                    );
+                    checkSpreadArgument(
+                      childNode.alternate,
+                      false,
+                      isInSafeContext
+                    );
                   }
                 }
               };
@@ -936,24 +691,35 @@ export default {
 
             // Track depth for nested structures
             // Only increment depth for actual control flow structures, not function bodies
-            const isNestingNode = astNode.type === 'IfStatement' ||
-                                  astNode.type === 'ForStatement' ||
-                                  astNode.type === 'WhileStatement' ||
-                                  astNode.type === 'DoWhileStatement' ||
-                                  astNode.type === 'SwitchStatement' ||
-                                  astNode.type === 'TryStatement';
+            const isNestingNode =
+              astNode.type === "IfStatement" ||
+              astNode.type === "ForStatement" ||
+              astNode.type === "WhileStatement" ||
+              astNode.type === "DoWhileStatement" ||
+              astNode.type === "SwitchStatement" ||
+              astNode.type === "TryStatement";
 
             // Recursively check children
             for (const key in astNode) {
-              if (key === 'parent' || key === 'range' || key === 'loc') {
+              if (key === "parent" || key === "range" || key === "loc") {
                 continue;
               }
               const child = astNode[key];
               const childDepth = isNestingNode ? depth + 1 : depth;
               if (Array.isArray(child)) {
-                child.forEach(item => checkForReassignmentOrSpread(item, childDepth, newInNestedFunction));
+                child.forEach((item) =>
+                  checkForReassignmentOrSpread(
+                    item,
+                    childDepth,
+                    newInNestedFunction
+                  )
+                );
               } else {
-                checkForReassignmentOrSpread(child, childDepth, newInNestedFunction);
+                checkForReassignmentOrSpread(
+                  child,
+                  childDepth,
+                  newInNestedFunction
+                );
               }
             }
           };
@@ -961,7 +727,8 @@ export default {
           checkForReassignmentOrSpread(node.value.body, 0, false);
         }
 
-        const hasParameterReassignment = Object.keys(parameterReassignmentInfo).length > 0;
+        const hasParameterReassignment =
+          Object.keys(parameterReassignmentInfo).length > 0;
 
         // Check for "simple" reassignment cases we can auto-fix:
         // - Consecutive statements at the beginning are ExpressionStatement with AssignmentExpression
@@ -969,16 +736,22 @@ export default {
         // - Assignments are at depth 0 (not nested in if/loop/etc)
         const simpleReassignments = [];
 
-        if (hasParameterReassignment && !hasParameterInSpread && node.value.body.body && node.value.body.body.length > 0) {
+        if (
+          hasParameterReassignment &&
+          !hasParameterInSpread &&
+          node.value.body.body &&
+          node.value.body.body.length > 0
+        ) {
           // Check consecutive statements from the beginning
           for (let i = 0; i < node.value.body.body.length; i++) {
             const statement = node.value.body.body[i];
 
-            if (statement.type === 'ExpressionStatement' &&
-                statement.expression.type === 'AssignmentExpression' &&
-                statement.expression.left.type === 'Identifier' &&
-                paramNames.includes(statement.expression.left.name)) {
-
+            if (
+              statement.type === "ExpressionStatement" &&
+              statement.expression.type === "AssignmentExpression" &&
+              statement.expression.left.type === "Identifier" &&
+              paramNames.includes(statement.expression.left.name)
+            ) {
               const paramName = statement.expression.left.name;
               const paramInfo = parameterReassignmentInfo[paramName];
 
@@ -986,11 +759,15 @@ export default {
               if (paramInfo && !paramInfo.hasUpdateExpression) {
                 // Check if the first assignment is at depth 0
                 const firstAssignment = paramInfo.assignments[0];
-                if (firstAssignment && firstAssignment.depth === 0 && firstAssignment.node === statement.expression) {
+                if (
+                  firstAssignment &&
+                  firstAssignment.depth === 0 &&
+                  firstAssignment.node === statement.expression
+                ) {
                   simpleReassignments.push({
                     statement,
                     paramName,
-                    info: paramInfo
+                    info: paramInfo,
                   });
                   continue; // Continue checking next statement
                 }
@@ -1010,10 +787,15 @@ export default {
         const { hasParameterReassignments } = analyzeDiscourseComputedUsage();
 
         // Determine if we can auto-fix or need to provide error message
-        const canAutoFix = !hasUnsafeOptionalChaining && !hasParameterInNestedFunction && (hasSimpleReassignments || (!hasParameterReassignment && !hasParameterInSpread));
-        const needsDecoratorRename = !canAutoFix &&
-                                     hasParameterReassignments &&
-                                     discourseComputedLocalName === 'computed';
+        const canAutoFix =
+          !hasUnsafeOptionalChaining &&
+          !hasParameterInNestedFunction &&
+          (hasSimpleReassignments ||
+            (!hasParameterReassignment && !hasParameterInSpread));
+        const needsDecoratorRename =
+          !canAutoFix &&
+          hasParameterReassignments &&
+          discourseComputedLocalName === "computed";
 
         // Choose a specific messageId and data parameters. Messages are defined in meta.messages and use parameter replacement.
         let messageIdToUse;
@@ -1021,36 +803,48 @@ export default {
 
         if (canAutoFix) {
           // For fixable decorators, use the replace message
-          messageIdToUse = 'replaceDecorator';
+          messageIdToUse = "replaceDecorator";
         } else if (hasParameterInNestedFunction) {
-          messageIdToUse = 'cannotAutoFixNestedFunction';
+          messageIdToUse = "cannotAutoFixNestedFunction";
           reportData.param = nestedFunctionParam;
-          reportData.propertyPath = decoratorArgs[paramNames.indexOf(nestedFunctionParam)] || nestedFunctionParam;
+          reportData.propertyPath =
+            decoratorArgs[paramNames.indexOf(nestedFunctionParam)] ||
+            nestedFunctionParam;
         } else if (hasUnsafeOptionalChaining) {
-          messageIdToUse = 'cannotAutoFixUnsafeOptionalChaining';
+          messageIdToUse = "cannotAutoFixUnsafeOptionalChaining";
           reportData.param = unsafeOptionalChainingParam;
-          reportData.propertyPath = decoratorArgs[paramNames.indexOf(unsafeOptionalChainingParam)] || unsafeOptionalChainingParam;
+          reportData.propertyPath =
+            decoratorArgs[paramNames.indexOf(unsafeOptionalChainingParam)] ||
+            unsafeOptionalChainingParam;
         } else if (hasParameterReassignment && !hasSimpleReassignments) {
           const reassignedParam = Object.keys(parameterReassignmentInfo)[0];
-          const reassignedInfo = parameterReassignmentInfo[reassignedParam] || {};
+          const reassignedInfo =
+            parameterReassignmentInfo[reassignedParam] || {};
           reportData.param = reassignedParam;
-          reportData.propertyPath = decoratorArgs[paramNames.indexOf(reassignedParam)] || reassignedParam;
+          reportData.propertyPath =
+            decoratorArgs[paramNames.indexOf(reassignedParam)] ||
+            reassignedParam;
 
           if (reassignedInfo.hasUpdateExpression) {
-            messageIdToUse = 'cannotAutoFixUpdateExpression';
-          } else if (reassignedInfo.assignments && reassignedInfo.assignments.length > 0 && reassignedInfo.assignments[0].depth > 0) {
-            messageIdToUse = 'cannotAutoFixNestedReassignment';
+            messageIdToUse = "cannotAutoFixUpdateExpression";
+          } else if (
+            reassignedInfo.assignments &&
+            reassignedInfo.assignments.length > 0 &&
+            reassignedInfo.assignments[0].depth > 0
+          ) {
+            messageIdToUse = "cannotAutoFixNestedReassignment";
           } else {
-            messageIdToUse = 'cannotAutoFixGeneric';
+            messageIdToUse = "cannotAutoFixGeneric";
           }
         } else if (hasParameterInSpread) {
-          messageIdToUse = 'cannotAutoFixSpread';
+          messageIdToUse = "cannotAutoFixSpread";
           reportData.param = spreadParam;
-          reportData.propertyPath = decoratorArgs[paramNames.indexOf(spreadParam)] || spreadParam;
+          reportData.propertyPath =
+            decoratorArgs[paramNames.indexOf(spreadParam)] || spreadParam;
         } else {
           // Fallback generic message
-          messageIdToUse = 'cannotAutoFixGeneric';
-          reportData.param = paramNames[0] || '';
+          messageIdToUse = "cannotAutoFixGeneric";
+          reportData.param = paramNames[0] || "";
           reportData.propertyPath = decoratorArgs[0] || reportData.param;
         }
 
@@ -1059,364 +853,29 @@ export default {
           messageId: messageIdToUse,
           data: reportData,
           fix: !canAutoFix
-            ? (needsDecoratorRename ? function(fixer) {
-                // Just rename the decorator to match the renamed import
-                if (decoratorExpression.type === "CallExpression") {
-                  return fixer.replaceText(decoratorExpression.callee, "discourseComputed");
-                } else {
-                  return fixer.replaceText(decoratorExpression, "discourseComputed");
-                }
-              } : undefined)
-            : function(fixer) {
-            const fixes = [];
-
-            // 1. Replace @discourseComputed with @computed in the decorator
-            // Use the appropriate name (computed or alias like emberComputed)
-            if (decoratorExpression.type === "CallExpression") {
-              fixes.push(
-                fixer.replaceText(decoratorExpression.callee, computedImportName)
-              );
-            } else {
-              fixes.push(fixer.replaceText(decoratorExpression, computedImportName));
-            }
-
-            // 2. Convert method to getter and handle parameters
-            const methodKey = node.key;
-            const methodBody = node.value.body;
-            const hasParams = node.value.params.length > 0;
-
-            // Get parameter names for replacement
-            const methodParamNames = node.value.params.map((param) => param.name);
-
-            // Add 'get' keyword before method name if not already a getter
-            if (node.kind !== "get") {
-              fixes.push(
-                fixer.insertTextBefore(methodKey, "get ")
-              );
-            }
-
-            // Remove parameters from the method signature
-            if (hasParams) {
-              const paramsStart = node.value.params[0].range[0];
-              const paramsEnd =
-                node.value.params[node.value.params.length - 1].range[1];
-              fixes.push(fixer.removeRange([paramsStart, paramsEnd]));
-
-              // Create a map of param names to property names (needed for both simple and normal replacement)
-              const paramToProperty = {};
-              methodParamNames.forEach((paramName, index) => {
-                paramToProperty[paramName] = decoratorArgs[index] || paramName;
-              });
-
-              // Recursive function to replace all parameter identifiers in an expression
-              const replaceIdentifiersInExpression = (expr) => {
-                if (!expr || typeof expr !== 'object') {
-                  return sourceCode.getText(expr);
-                }
-
-                if (expr.type === 'Identifier') {
-                  if (paramToProperty[expr.name]) {
-                    const propertyPath = paramToProperty[expr.name];
-                    return propertyPathToOptionalChaining(propertyPath, true, false);
-                  }
-                  return expr.name;
-                }
-
-                if (expr.type === 'CallExpression') {
-                  const callee = replaceIdentifiersInExpression(expr.callee);
-                  const args = expr.arguments.map(arg => replaceIdentifiersInExpression(arg)).join(', ');
-                  return `${callee}(${args})`;
-                }
-
-                if (expr.type === 'MemberExpression') {
-                  const object = replaceIdentifiersInExpression(expr.object);
-                  if (expr.computed) {
-                    const property = replaceIdentifiersInExpression(expr.property);
-                    return `${object}[${property}]`;
+            ? needsDecoratorRename
+              ? function (fixer) {
+                  // Just rename the decorator to match the renamed import
+                  if (decoratorExpression.type === "CallExpression") {
+                    return fixer.replaceText(
+                      decoratorExpression.callee,
+                      "discourseComputed"
+                    );
                   } else {
-                    return `${object}.${expr.property.name}`;
+                    return fixer.replaceText(
+                      decoratorExpression,
+                      "discourseComputed"
+                    );
                   }
                 }
-
-                if (expr.type === 'LogicalExpression' || expr.type === 'BinaryExpression') {
-                  const left = replaceIdentifiersInExpression(expr.left);
-                  const right = replaceIdentifiersInExpression(expr.right);
-                  return `${left} ${expr.operator} ${right}`;
-                }
-
-                if (expr.type === 'ConditionalExpression') {
-                  const test = replaceIdentifiersInExpression(expr.test);
-                  const consequent = replaceIdentifiersInExpression(expr.consequent);
-                  const alternate = replaceIdentifiersInExpression(expr.alternate);
-                  return `${test} ? ${consequent} : ${alternate}`;
-                }
-
-                if (expr.type === 'SpreadElement') {
-                  const argument = replaceIdentifiersInExpression(expr.argument);
-                  return `...${argument}`;
-                }
-
-                if (expr.type === 'ArrayExpression') {
-                  const elements = expr.elements.map(el => el ? replaceIdentifiersInExpression(el) : '').join(', ');
-                  return `[${elements}]`;
-                }
-
-                if (expr.type === 'ObjectExpression') {
-                  // For objects, use the original text to preserve formatting
-                  return sourceCode.getText(expr);
-                }
-
-                // For other expressions, just use the original text
-                return sourceCode.getText(expr);
-              };
-
-              // Handle simple reassignment cases: convert assignments to variable declarations
-              if (hasSimpleReassignments) {
-                for (const reassignment of simpleReassignments) {
-                  const { statement, paramName, info } = reassignment;
-                  const assignmentExpr = statement.expression;
-
-                  // Determine whether to use const or let
-                  const useConst = info.assignments.length === 1;
-                  const keyword = useConst ? 'const' : 'let';
-
-                  // Replace all parameter identifiers in the right-hand side
-                  const newRightSide = replaceIdentifiersInExpression(assignmentExpr.right);
-
-                  fixes.push(
-                    fixer.replaceText(
-                      assignmentExpr,
-                      `${keyword} ${paramName} = ${newRightSide}`
-                    )
-                  );
-
-                  // Remove this parameter from paramToProperty since it's already handled
-                  delete paramToProperty[paramName];
-                }
-              }
-
-              // Replace parameter references with this.propertyName in method body
-              // Use AST traversal to find identifiers and check their context
-              const replacements = [];
-
-              // Collect statements to skip (already handled in simple reassignments)
-              const statementsToSkipInTraversal = hasSimpleReassignments
-                ? new Set(simpleReassignments.map(r => r.statement))
-                : new Set();
-
-              const traverse = (astNode) => {
-                if (!astNode || typeof astNode !== 'object') {
-                  return;
-                }
-
-                // Skip statements that were already handled as simple reassignments
-                // (we already handled them above and don't want overlapping fixes)
-                if (statementsToSkipInTraversal.has(astNode)) {
-                  return;
-                }
-
-                // Check if this is an identifier that matches a parameter name
-                if (astNode.type === 'Identifier' && paramToProperty[astNode.name]) {
-                  // Check if this identifier should be replaced
-                  const parent = astNode.parent;
-
-                  // Skip if it's a property key in an object literal (non-shorthand)
-                  if (parent && parent.type === 'Property' && parent.key === astNode && !parent.shorthand) {
-                    // This is an object property key like { data: ... }, don't replace
-                    return;
-                  }
-
-                  // Skip if it's a property key in object pattern (destructuring)
-                  if (parent && parent.type === 'Property' && parent.key === astNode && parent.value !== astNode) {
-                    return;
-                  }
-
-                  // Skip if it's a property in a member expression (e.g., the 'toString' in title.toString())
-                  // But we DO want to replace the object part (e.g., 'title' in title.toString())
-                  if (parent && parent.type === 'MemberExpression' && parent.property === astNode && !parent.computed) {
-                    return;
-                  }
-
-                  // Skip if it's the left side of an assignment expression (assignment target)
-                  if (parent && parent.type === 'AssignmentExpression' && parent.left === astNode) {
-                    return;
-                  }
-
-                  // Skip if it's part of an update expression (++, --)
-                  if (parent && parent.type === 'UpdateExpression') {
-                    return;
-                  }
-
-                  // Handle shorthand properties: { userId } -> { userId: this.userId }
-                  if (parent && parent.type === 'Property' && parent.shorthand) {
-                    const propertyPath = paramToProperty[astNode.name];
-                    const optionalChainingAccess = propertyPathToOptionalChaining(propertyPath, true, false);
-                    replacements.push({
-                      range: astNode.range,
-                      text: `${astNode.name}: ${optionalChainingAccess}`
-                    });
-                    return;
-                  }
-
-                  // Check if this identifier is used in a member expression as the object
-                  const isInMemberExpression = parent && parent.type === 'MemberExpression' && parent.object === astNode;
-
-                  // Check if this identifier or its member expression is used in a spread element
-                  // Walk up to see if we're anywhere in a spread element's argument
-                  let isInSpreadElement = false;
-                  let isInSafeSpread = false;
-                  let checkNode = astNode;
-                  while (checkNode && checkNode.parent) {
-                    if (checkNode.parent.type === 'SpreadElement' && checkNode.parent.argument === checkNode) {
-                      isInSpreadElement = true;
-                      // Check if this spread has a safe fallback pattern
-                      const spreadArg = checkNode.parent.argument;
-                      if (spreadArg.type === 'LogicalExpression' &&
-                          (spreadArg.operator === '||' || spreadArg.operator === '??') &&
-                          spreadArg.right.type === 'ArrayExpression') {
-                        isInSafeSpread = true;
-                      } else if (spreadArg.type === 'ConditionalExpression' &&
-                                 spreadArg.alternate.type === 'ArrayExpression') {
-                        isInSafeSpread = true;
-                      }
-                      break;
-                    }
-                    // Stop if we've gone beyond the immediate expression context
-                    if (checkNode.parent.type === 'ArrayExpression' ||
-                        checkNode.parent.type === 'ObjectExpression' ||
-                        checkNode.parent.type === 'CallExpression' ||
-                        checkNode.parent.type === 'ReturnStatement') {
-                      break;
-                    }
-                    checkNode = checkNode.parent;
-                  }
-
-                  // If in an unsafe spread element, we can't safely auto-fix (would need fallback like || [])
-                  if (isInSpreadElement && !isInSafeSpread) {
-                    // Skip this replacement - will be handled by not providing a fix at the method level
-                    return;
-                  }
-
-                  // This identifier should be replaced
-                  const propertyPath = paramToProperty[astNode.name];
-
-                  const optionalChainingAccess = propertyPathToOptionalChaining(propertyPath, true, isInMemberExpression);
-
-                  // If it's in a member expression and we added "?.", we need to replace the "." with "?." after it
-                  if (isInMemberExpression && !isInSpreadElement && optionalChainingAccess.endsWith("?.")) {
-                    // Find the position of the "." or "?." that follows the identifier (may have whitespace/newlines)
-                    const fullText = sourceCode.getText();
-                    let searchPos = astNode.range[1];
-
-                    // Skip whitespace and newlines to find the "." or "?."
-                    while (searchPos < fullText.length && /\s/.test(fullText.charAt(searchPos))) {
-                      searchPos++;
-                    }
-
-                    const charAtPos = fullText.charAt(searchPos);
-                    const nextChar = fullText.charAt(searchPos + 1);
-
-                    // Replace the identifier with the path (without trailing "?.")
-                    replacements.push({
-                      range: astNode.range,
-                      text: optionalChainingAccess.slice(0, -2) // Remove trailing "?." to get "this.property"
-                    });
-
-                    // Then separately replace the "." or "?." to add/preserve optional chaining
-                    if (charAtPos === '?' && nextChar === '.') {
-                      // Already has optional chaining, no need to change it
-                    } else if (charAtPos === '.') {
-                      // Replace "." with "?."
-                      replacements.push({
-                        range: [searchPos, searchPos + 1],
-                        text: "?."
-                      });
-                    } else if (charAtPos === '[') {
-                      // Insert "?." before "["
-                      replacements.push({
-                        range: [searchPos, searchPos],
-                        text: "?."
-                      });
-                    }
-
-                    // Also handle chained member expressions (e.g., words.map().filter())
-                    // Walk up the AST to find all chained member expressions and replace their "." with "?."
-                    let currentNode = parent;
-                    while (currentNode) {
-                      // If this is a call expression, check if its parent is a member expression (chaining)
-                      if (currentNode.type === 'CallExpression' && currentNode.parent &&
-                          currentNode.parent.type === 'MemberExpression' &&
-                          currentNode.parent.object === currentNode) {
-                        // This call expression is the object of a member expression (it's being chained)
-                        const memberExpr = currentNode.parent;
-
-                        // Find the "." before the property
-                        let dotSearchPos = currentNode.range[1];
-                        while (dotSearchPos < fullText.length && /\s/.test(fullText.charAt(dotSearchPos))) {
-                          dotSearchPos++;
-                        }
-
-                        const dotChar = fullText.charAt(dotSearchPos);
-                        const dotNextChar = fullText.charAt(dotSearchPos + 1);
-
-                        if (dotChar === '.' && !(dotNextChar === '.')) {
-                          // Regular property access, replace "." with "?."
-                          replacements.push({
-                            range: [dotSearchPos, dotSearchPos + 1],
-                            text: "?."
-                          });
-                        }
-                        // Continue walking up
-                        currentNode = memberExpr;
-                      } else {
-                        currentNode = currentNode.parent;
-                      }
-                    }
-                  } else {
-                    replacements.push({
-                      range: astNode.range,
-                      text: optionalChainingAccess
-                    });
-                  }
-                }
-
-                // Recursively traverse child nodes
-                for (const key in astNode) {
-                  if (key === 'parent' || key === 'range' || key === 'loc') {
-                    continue;
-                  }
-
-                  const child = astNode[key];
-                  if (Array.isArray(child)) {
-                    child.forEach(item => {
-                      if (item && typeof item === 'object') {
-                        item.parent = astNode;
-                        traverse(item);
-                      }
-                    });
-                  } else if (child && typeof child === 'object') {
-                    child.parent = astNode;
-                    traverse(child);
-                  }
-                }
-              };
-
-              traverse(methodBody);
-
-              // Sort replacements by range (descending) so we replace from end to start
-              // This prevents offset issues
-              replacements.sort((a, b) => b.range[0] - a.range[0]);
-
-              // Apply replacements using individual fixer operations
-              if (replacements.length > 0) {
-                replacements.forEach(({ range, text }) => {
-                  fixes.push(fixer.replaceTextRange(range, text));
-                });
-              }
-            }
-
-            return fixes;
-          },
+              : undefined
+            : createMethodFix(
+                sourceCode,
+                node,
+                decoratorArgs,
+                computedImportName,
+                { simpleReassignments }
+              ),
         });
       },
     };

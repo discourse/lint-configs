@@ -24,13 +24,15 @@
 export function collectImports(sourceCode) {
   const imports = new Map();
 
-  sourceCode.ast.body.forEach(statement => {
-    if (statement && statement.type === 'ImportDeclaration') {
+  sourceCode.ast.body.forEach((statement) => {
+    if (statement && statement.type === "ImportDeclaration") {
       const sourceValue = statement.source && statement.source.value;
       if (!imports.has(sourceValue)) {
         imports.set(sourceValue, {
           node: statement,
-          specifiers: Array.isArray(statement.specifiers) ? statement.specifiers.slice() : []
+          specifiers: Array.isArray(statement.specifiers)
+            ? statement.specifiers.slice()
+            : [],
         });
       }
     }
@@ -52,7 +54,7 @@ export function getImportedLocalNames(sourceCode) {
   const imports = collectImports(sourceCode);
 
   for (const { specifiers } of imports.values()) {
-    specifiers.forEach(spec => {
+    specifiers.forEach((spec) => {
       if (spec && spec.local && spec.local.name) {
         names.add(spec.local.name);
       }

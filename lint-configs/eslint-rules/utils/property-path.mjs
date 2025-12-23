@@ -8,20 +8,20 @@
 // - "data.0.value" -> "data.0.value" (numeric index preserved)
 // - "payload{?}.name" -> "payload"
 export function niceAttr(attr) {
-  if (!attr || typeof attr !== 'string') {
-    return '';
+  if (!attr || typeof attr !== "string") {
+    return "";
   }
 
-  const parts = attr.split('.');
+  const parts = attr.split(".");
   let i;
 
   for (i = 0; i < parts.length; i++) {
-    if (parts[i] === '@each' || parts[i] === '[]' || parts[i].includes('{')) {
+    if (parts[i] === "@each" || parts[i] === "[]" || parts[i].includes("{")) {
       break;
     }
   }
 
-  return parts.slice(0, i).join('.');
+  return parts.slice(0, i).join(".");
 }
 
 // Convert a `propertyPath` (like "model.poll.title" or "data.0.value") into
@@ -31,16 +31,20 @@ export function niceAttr(attr) {
 // - useOptionalChaining: if true, emit `?.` and `?.[...]` for nested parts
 // - needsTrailingChaining: when true and the path requires it, append a
 //   trailing `?.` so that subsequent member access becomes part of the chain.
-export function propertyPathToOptionalChaining(propertyPath, useOptionalChaining = true, needsTrailingChaining = false) {
+export function propertyPathToOptionalChaining(
+  propertyPath,
+  useOptionalChaining = true,
+  needsTrailingChaining = false
+) {
   const cleanPath = niceAttr(propertyPath);
   const wasExtracted = cleanPath !== propertyPath;
 
   if (!cleanPath) {
-    return 'this';
+    return "this";
   }
 
-  const parts = cleanPath.split('.');
-  let result = 'this';
+  const parts = cleanPath.split(".");
+  let result = "this";
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
@@ -62,11 +66,13 @@ export function propertyPathToOptionalChaining(propertyPath, useOptionalChaining
   }
 
   if (needsTrailingChaining && useOptionalChaining) {
-    if ((wasExtracted && parts.length === 1) || (!wasExtracted && parts.length > 1)) {
-      result += '?.';
+    if (
+      (wasExtracted && parts.length === 1) ||
+      (!wasExtracted && parts.length > 1)
+    ) {
+      result += "?.";
     }
   }
 
   return result;
 }
-
