@@ -46,6 +46,18 @@ export default {
               return fixer.replaceText(node.source, `"discourse/lib/get-url"`);
             },
           });
+        } else if (node.source.value === "discourse/lib/transformer/registry") {
+          context.report({
+            node,
+            message:
+              "Use 'discourse/lib/registry/transformers' instead of 'discourse/lib/transformer/registry'",
+            fix(fixer) {
+              return fixer.replaceText(
+                node.source,
+                `"discourse/lib/registry/transformers"`
+              );
+            },
+          });
         } else if (
           node.source.value === "discourse/helpers/html-safe" &&
           node.specifiers[0]?.local.name === "htmlSafe"
