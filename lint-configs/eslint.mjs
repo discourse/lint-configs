@@ -17,6 +17,7 @@ import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
+import keepArraySorted from "./eslint-rules/keep-array-sorted.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
@@ -120,6 +121,7 @@ export default [
         rules: {
           "i18n-import-location": i18nImport,
           "i18n-t": i18nT,
+          "keep-array-sorted": keepArraySorted,
           "service-inject-import": serviceInjectImport,
           "truth-helpers-imports": truthHelpersImports,
           "no-unused-services": noUnusedServices,
@@ -316,6 +318,7 @@ export default [
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
+      "discourse/keep-array-sorted": ["error"],
       // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
       // "discourse/moved-packages-import-paths": ["error"], // Enable when the package move commits are released
     },
