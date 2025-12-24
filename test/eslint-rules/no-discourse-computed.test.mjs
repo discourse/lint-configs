@@ -11,10 +11,10 @@ const ruleTester = new RuleTester({
       ecmaFeatures: {
         legacyDecorators: true,
         // Enable class fields parsing so tests with class properties work reliably
-        classFields: true
-      }
-    }
-  }
+        classFields: true,
+      },
+    },
+  },
 });
 
 ruleTester.run("no-discourse-computed", rule, {
@@ -27,7 +27,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "Working computed with nested property",
@@ -37,8 +37,8 @@ class MyClass {
   get myComputed() {
     return this.model.property + 1;
   }
-}`
-    }
+}`,
+    },
   ],
   invalid: [
     {
@@ -53,7 +53,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { action, computed } from "@ember/object";
 class MyClass {
@@ -61,7 +61,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with multiple decorators in import",
@@ -74,7 +74,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { or } from "discourse/lib/decorators";
 import { computed } from "@ember/object";
@@ -83,7 +83,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with multiple arguments",
@@ -96,7 +96,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { or } from "discourse/lib/decorators";
 import { computed } from "@ember/object";
@@ -105,7 +105,7 @@ class MyClass {
   get myComputed() {
     return { X: this.somePropertyX, Y: this.somePropertyY, Z: this.somePropertyZ };
   }
-}`
+}`,
     },
     {
       name: "discourseComputed without arguments",
@@ -118,7 +118,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { or } from "discourse/lib/decorators";
 import { computed } from "@ember/object";
@@ -127,7 +127,7 @@ class MyClass {
   get myComputed() {
     return this.unreferencedValue;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with nested property - auto-fix with optional chaining",
@@ -140,7 +140,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -148,7 +148,7 @@ class MyClass {
   get myComputed() {
     return this.model?.property + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with multiple properties including nested - auto-fix with optional chaining",
@@ -161,7 +161,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -169,7 +169,7 @@ class MyClass {
   get myComputed() {
     return this.simpleProperty + this.model?.nestedProperty;
   }
-}`
+}`,
     },
     {
       name: "mixing fixable examples with parameter reassignments",
@@ -196,7 +196,7 @@ class MyClass {
         { messageId: "replaceImport" },
         { messageId: "replaceDecorator" },
         { messageId: "replaceDecorator" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { action, computed } from "@ember/object";
 class MyClass {
@@ -215,7 +215,7 @@ class MyClass {
     const title = this.title || "";
     return title.length;
   }
-}`
+}`,
     },
     {
       name: "Real world example with existing @ember/object/computed import",
@@ -235,7 +235,7 @@ export default class AdminReportTableCell extends Component {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import Component from "@ember/component";
 import { alias } from "@ember/object/computed";
@@ -250,7 +250,7 @@ export default class AdminReportTableCell extends Component {
   get computedLabel() {
     return this.label.compute(this.data, this.options || {});
   }
-}`
+}`,
     },
     {
       name: "discourseComputed removed when computed already imported",
@@ -264,7 +264,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -272,7 +272,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with parameter name used as object key",
@@ -290,7 +290,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -303,7 +303,7 @@ class MyClass {
       mode: this.displayMode
     };
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with shorthand property",
@@ -316,7 +316,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -324,7 +324,7 @@ class MyClass {
   get userData() {
     return { userId: this.userId, userName: this.userName };
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with default import only from @ember/object",
@@ -338,7 +338,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import EmberObject, { computed } from "@ember/object";
 class MyClass {
@@ -346,7 +346,7 @@ class MyClass {
   get nameValidation() {
     return this.uniqueNameValidation ? this.uniqueNameValidation : this.basicNameValidation;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with default and named imports from @ember/object",
@@ -360,7 +360,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import EmberObject, { action, computed } from "@ember/object";
 class MyClass {
@@ -368,7 +368,7 @@ class MyClass {
   get myValue() {
     return this.value + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with computed already imported (after)",
@@ -382,7 +382,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -390,7 +390,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed imported with different name",
@@ -403,7 +403,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -411,7 +411,7 @@ class MyClass {
   get myValue() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed as function call in classic Ember class - no auto-fix",
@@ -428,10 +428,10 @@ const EmberObjectComponent = Component.extend({
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixClassic"
-        }
+          messageId: "cannotAutoFixClassic",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with simple parameter reassignment - auto-fix with const",
@@ -448,7 +448,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -460,7 +460,7 @@ class MyClass {
     }
     return title.replace(/\s+/gim, " ").trim().length;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed imported with different name in classic class - no auto-fix",
@@ -477,10 +477,10 @@ const EmberObjectComponent = Component.extend({
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixClassic"
-        }
+          messageId: "cannotAutoFixClassic",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "mixed classic and ES6 classes - keep discourseComputed import",
@@ -502,9 +502,9 @@ class ModernComponent extends Component {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixClassic"
+          messageId: "cannotAutoFixClassic",
         },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import Component from "@ember/component";
 import discourseComputed from "discourse/lib/decorators";
@@ -521,7 +521,7 @@ class ModernComponent extends Component {
   get modernProp() {
     return this.value + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed imported as 'computed' conflicts with needed import",
@@ -534,7 +534,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { debounce } from "discourse/lib/decorators";
 import { computed } from "@ember/object";
@@ -543,7 +543,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed imported as 'computed' without named imports",
@@ -556,7 +556,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -564,7 +564,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "multiple fixable decorators with computed name conflict",
@@ -583,7 +583,7 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         { messageId: "replaceDecorator" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { debounce } from "discourse/lib/decorators";
 import { computed } from "@ember/object";
@@ -597,7 +597,7 @@ class MyClass {
   get normalComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "computed already imported with alias from @ember/object",
@@ -611,7 +611,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed as emberComputed } from "@ember/object";
 class MyClass {
@@ -619,7 +619,7 @@ class MyClass {
   get myComputed() {
     return this.someProperty + 1;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with nested properties - auto-fix with optional chaining",
@@ -632,7 +632,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -640,7 +640,7 @@ class MyClass {
   get title() {
     return this.model?.poll?.title ? htmlSafe(this.model?.poll?.title) : this.model?.post?.topic?.title;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with single nested property - auto-fix with optional chaining",
@@ -653,7 +653,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -661,7 +661,7 @@ class MyClass {
   get userName() {
     return this.user?.profile?.name?.toUpperCase();
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with @each - auto-fix with optional chaining to extracted path",
@@ -674,7 +674,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -682,7 +682,7 @@ class MyClass {
   get totalValue() {
     return this.items?.reduce((sum, item) => sum + item.value, 0);
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with [] - auto-fix with optional chaining to extracted path",
@@ -695,7 +695,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -703,7 +703,7 @@ class MyClass {
   get categoryCount() {
     return this.categories?.length;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with {} - auto-fix with optional chaining to extracted path",
@@ -716,7 +716,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -724,7 +724,7 @@ class MyClass {
   get combined() {
     return this.foo?.bar + this.foo?.baz;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with array element access - auto-fix with bracket notation",
@@ -738,7 +738,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -747,7 +747,7 @@ class MyClass {
     const averageLabel = this.model.computedLabels.at(-1);
     return averageLabel.compute({ y: (this.totalsForSample?.[1]?.value / this.model?.data?.length).toFixed(0) }).formattedValue;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with mixed nested and @each - auto-fix both with optional chaining",
@@ -760,7 +760,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -768,7 +768,7 @@ class MyClass {
   get likesInfo() {
     return { posts: this.user?.posts, totalLikes: this.user?.profile?.totalLikes };
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with deeply nested array access",
@@ -781,7 +781,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -789,7 +789,7 @@ class MyClass {
   get specificValue() {
     return this.data?.results?.[0]?.items?.[1]?.value * 2;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with .[] returning parameter directly",
@@ -806,7 +806,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -818,7 +818,7 @@ class MyClass {
     }
     return this.sortedData;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with .[] in filter callback",
@@ -831,7 +831,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -839,7 +839,7 @@ class MyClass {
   get filteredChoices() {
     return makeArray(this.choices).filter((i) => !this.collection?.includes(i));
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with .[] and multiline member expression",
@@ -854,7 +854,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -864,7 +864,7 @@ class MyClass {
       ?.map((w) => w.toLowerCase())
       ?.filter((w) => w.length > 3);
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with spread operator - no auto-fix (requires manual intervention)",
@@ -884,10 +884,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixSpread"
-        }
+          messageId: "cannotAutoFixSpread",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with spread operator on nested property - no auto-fix",
@@ -901,10 +901,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixSpread"
-        }
+          messageId: "cannotAutoFixSpread",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with parameter in unsafe spread (no fallback) - no auto-fix",
@@ -918,10 +918,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixSpread"
-        }
+          messageId: "cannotAutoFixSpread",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with update expression - no auto-fix",
@@ -936,10 +936,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixUpdateExpression"
-        }
+          messageId: "cannotAutoFixUpdateExpression",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with nested reassignment - no auto-fix",
@@ -956,10 +956,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixNestedReassignment"
-        }
+          messageId: "cannotAutoFixNestedReassignment",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with multiple simple reassignments - auto-fix with let",
@@ -976,7 +976,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -988,7 +988,7 @@ class MyClass {
     }
     return status;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with multiple consecutive reassignments - auto-fix all",
@@ -1003,7 +1003,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1013,7 +1013,7 @@ class MyClass {
     const suspendedTill = moment(this.suspended_till);
     return suspendedAt.format("L") + " - " + suspendedTill.format("L");
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with unsafe optional chaining in member expression - no auto-fix",
@@ -1027,10 +1027,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixUnsafeOptionalChaining"
-        }
+          messageId: "cannotAutoFixUnsafeOptionalChaining",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with nested property in conditional expression used in member access - no auto-fix",
@@ -1044,10 +1044,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixUnsafeOptionalChaining"
-        }
+          messageId: "cannotAutoFixUnsafeOptionalChaining",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with nested property and safe literal fallback - auto-fix OK",
@@ -1060,7 +1060,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1068,7 +1068,7 @@ class MyClass {
   get activityMetrics() {
     return (this.siteSettings?.dashboard_general_tab_activity_metrics || "").split("|").filter(Boolean);
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with nested property and safe nullish coalescing fallback - auto-fix OK",
@@ -1081,7 +1081,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1089,7 +1089,7 @@ class MyClass {
   get formattedValue() {
     return (this.model?.value ?? 0).toFixed(2);
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with nested property used directly in member expression - auto-fix OK (safe)",
@@ -1102,7 +1102,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1110,7 +1110,7 @@ class MyClass {
   get userUrl() {
     return this.item?.username?.toLowerCase();
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with parameter used in nested function - no auto-fix",
@@ -1131,10 +1131,10 @@ class MyClass {
       errors: [
         { messageId: "replaceImport" },
         {
-          messageId: "cannotAutoFixNestedFunction"
-        }
+          messageId: "cannotAutoFixNestedFunction",
+        },
       ],
-      output: null
+      output: null,
     },
     {
       name: "discourseComputed with parameter in arrow function - auto-fix OK",
@@ -1154,7 +1154,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1169,7 +1169,7 @@ class MyClass {
       }
     };
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with guard clause reassignment - auto-fix with let",
@@ -1183,7 +1183,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1192,7 +1192,7 @@ class MyClass {
     let items = this.items || [];
     return items.length;
   }
-}`
+}`,
     },
     {
       name: "discourseComputed with nested property used in method call - optional chaining before method",
@@ -1205,7 +1205,7 @@ class MyClass {
 }`,
       errors: [
         { messageId: "replaceImport" },
-        { messageId: "replaceDecorator" }
+        { messageId: "replaceDecorator" },
       ],
       output: `import { computed } from "@ember/object";
 class MyClass {
@@ -1213,11 +1213,11 @@ class MyClass {
   get totalVotes() {
     return this.model?.poll?.options?.reduce((sum, option) => sum + option.votes, 0);
   }
-}`
+}`,
     },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
     // needed to parse decorator syntax on object properties. This functionality should be
     // tested manually in the actual Discourse codebase where the transformer is available.
-  ]
+  ],
 });

@@ -42,11 +42,15 @@ cd test/eslint-rules && npx mocha rule-name.test.mjs
 After making modifications to the rules or utilities, you must ensure the codebase adheres to the project's quality standards.
 
 ### Linting
-Run the linting command from the `lint-configs` directory:
+Run the linting command from the `lint-configs` directory to check the rules:
 ```bash
 cd lint-configs && pnpm lint
 ```
-This runs ESLint and checks formatting with Prettier.
+And from the `test` directory to check the tests:
+```bash
+cd test && pnpm lint
+```
+These run ESLint and check formatting with Prettier.
 
 ### Formatting
 To automatically fix formatting issues, run:
@@ -62,6 +66,7 @@ The following guidelines ensure the codebase is readable, maintainable, and easy
 - **Self-Documenting Code**: Choose clear, descriptive names for variables, functions, and parameters.
 - **Complexity Management**: Break down complex logic into smaller, focused helper functions. Avoid deep nesting.
 - **Intent over Implementation**: Write code that expresses *what* it is doing, making the high-level flow easy to follow.
+- **Explicit Imports**: Prefer explicit imports over globals for better tool support and clarity. For example, in tests, import `{ describe, it, beforeEach }` from `mocha`.
 
 ### 2. Organization and Modularization
 - **Separation of Concerns**: Separate analysis (detecting patterns), fixing (transforming code), and reporting (ESLint/Lint integration).

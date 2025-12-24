@@ -1,41 +1,44 @@
 import EmberESLintParser from "ember-eslint-parser";
 import { Linter } from "eslint";
+import { describe, it } from "mocha";
 import assert from "node:assert";
 import { analyzeDiscourseComputedUsage } from "../../lint-configs/eslint-rules/no-discourse-computed/discourse-computed-analysis.mjs";
 
 describe("analyzeDiscourseComputedUsage", () => {
-  const linter = new Linter();
-
   function getAnalysis(code, localName = "discourseComputed") {
     let sourceCode;
     const linter = new Linter({ configType: "flat" });
-    linter.verify(code, [
-      {
-        languageOptions: {
-          parser: EmberESLintParser,
-          parserOptions: {
-            ecmaVersion: 2022,
-            sourceType: "module",
-            ecmaFeatures: { legacyDecorators: true }
-          }
+    linter.verify(
+      code,
+      [
+        {
+          languageOptions: {
+            parser: EmberESLintParser,
+            parserOptions: {
+              ecmaVersion: 2022,
+              sourceType: "module",
+              ecmaFeatures: { legacyDecorators: true },
+            },
+          },
+          plugins: {
+            test: {
+              rules: {
+                "get-source": {
+                  create(context) {
+                    sourceCode = context.sourceCode;
+                    return {};
+                  },
+                },
+              },
+            },
+          },
+          rules: {
+            "test/get-source": "error",
+          },
         },
-        plugins: {
-          test: {
-            rules: {
-              "get-source": {
-                create(context) {
-                  sourceCode = context.sourceCode;
-                  return {};
-                }
-              }
-            }
-          }
-        },
-        rules: {
-          "test/get-source": "error"
-        }
-      }
-    ], { filename: "test.js" });
+      ],
+      { filename: "test.js" }
+    );
 
     if (!sourceCode) {
       throw new Error("Failed to capture sourceCode");
