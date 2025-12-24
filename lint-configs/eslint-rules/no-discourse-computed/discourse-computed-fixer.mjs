@@ -112,6 +112,8 @@ export function createMethodFix(
 
       // Apply simple reassignments first if provided (these were detected earlier).
       const simpleReassignments = options.simpleReassignments || [];
+      const handledRanges = [];
+
       if (simpleReassignments.length > 0) {
         for (const reassignment of simpleReassignments) {
           const { statement, paramName, info, isGuard } = reassignment;
@@ -147,6 +149,7 @@ export function createMethodFix(
               text: `${keyword} ${paramName} = ${newRight};`,
             });
           }
+          handledRanges.push(statement.range);
           // prevent further replacements for this param
           delete paramToProperty[paramName];
         }
@@ -163,6 +166,17 @@ export function createMethodFix(
 
         for (const reference of variable.references) {
           const refNode = reference.identifier;
+
+          // Skip if this reference is inside a range already handled by simpleReassignments
+          if (
+            handledRanges.some(
+              (range) =>
+                refNode.range[0] >= range[0] && refNode.range[1] <= range[1]
+            )
+          ) {
+            continue;
+          }
+
           const parent = refNode.parent;
 
           // contexts to skip
