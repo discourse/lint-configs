@@ -19,6 +19,9 @@ importers:
       '@babel/plugin-proposal-decorators':
         specifier: ^7.28.0
         version: 7.28.0(@babel/core@7.28.5)
+      ember-eslint-parser:
+        specifier: ^0.5.13
+        version: 0.5.13(@babel/core@7.28.5)(@typescript-eslint/parser@8.16.0(eslint@9.39.1)(typescript@5.9.3))(eslint@9.39.1)(typescript@5.9.3)
       ember-template-lint:
         specifier: ^7.9.3
         version: 7.9.3
@@ -121,6 +124,9 @@ importers:
       '@discourse/lint-configs':
         specifier: workspace:*
         version: link:../../lint-configs
+      ember-eslint-parser:
+        specifier: ^0.5.13
+        version: 0.5.13(@babel/core@7.28.5)(@typescript-eslint/parser@8.16.0(eslint@9.39.1)(typescript@5.9.3))(eslint@9.39.1)(typescript@5.9.3)
       eslint:
         specifier: 9.39.1
         version: 9.39.1
