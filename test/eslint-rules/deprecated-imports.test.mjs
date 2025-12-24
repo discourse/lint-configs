@@ -9,6 +9,7 @@ ruleTester.run("deprecated-imports", rule, {
     `import { htmlSafe } from "@ember/template";`,
     `import { getOwner } from "@ember/owner";`,
     `import { isArray } from "@ember/array";`,
+    `import { registerTransformer } from "discourse/lib/registry/transformers";`,
   ],
   invalid: [
     {
@@ -20,6 +21,16 @@ ruleTester.run("deprecated-imports", rule, {
         },
       ],
       output: `import getUrl from "discourse/lib/get-url";`,
+    },
+    {
+      code: `import { VALUE_TRANSFORMERS } from "discourse/lib/transformer/registry";`,
+      errors: [
+        {
+          message:
+            "Use 'discourse/lib/registry/transformers' instead of 'discourse/lib/transformer/registry'",
+        },
+      ],
+      output: `import { VALUE_TRANSFORMERS } from "discourse/lib/registry/transformers";`,
     },
     {
       code: `import htmlSafe from "discourse/helpers/html-safe";`,
