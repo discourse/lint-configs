@@ -127,6 +127,9 @@ importers:
       '@discourse/lint-configs':
         specifier: workspace:*
         version: link:../../lint-configs
+      ember-eslint-parser:
+        specifier: ^0.5.13
+        version: 0.5.13(@babel/core@7.28.6)(@typescript-eslint/parser@8.16.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)
       eslint:
         specifier: 9.39.2
         version: 9.39.2
