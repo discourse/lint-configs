@@ -30,10 +30,9 @@ const expectedEslintOutput = `
 
 const expectedStylelintOutput = `
 style.scss
-  14:1  ✖  Unexpected duplicate selector "::placeholder", first used at line 10    no-duplicate-selectors
-  25:3  ✖  Replace "@include breakpoint(...)" with "@include viewport.until(...)"  discourse/no-breakpoint-mixin
+  21:3  ✖  Replace "@include breakpoint(...)" with "@include viewport.until(...)"  discourse/no-breakpoint-mixin
 
-✖ 2 problems (2 errors, 0 warnings)
+✖ 1 problem (1 error, 0 warnings)
   1 error potentially fixable with the "--fix" option.
 `;
 
