@@ -71,6 +71,8 @@ export default {
           return;
         }
 
+        // An explicit comparator is needed because the default sort() converts elements to strings,
+        // which causes incorrect ordering for numbers (e.g., [1, 10, 2] instead of [1, 2, 10]).
         const sortedElements = [...elements].sort((a, b) => {
           if (a.value < b.value) {
             return -1;
