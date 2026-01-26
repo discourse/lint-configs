@@ -9,6 +9,8 @@ export default [
         themePrefix: "readonly",
       },
     },
+  },
+  {
     ignores: ["javascripts/vendor/*"],
   },
 ];
