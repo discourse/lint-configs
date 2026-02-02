@@ -55,6 +55,7 @@ export default [
         useBabel: true,
         requireConfigFile: false,
         babelOptions: {
+          configFile: false,
           plugins: [[decoratorsPluginPath, { legacy: true }]],
         },
       },
