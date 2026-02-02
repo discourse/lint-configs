@@ -52,5 +52,8 @@ jobs:
           node-version: "24"
           cache: "pnpm"
 
+      - name: Pnpm install
+        run: pnpm install
+
       - name: Publish package
         run: pnpm publish ./lint-configs -r
