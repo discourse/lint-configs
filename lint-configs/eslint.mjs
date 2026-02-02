@@ -185,41 +185,27 @@ export default [
       "import/no-duplicates": "error",
       "object-shorthand": ["error", "properties"],
       "no-dupe-class-members": "error",
-      "ember/no-classic-components": "off",
-      "ember/no-component-lifecycle-hooks": "off",
-      "ember/require-tagless-components": "off",
+      "ember/no-component-lifecycle-hooks": "off", // too much noise for now; classic components should be converted to glimmer wholesale instead
       "ember/no-assignment-of-untracked-properties-used-in-tracking-contexts":
-        "off",
-      "ember/no-computed-properties-in-native-classes": "off",
-      "ember/no-side-effects": "off",
-      "ember/require-computed-property-dependencies": "off",
-      "ember/require-return-from-computed": "off",
+        "off", // TODO? needs to understand `@trackedArray` though
+      "ember/no-computed-properties-in-native-classes": "off", // too many for now
+      "ember/require-computed-property-dependencies": "off", // we no longer recommend using @computed
+      "ember/require-return-from-computed": "off", // we no longer recommend using @computed
       "ember/use-brace-expansion": "off", // we no longer recommend using @computed
       "ember/no-deprecated-router-transition-methods": "off", // this rule is broken
-      "ember/avoid-leaking-state-in-ember-objects": "off",
-      "ember/no-get": "off",
-      "ember/no-observers": "off",
+      "ember/no-get": "off", // TODO: still too many uses, and is required when crossing `@tracked`/`EmberObject` boundary
       "ember/no-implicit-injections": "off", // this rule is broken
-      "ember/no-array-prototype-extensions": "off",
-      "ember/no-at-ember-render-modifiers": "off",
-      "ember/classic-decorator-hooks": "off",
-      "ember/classic-decorator-no-classic-methods": "off",
-      "ember/no-actions-hash": "off",
-      "ember/no-tracked-properties-from-args": "off",
-      "ember/no-jquery": "off",
-      "ember/no-runloop": "off",
-      "ember/no-capital-letters-in-routes": "off",
-      "ember/no-controller-access-in-routes": "off",
-      "ember/no-shadow-route-definition": "off",
-      "ember/no-unnecessary-index-route": "off",
+      "ember/no-array-prototype-extensions": "off", // too many false-positives
+      "ember/no-at-ember-render-modifiers": "off", // TODO: @ember/render-modifiers are considered an anti-pattern
+      "ember/classic-decorator-hooks": "off", // too much noise; doesn't consider EmberObject/Controller/EmberComponent as classic w/o the decorator
+      "ember/classic-decorator-no-classic-methods": "off", // same as ember/classic-decorator-hooks
+      "ember/no-runloop": "off", // TODO: though not in the foreseeable future
+      "ember/no-capital-letters-in-routes": "off", // TODO: too many errors for now
+      "ember/no-controller-access-in-routes": "off", // TODO: maybe?
+      "ember/no-shadow-route-definition": "off", // TODO: but there seems to be a bug in the rule (a nested route can't shadow the parent)
+      "ember/no-unnecessary-index-route": "off", // the assumption made in this rule doesn't seem to be true in discourse router
       "ember/no-unnecessary-service-injection-argument": "error",
-      "ember/route-path-style": "off",
-      "ember/routes-segments-snake-case": "off",
       "ember/no-replace-test-comments": "error",
-      "qunit/no-assert-equal": "off",
-      "qunit/no-conditional-assertions": "off",
-      "qunit/no-identical-names": "off",
-      "qunit/no-loose-assertions": "off",
       "sort-class-members/sort-class-members": [
         "error",
         {
@@ -316,8 +302,8 @@ export default [
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
-      // "discourse/no-route-template": ["error"], // Enable by default once Ember 6.6 is on stable
-      // "discourse/moved-packages-import-paths": ["error"], // Enable when the package move commits are released
+      "discourse/no-route-template": ["error"],
+      "discourse/moved-packages-import-paths": ["error"],
     },
   },
   {
