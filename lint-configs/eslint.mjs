@@ -29,6 +29,7 @@ import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs";
+import testFilenameSuffix from "./eslint-rules/test-filename-suffix.mjs";
 import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
 
@@ -140,6 +141,7 @@ export default [
           "no-route-template": noRouteTemplate,
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
+          "test-filename-suffix": testFilenameSuffix,
         },
       },
     },
@@ -305,6 +307,7 @@ export default [
       "discourse/template-tag-no-self-this": ["error"],
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
+      "discourse/test-filename-suffix": ["error"],
     },
   },
   {
