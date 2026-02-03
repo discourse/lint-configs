@@ -207,6 +207,7 @@ export default [
       "ember/no-unnecessary-index-route": "off", // the assumption made in this rule doesn't seem to be true in discourse router
       "ember/no-unnecessary-service-injection-argument": "error",
       "ember/no-replace-test-comments": "error",
+      "qunit/no-identical-names": "off", // the rule doesn't consider that tests might be in different `acceptance` modules
       "sort-class-members/sort-class-members": [
         "error",
         {
