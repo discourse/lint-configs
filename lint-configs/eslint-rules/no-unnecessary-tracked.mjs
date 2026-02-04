@@ -2,10 +2,13 @@
 // value array: component names
 const MUTATING_COMPONENTS = {
   "@value": ["Input", "Textarea", "TextField", "DatePicker"],
-  "@checked": ["Input"],
+  "@checked": ["Input", "PreferenceCheckbox"],
   "@selection": ["RadioButton", "InstallThemeItem"],
   "@postAction": ["AdminPenaltyPostAction"],
   "@reason": ["AdminPenaltyReason"],
+  "@tags": ["TagChooser"],
+  "@capsLockOn": ["PasswordField"],
+  "@message": ["FlagActionType"],
 };
 
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
