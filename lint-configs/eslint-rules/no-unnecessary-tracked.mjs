@@ -9,13 +9,15 @@ const MUTATING_COMPONENTS = {
     "ChatChannelChooser",
   ],
   "@checked": ["Input", "PreferenceCheckbox"],
-  "@selection": ["RadioButton", "InstallThemeItem"],
+  "@selection": ["RadioButton", "InstallThemeItem", "ChatToTopicSelector"],
   "@postAction": ["AdminPenaltyPostAction"],
   "@reason": ["AdminPenaltyReason"],
-  "@tags": ["TagChooser"],
+  "@tags": ["TagChooser", "ChatToTopicSelector"],
   "@capsLockOn": ["PasswordField"],
   "@message": ["FlagActionType"],
   "@isConfirmed": ["FlagActionType"],
+  "@topicTitle": ["ChatToTopicSelector"],
+  "@categoryId": ["ChatToTopicSelector"],
 };
 
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
@@ -128,22 +130,29 @@ export default {
         return;
       }
 
-      const valueAttr = node.attributes?.find(
-        (attr) =>
-          attr.type === "GlimmerAttrNode" &&
-          (MUTATING_COMPONENTS[attr.name]?.includes(componentName) ||
-            (attr.name === "@value" && selectKitComponents.has(componentName)))
-      );
-      if (
-        !valueAttr?.value ||
-        valueAttr.value.type !== "GlimmerMustacheStatement"
-      ) {
-        return;
-      }
+      const attributes = node.attributes || [];
+      for (const attr of attributes) {
+        if (attr.type !== "GlimmerAttrNode") {
+          continue;
+        }
 
-      const path = valueAttr.value.path;
-      if (path?.type === "GlimmerPathExpression") {
-        if (path.head?.type === "ThisHead" && path.tail?.length) {
+        const isMutatingAttr =
+          MUTATING_COMPONENTS[attr.name]?.includes(componentName) ||
+          (attr.name === "@value" && selectKitComponents.has(componentName));
+        if (!isMutatingAttr) {
+          continue;
+        }
+
+        if (!attr.value || attr.value.type !== "GlimmerMustacheStatement") {
+          continue;
+        }
+
+        const path = attr.value.path;
+        if (
+          path?.type === "GlimmerPathExpression" &&
+          path.head?.type === "ThisHead" &&
+          path.tail?.length
+        ) {
           currentComponent.valueUses.add(path.tail[0]);
         }
       }
