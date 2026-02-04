@@ -4,6 +4,8 @@ const MUTATING_COMPONENTS = {
   "@value": ["Input", "Textarea", "TextField", "DatePicker"],
   "@checked": ["Input"],
   "@selection": ["RadioButton", "InstallThemeItem"],
+  "@postAction": ["AdminPenaltyPostAction"],
+  "@reason": ["AdminPenaltyReason"],
 };
 
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
