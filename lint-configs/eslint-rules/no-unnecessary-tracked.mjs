@@ -94,6 +94,35 @@ export default {
       }
     }
 
+    function handleClass(node) {
+      if (isComponentClass(node, componentNames)) {
+        currentComponent = {
+          node,
+          trackedProps: new Map(),
+          assigned: new Set(),
+        };
+      }
+    }
+
+    function handleClassExit(node) {
+      if (currentComponent?.node !== node) {
+        return;
+      }
+
+      for (const [name, propNode] of currentComponent.trackedProps.entries()) {
+        const reassigned = currentComponent.assigned.has(name);
+
+        if (!reassigned && !mutUses.has(name)) {
+          context.report({
+            node: propNode,
+            message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
+          });
+        }
+      }
+
+      currentComponent = null;
+    }
+
     return {
       ImportDeclaration(node) {
         const glimmerComponentName = getImportIdentifier(
@@ -113,69 +142,11 @@ export default {
         }
       },
 
-      ClassDeclaration(node) {
-        if (isComponentClass(node, componentNames)) {
-          currentComponent = {
-            node,
-            trackedProps: new Map(),
-            assigned: new Set(),
-          };
-        }
-      },
+      ClassDeclaration: handleClass,
+      ClassExpression: handleClass,
 
-      ClassExpression(node) {
-        if (isComponentClass(node, componentNames)) {
-          currentComponent = {
-            node,
-            trackedProps: new Map(),
-            assigned: new Set(),
-          };
-        }
-      },
-
-      "ClassDeclaration:exit"(node) {
-        if (currentComponent?.node !== node) {
-          return;
-        }
-
-        for (const [
-          name,
-          propNode,
-        ] of currentComponent.trackedProps.entries()) {
-          const reassigned = currentComponent.assigned.has(name);
-
-          if (!reassigned && !mutUses.has(name)) {
-            context.report({
-              node: propNode,
-              message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
-            });
-          }
-        }
-
-        currentComponent = null;
-      },
-
-      "ClassExpression:exit"(node) {
-        if (currentComponent?.node !== node) {
-          return;
-        }
-
-        for (const [
-          name,
-          propNode,
-        ] of currentComponent.trackedProps.entries()) {
-          const reassigned = currentComponent.assigned.has(name);
-
-          if (!reassigned && !mutUses.has(name)) {
-            context.report({
-              node: propNode,
-              message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
-            });
-          }
-        }
-
-        currentComponent = null;
-      },
+      "ClassDeclaration:exit": handleClassExit,
+      "ClassExpression:exit": handleClassExit,
 
       ClassProperty: handleTrackedProperty,
       PropertyDefinition: handleTrackedProperty,
