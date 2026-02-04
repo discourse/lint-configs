@@ -54,6 +54,7 @@ export default {
   create(context) {
     const componentNames = new Set();
     const classStack = [];
+    const mutUses = new Set();
 
     function currentClass() {
       return classStack[classStack.length - 1];
@@ -85,6 +86,21 @@ export default {
       }
 
       current.trackedProps.set(node.key.name, node);
+    }
+
+    function handleGlimmerSubExpression(node) {
+      if (node.path.head.type !== "VarHead" || node.path.head.name !== "mut") {
+        return;
+      }
+
+      const firstParam = node.params?.[0];
+      if (firstParam.type !== "GlimmerPathExpression") {
+        return;
+      }
+
+      if (firstParam.head.type === "ThisHead" && firstParam.tail.length) {
+        mutUses.add(firstParam.tail[0]);
+      }
     }
 
     return {
@@ -139,7 +155,7 @@ export default {
         for (const [name, propNode] of current.trackedProps.entries()) {
           const reassigned = current.assigned.has(name);
 
-          if (!reassigned) {
+          if (!reassigned && !mutUses.has(name)) {
             context.report({
               node: propNode,
               message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
@@ -159,7 +175,7 @@ export default {
         for (const [name, propNode] of current.trackedProps.entries()) {
           const reassigned = current.assigned.has(name);
 
-          if (!reassigned) {
+          if (!reassigned && !mutUses.has(name)) {
             context.report({
               node: propNode,
               message: `@tracked \`${name}\` is unnecessary.`,
@@ -186,6 +202,8 @@ export default {
           markAssigned(name);
         }
       },
+
+      GlimmerSubExpression: handleGlimmerSubExpression,
     };
   },
 };
