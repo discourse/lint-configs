@@ -157,7 +157,7 @@ export default {
         if (!reassigned && !hasMutUse && !hasValueUse) {
           context.report({
             node: propNode,
-            message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
+            message: `\`${name}\` property is @tracked but isn't modified anywhere.`,
           });
         }
       }
