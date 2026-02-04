@@ -1,4 +1,4 @@
-const MUTATING_COMPONENTS = ["Input", "TextField", "Textarea"];
+const MUTATING_COMPONENTS = ["Input", "Textarea", "TextField", "DatePicker"];
 
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
   if (node.source.value !== source) {
