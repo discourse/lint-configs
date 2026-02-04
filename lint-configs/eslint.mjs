@@ -25,6 +25,7 @@ import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
+import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
@@ -142,6 +143,7 @@ export default [
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
           "test-filename-suffix": testFilenameSuffix,
+          "no-unnecessary-tracked": noUnnecessaryTracked,
         },
       },
     },
@@ -311,6 +313,7 @@ export default [
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
       "discourse/test-filename-suffix": ["error"],
+      "discourse/no-unnecessary-tracked": ["warn"],
     },
   },
   {
