@@ -1,4 +1,10 @@
-const MUTATING_COMPONENTS = ["Input", "Textarea", "TextField", "DatePicker"];
+// key: the mutable argument name
+// value array: component names
+const MUTATING_COMPONENTS = {
+  "@value": ["Input", "Textarea", "TextField", "DatePicker"],
+  "@checked": ["Input"],
+  "@selection": ["RadioButton", "InstallThemeItem"],
+};
 
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
   if (node.source.value !== source) {
@@ -106,19 +112,15 @@ export default {
       }
 
       const componentName = node.tag || node.name;
-      if (
-        !componentName ||
-        (!MUTATING_COMPONENTS.includes(componentName) &&
-          !selectKitComponents.has(componentName))
-      ) {
+      if (!componentName) {
         return;
       }
 
       const valueAttr = node.attributes?.find(
         (attr) =>
           attr.type === "GlimmerAttrNode" &&
-          (attr.name === "@value" ||
-            (attr.name === "@checked" && componentName === "Input"))
+          (MUTATING_COMPONENTS[attr.name]?.includes(componentName) ||
+            (attr.name === "@value" && selectKitComponents.has(componentName)))
       );
       if (
         !valueAttr?.value ||

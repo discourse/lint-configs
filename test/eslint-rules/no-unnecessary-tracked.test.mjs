@@ -84,6 +84,20 @@ ruleTester.run("no-unnecessary-tracked", rule, {
       `,
     },
     {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked selectedId;
+
+          <template>
+            <RadioButton @selection={{this.selectedId}} />
+          </template>
+        }
+      `,
+    },
+    {
       filename: "frontend/discourse/app/service/baz.js",
       code: `
         class Baz extends Service {
