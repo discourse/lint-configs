@@ -92,8 +92,7 @@ ruleTester.run("no-unnecessary-tracked", rule, {
       `,
       errors: [
         {
-          message:
-            "`count` property is defined as tracked but isn't modified anywhere.",
+          message: "`count` property is @tracked but isn't modified anywhere.",
         },
       ],
     },
