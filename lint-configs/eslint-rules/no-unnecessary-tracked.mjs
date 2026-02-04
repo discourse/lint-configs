@@ -167,11 +167,9 @@ export default {
 
     return {
       ImportDeclaration(node) {
-        if (node.source.value?.includes("/select-kit/")) {
+        if (node.source.value.includes("/select-kit/")) {
           node.specifiers.forEach((specifier) => {
-            if (specifier.local?.name) {
               selectKitComponents.add(specifier.local.name);
-            }
           });
         }
 
