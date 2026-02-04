@@ -61,6 +61,15 @@ function getAssignedPropertyName(node) {
   }
 }
 
+function hasTrackedDecorator(node) {
+  return node.decorators.some((decorator) => {
+    return (
+      decorator.expression.type === "Identifier" &&
+      decorator.expression.name === "tracked"
+    );
+  });
+}
+
 export default {
   meta: {
     type: "suggestion",
@@ -87,14 +96,7 @@ export default {
         return;
       }
 
-      const hasTrackedDecorator = node.decorators.some((decorator) => {
-        const expression = decorator.expression;
-        return (
-          expression?.type === "Identifier" && expression.name === "tracked"
-        );
-      });
-
-      if (!hasTrackedDecorator || node.key?.type !== "Identifier") {
+      if (!hasTrackedDecorator(node) || node.key?.type !== "Identifier") {
         return;
       }
 
