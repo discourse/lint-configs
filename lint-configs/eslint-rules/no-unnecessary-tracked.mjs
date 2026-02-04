@@ -1,6 +1,6 @@
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
   if (node.source.value !== source) {
-    return null;
+    return;
   }
 
   return node.specifiers
@@ -27,7 +27,7 @@ function getAssignedPropertyName(node) {
     node?.type !== "MemberExpression" ||
     node.object?.type !== "ThisExpression"
   ) {
-    return null;
+    return;
   }
 
   if (!node.computed && node.property?.type === "Identifier") {
@@ -37,8 +37,6 @@ function getAssignedPropertyName(node) {
   if (node.computed && node.property?.type === "Literal") {
     return node.property.value;
   }
-
-  return null;
 }
 
 export default {
@@ -53,24 +51,17 @@ export default {
 
   create(context) {
     const componentNames = new Set();
-    const classStack = [];
     const mutUses = new Set();
-
-    function currentClass() {
-      return classStack[classStack.length - 1];
-    }
+    let currentComponent;
 
     function markAssigned(name) {
-      const current = currentClass();
-      if (!current || !name) {
-        return;
+      if (currentComponent && name) {
+        currentComponent.assigned.add(name);
       }
-      current.assigned.add(name);
     }
 
     function handleTrackedProperty(node) {
-      const current = currentClass();
-      if (!current || node.static || !node.decorators?.length) {
+      if (!currentComponent || node.static || !node.decorators?.length) {
         return;
       }
 
@@ -85,7 +76,7 @@ export default {
         return;
       }
 
-      current.trackedProps.set(node.key.name, node);
+      currentComponent.trackedProps.set(node.key.name, node);
     }
 
     function handleGlimmerSubExpression(node) {
@@ -123,37 +114,35 @@ export default {
       },
 
       ClassDeclaration(node) {
-        if (!isComponentClass(node, componentNames)) {
-          return;
+        if (isComponentClass(node, componentNames)) {
+          currentComponent = {
+            node,
+            trackedProps: new Map(),
+            assigned: new Set(),
+          };
         }
-
-        classStack.push({
-          node,
-          trackedProps: new Map(),
-          assigned: new Set(),
-        });
       },
 
       ClassExpression(node) {
-        if (!isComponentClass(node, componentNames)) {
-          return;
+        if (isComponentClass(node, componentNames)) {
+          currentComponent = {
+            node,
+            trackedProps: new Map(),
+            assigned: new Set(),
+          };
         }
-
-        classStack.push({
-          node,
-          trackedProps: new Map(),
-          assigned: new Set(),
-        });
       },
 
       "ClassDeclaration:exit"(node) {
-        const current = currentClass();
-        if (!current || current.node !== node) {
+        if (currentComponent?.node !== node) {
           return;
         }
 
-        for (const [name, propNode] of current.trackedProps.entries()) {
-          const reassigned = current.assigned.has(name);
+        for (const [
+          name,
+          propNode,
+        ] of currentComponent.trackedProps.entries()) {
+          const reassigned = currentComponent.assigned.has(name);
 
           if (!reassigned && !mutUses.has(name)) {
             context.report({
@@ -163,27 +152,29 @@ export default {
           }
         }
 
-        classStack.pop();
+        currentComponent = null;
       },
 
       "ClassExpression:exit"(node) {
-        const current = currentClass();
-        if (!current || current.node !== node) {
+        if (currentComponent?.node !== node) {
           return;
         }
 
-        for (const [name, propNode] of current.trackedProps.entries()) {
-          const reassigned = current.assigned.has(name);
+        for (const [
+          name,
+          propNode,
+        ] of currentComponent.trackedProps.entries()) {
+          const reassigned = currentComponent.assigned.has(name);
 
           if (!reassigned && !mutUses.has(name)) {
             context.report({
               node: propNode,
-              message: `@tracked \`${name}\` is unnecessary.`,
+              message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
             });
           }
         }
 
-        classStack.pop();
+        currentComponent = null;
       },
 
       ClassProperty: handleTrackedProperty,
