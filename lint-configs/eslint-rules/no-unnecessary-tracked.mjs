@@ -115,7 +115,10 @@ export default {
       }
 
       const valueAttr = node.attributes?.find(
-        (attr) => attr.type === "GlimmerAttrNode" && attr.name === "@value"
+        (attr) =>
+          attr.type === "GlimmerAttrNode" &&
+          (attr.name === "@value" ||
+            (attr.name === "@checked" && componentName === "Input"))
       );
       if (
         !valueAttr?.value ||
@@ -169,7 +172,7 @@ export default {
       ImportDeclaration(node) {
         if (node.source.value.includes("/select-kit/")) {
           node.specifiers.forEach((specifier) => {
-              selectKitComponents.add(specifier.local.name);
+            selectKitComponents.add(specifier.local.name);
           });
         }
 
