@@ -1,3 +1,5 @@
+const MUTATING_COMPONENTS = ["Input", "TextField", "Textarea"];
+
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
   if (node.source.value !== source) {
     return;
@@ -51,7 +53,7 @@ export default {
 
   create(context) {
     const componentNames = new Set();
-    const mutUses = new Set();
+    const selectKitComponents = new Set();
     let currentComponent;
 
     function markAssigned(name) {
@@ -80,6 +82,10 @@ export default {
     }
 
     function handleGlimmerSubExpression(node) {
+      if (!currentComponent || !node.path?.head) {
+        return;
+      }
+
       if (node.path.head.type !== "VarHead" || node.path.head.name !== "mut") {
         return;
       }
@@ -90,7 +96,36 @@ export default {
       }
 
       if (firstParam.head.type === "ThisHead" && firstParam.tail.length) {
-        mutUses.add(firstParam.tail[0]);
+        currentComponent.mutUses.add(firstParam.tail[0]);
+      }
+    }
+
+    function handleGlimmerElementNode(node) {
+      if (!currentComponent) {
+        return;
+      }
+
+      const componentName = node.tag || node.name;
+      if (
+        !componentName ||
+        (!MUTATING_COMPONENTS.includes(componentName) &&
+          !selectKitComponents.has(componentName))
+      ) {
+        return;
+      }
+
+      const valueAttr = node.attributes?.find(
+        (attr) => attr.type === "GlimmerAttrNode" && attr.name === "@value"
+      );
+      if (!valueAttr?.value || valueAttr.value.type !== "GlimmerMustacheStatement") {
+        return;
+      }
+
+      const path = valueAttr.value.path;
+      if (path?.type === "GlimmerPathExpression") {
+        if (path.head?.type === "ThisHead" && path.tail?.length) {
+          currentComponent.valueUses.add(path.tail[0]);
+        }
       }
     }
 
@@ -100,6 +135,8 @@ export default {
           node,
           trackedProps: new Map(),
           assigned: new Set(),
+          mutUses: new Set(),
+          valueUses: new Set(),
         };
       }
     }
@@ -111,8 +148,10 @@ export default {
 
       for (const [name, propNode] of currentComponent.trackedProps.entries()) {
         const reassigned = currentComponent.assigned.has(name);
+        const hasMutUse = currentComponent.mutUses.has(name);
+        const hasValueUse = currentComponent.valueUses.has(name);
 
-        if (!reassigned && !mutUses.has(name)) {
+        if (!reassigned && !hasMutUse && !hasValueUse) {
           context.report({
             node: propNode,
             message: `\`${name}\` property is defined as tracked but isn't modified anywhere.`,
@@ -125,6 +164,14 @@ export default {
 
     return {
       ImportDeclaration(node) {
+        if (node.source.value?.includes("/select-kit/")) {
+          node.specifiers.forEach((specifier) => {
+            if (specifier.local?.name) {
+              selectKitComponents.add(specifier.local.name);
+            }
+          });
+        }
+
         const glimmerComponentName = getImportIdentifier(
           node,
           "@glimmer/component"
@@ -166,6 +213,7 @@ export default {
       },
 
       GlimmerSubExpression: handleGlimmerSubExpression,
+      GlimmerElementNode: handleGlimmerElementNode,
     };
   },
 };

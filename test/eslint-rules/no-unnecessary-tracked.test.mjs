@@ -41,6 +41,35 @@ ruleTester.run("no-unnecessary-tracked", rule, {
       `,
     },
     {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked status = "ready";
+
+          <template>
+            <Input @value={{this.status}} />
+          </template>
+        }
+      `,
+    },
+    {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+        import ComboBox from "discourse/components/select-kit/combo-box";
+
+        export default class FooBar extends Component {
+          @tracked status = "ready";
+
+          <template>
+            <ComboBox @value={{this.status}} />
+          </template>
+        }
+      `,
+    },
+    {
       filename: "frontend/discourse/app/service/baz.js",
       code: `
         class Baz extends Service {
