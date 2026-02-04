@@ -46,7 +46,7 @@ export default {
     type: "suggestion",
     docs: {
       description:
-        "Disallow @tracked for properties that are never reassigned in components when only used in templates.",
+        "Component properties should be @tracked only when they're reassigned at some point.",
     },
     schema: [], // no options
   },
@@ -117,7 +117,10 @@ export default {
       const valueAttr = node.attributes?.find(
         (attr) => attr.type === "GlimmerAttrNode" && attr.name === "@value"
       );
-      if (!valueAttr?.value || valueAttr.value.type !== "GlimmerMustacheStatement") {
+      if (
+        !valueAttr?.value ||
+        valueAttr.value.type !== "GlimmerMustacheStatement"
+      ) {
         return;
       }
 
@@ -146,7 +149,7 @@ export default {
         return;
       }
 
-      for (const [name, propNode] of currentComponent.trackedProps.entries()) {
+      for (const [name, propNode] of currentComponent.trackedProps) {
         const reassigned = currentComponent.assigned.has(name);
         const hasMutUse = currentComponent.mutUses.has(name);
         const hasValueUse = currentComponent.valueUses.has(name);
@@ -199,17 +202,11 @@ export default {
       PropertyDefinition: handleTrackedProperty,
 
       AssignmentExpression(node) {
-        const name = getAssignedPropertyName(node.left);
-        if (name) {
-          markAssigned(name);
-        }
+        markAssigned(getAssignedPropertyName(node.left));
       },
 
       UpdateExpression(node) {
-        const name = getAssignedPropertyName(node.argument);
-        if (name) {
-          markAssigned(name);
-        }
+        markAssigned(getAssignedPropertyName(node.argument));
       },
 
       GlimmerSubExpression: handleGlimmerSubExpression,
