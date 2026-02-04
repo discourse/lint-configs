@@ -1,7 +1,13 @@
 // key: the mutable argument name
 // value array: component names
 const MUTATING_COMPONENTS = {
-  "@value": ["Input", "Textarea", "TextField", "DatePicker"],
+  "@value": [
+    "Input",
+    "Textarea",
+    "TextField",
+    "DatePicker",
+    "ChatChannelChooser",
+  ],
   "@checked": ["Input", "PreferenceCheckbox"],
   "@selection": ["RadioButton", "InstallThemeItem"],
   "@postAction": ["AdminPenaltyPostAction"],
@@ -9,6 +15,7 @@ const MUTATING_COMPONENTS = {
   "@tags": ["TagChooser"],
   "@capsLockOn": ["PasswordField"],
   "@message": ["FlagActionType"],
+  "@isConfirmed": ["FlagActionType"],
 };
 
 function getImportIdentifier(node, source, namedImportIdentifier = null) {
