@@ -4,7 +4,7 @@
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
     "ember-eslint-parser": "^0.5.13",
-    "eslint": "9.39.1",
+    "eslint": "9.39.2",
     "mocha": "^11.7.5"
   },
   "scripts": {
