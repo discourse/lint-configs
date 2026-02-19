@@ -73,8 +73,11 @@ export function analyzeMacroUsage(sourceCode, imports) {
     });
   }
 
-  // Deduplicate tracked deps across usages so that each dep/node is
-  // only inserted/decorated by ONE usage's fixer (the first one encountered).
+  // Post-process tracked deps:
+  // 1. Remove deps that are themselves macro properties being converted to
+  //    getters — adding @tracked to something that will become a getter is wrong.
+  // 2. Deduplicate so each new @tracked declaration is emitted by one fixer only.
+  excludeDepsBeingConverted(usages);
   deduplicateTrackedDeps(usages);
 
   return { usages, importedMacros, macroImportNodes };
@@ -384,8 +387,52 @@ function buildUsage({
 }
 
 // ---------------------------------------------------------------------------
-// Tracked dep deduplication
+// Tracked dep post-processing
 // ---------------------------------------------------------------------------
+
+/**
+ * Remove tracked deps and nodes-to-decorate that correspond to other macro
+ * usages being converted to getters in the same class. After conversion,
+ * those properties will be getters (reactive by nature), so adding `@tracked`
+ * would create a duplicate class member.
+ *
+ * @param {MacroUsage[]} usages
+ */
+function excludeDepsBeingConverted(usages) {
+  // Group fixable usage prop names and property nodes by ClassBody
+  const convertedByClass = new Map();
+  for (const usage of usages) {
+    if (!usage.canAutoFix) {
+      continue;
+    }
+    const classBody = usage.propertyNode.parent;
+    if (!convertedByClass.has(classBody)) {
+      convertedByClass.set(classBody, { names: new Set(), nodes: new Set() });
+    }
+    const entry = convertedByClass.get(classBody);
+    entry.names.add(usage.propName);
+    entry.nodes.add(usage.propertyNode);
+  }
+
+  for (const usage of usages) {
+    const classBody = usage.propertyNode?.parent;
+    const converted = convertedByClass.get(classBody);
+    if (!converted) {
+      continue;
+    }
+
+    if (usage.trackedDeps) {
+      usage.trackedDeps = usage.trackedDeps.filter(
+        (dep) => !converted.names.has(dep)
+      );
+    }
+    if (usage.existingNodesToDecorate) {
+      usage.existingNodesToDecorate = usage.existingNodesToDecorate.filter(
+        (node) => !converted.nodes.has(node)
+      );
+    }
+  }
+}
 
 /**
  * Ensure each new `@tracked` dep name is assigned to at most ONE usage.
@@ -429,9 +476,10 @@ function deduplicateTrackedDeps(usages) {
  * Given a PropertyDefinition inside a class body, determine which local
  * dependent keys need `@tracked` handling:
  *
- * - Keys not declared as class members → need a new `@tracked propName;` inserted
- * - Keys declared as members without `@tracked` → need `@tracked` added to the existing declaration
- * - Keys already declared with `@tracked` → no action needed
+ * - Keys matching a MethodDefinition (getter/method) → already reactive, skip
+ * - Keys declared as PropertyDefinition with `@tracked` → already tracked, skip
+ * - Keys declared as PropertyDefinition without `@tracked` → need `@tracked` added
+ * - Keys not declared as any class member → need a new `@tracked propName;` inserted
  *
  * @param {import('estree').Node} propertyNode - The PropertyDefinition node
  * @param {string[]} dependentKeys - Local-only dependent keys (no dots)
@@ -443,10 +491,20 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
     return { depsToInsert: [...dependentKeys], existingNodesToDecorate: [] };
   }
 
-  const trackedMembers = new Set();
+  const reactiveMembers = new Set(); // getters, methods, and @tracked properties
   const untrackedMemberNodes = new Map(); // name → AST node
 
   for (const member of classBody.body) {
+    // Getters and methods are already reactive — no @tracked needed
+    if (member.type === "MethodDefinition") {
+      const name =
+        member.key.type === "Identifier"
+          ? member.key.name
+          : String(member.key.value);
+      reactiveMembers.add(name);
+      continue;
+    }
+
     if (member.type !== "PropertyDefinition") {
       continue;
     }
@@ -468,7 +526,7 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
       }) ?? false;
 
     if (hasTracked) {
-      trackedMembers.add(name);
+      reactiveMembers.add(name);
     } else {
       untrackedMemberNodes.set(name, member);
     }
@@ -478,8 +536,8 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
   const existingNodesToDecorate = [];
 
   for (const key of dependentKeys) {
-    if (trackedMembers.has(key)) {
-      continue; // already tracked
+    if (reactiveMembers.has(key)) {
+      continue; // already reactive (getter, method, or @tracked)
     }
     if (untrackedMemberNodes.has(key)) {
       existingNodesToDecorate.push(untrackedMemberNodes.get(key));
