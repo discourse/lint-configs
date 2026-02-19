@@ -725,6 +725,55 @@ class C {
 }`,
     },
 
+    {
+      name: "does not add @tracked when dep is an existing getter",
+      code: `import { not } from "@ember/object/computed";
+class C {
+  @not("isHidden") isExpanded;
+  get isHidden() {
+    return false;
+  }
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @dependentKeyCompat
+  get isExpanded() {
+    return !this.isHidden;
+  }
+  get isHidden() {
+    return false;
+  }
+}`,
+    },
+    {
+      name: "does not add @tracked when dep is another macro being converted",
+      code: `import { alias, not } from "@ember/object/computed";
+class C {
+  @not("enabled") disabled;
+  @alias("disabled") isDisabled;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked enabled;
+  @dependentKeyCompat
+  get disabled() {
+    return !this.enabled;
+  }
+  @dependentKeyCompat
+  get isDisabled() {
+    return this.disabled;
+  }
+}`,
+    },
+
     // ---- import alias ----
     {
       name: "handles import aliases",
