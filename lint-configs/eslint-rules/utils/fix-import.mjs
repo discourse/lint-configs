@@ -1,4 +1,32 @@
 /**
+ * Build an import statement string from its parts.
+ *
+ * @param {string} source - The import source (e.g. "@ember/object").
+ * @param {Object} [options]
+ * @param {string|null} [options.defaultImport] - Default import name, or null.
+ * @param {string[]} [options.namedImports] - Named import specifiers (may include aliases like "foo as bar").
+ * @param {string} [options.quote] - Quote style: `"` (default) or `'`.
+ * @returns {string} A complete import statement string.
+ */
+export function buildImportStatement(
+  source,
+  { defaultImport = null, namedImports = [], quote = '"' } = {}
+) {
+  let stmt = "import ";
+  if (defaultImport) {
+    stmt += defaultImport;
+    if (namedImports.length > 0) {
+      stmt += ", ";
+    }
+  }
+  if (namedImports.length > 0) {
+    stmt += `{ ${namedImports.join(", ")} }`;
+  }
+  stmt += ` from ${quote}${source}${quote};`;
+  return stmt;
+}
+
+/**
  * Fix an import declaration
  *
  * @param {ASTNode} importDeclarationNode - The AST node representing the import declaration.
@@ -51,18 +79,10 @@ export function fixImport(
     ])
   );
 
-  // Construct the new import statement
-  let newImportStatement = "import ";
-  if (finalDefaultImport) {
-    newImportStatement += `${finalDefaultImport}`;
-    if (finalNamedImports.length > 0) {
-      newImportStatement += ", ";
-    }
-  }
-  if (finalNamedImports.length > 0) {
-    newImportStatement += `{ ${finalNamedImports.join(", ")} }`;
-  }
-  newImportStatement += ` from "${importDeclarationNode.source.value}";`;
+  const newImportStatement = buildImportStatement(
+    importDeclarationNode.source.value,
+    { defaultImport: finalDefaultImport, namedImports: finalNamedImports }
+  );
 
   // Replace the entire import declaration
   return fixer.replaceText(importDeclarationNode, newImportStatement);
