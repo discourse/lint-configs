@@ -472,6 +472,15 @@ function deduplicateTrackedDeps(usages) {
 // @tracked dependency detection
 // ---------------------------------------------------------------------------
 
+// Decorators that make a property reactive (equivalent to @tracked).
+// Members with these decorators do not need @tracked added.
+const TRACKED_DECORATORS = new Set([
+  "tracked",
+  "trackedArray",
+  "dedupeTracked",
+  "resettableTracked",
+]);
+
 /**
  * @typedef {Object} TrackedDepsInfo
  * @property {string[]} depsToInsert - Deps that need a NEW `@tracked propName;` declaration
@@ -484,8 +493,9 @@ function deduplicateTrackedDeps(usages) {
  * dependent keys need `@tracked` handling:
  *
  * - Keys matching a MethodDefinition (getter/method) → already reactive, skip
- * - Keys declared as PropertyDefinition with `@tracked` → already tracked, skip
- * - Keys declared as PropertyDefinition without `@tracked` → need `@tracked` added
+ * - Keys declared as PropertyDefinition with a tracked-like decorator
+ *   (@tracked, @trackedArray, @dedupeTracked, @resettableTracked) → skip
+ * - Keys declared as PropertyDefinition without tracking → need `@tracked` added
  * - Keys not declared as any class member → need a new `@tracked propName;` inserted
  *
  * @param {import('estree').Node} propertyNode - The PropertyDefinition node
@@ -498,7 +508,7 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
     return { depsToInsert: [...dependentKeys], existingNodesToDecorate: [] };
   }
 
-  const reactiveMembers = new Set(); // getters, methods, and @tracked properties
+  const reactiveMembers = new Set(); // getters, methods, and tracked properties
   const untrackedMemberNodes = new Map(); // name → AST node
 
   for (const member of classBody.body) {
@@ -521,18 +531,18 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
         ? member.key.name
         : String(member.key.value);
 
-    const hasTracked =
+    const hasTrackedLike =
       member.decorators?.some((d) => {
         const expr = d.expression;
         return (
-          (expr.type === "Identifier" && expr.name === "tracked") ||
+          (expr.type === "Identifier" && TRACKED_DECORATORS.has(expr.name)) ||
           (expr.type === "CallExpression" &&
             expr.callee?.type === "Identifier" &&
-            expr.callee.name === "tracked")
+            TRACKED_DECORATORS.has(expr.callee.name))
         );
       }) ?? false;
 
-    if (hasTracked) {
+    if (hasTrackedLike) {
       reactiveMembers.add(name);
     } else {
       untrackedMemberNodes.set(name, member);

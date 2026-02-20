@@ -745,6 +745,33 @@ class C {
   }
 }`,
     },
+    {
+      name: "@tracked replacement consumes preceding blank line",
+      code: `import { not } from "@ember/object/computed";
+class C {
+  @tracked showAdvanced;
+  @tracked currentTargetName;
+
+  @not("fieldName") isNotField;
+
+  warning = null;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked showAdvanced;
+  @tracked currentTargetName;
+  @tracked fieldName;
+
+  warning = null;
+
+  @dependentKeyCompat
+  get isNotField() {
+    return !this.fieldName;
+  }
+}`,
+    },
 
     {
       name: "does not add @tracked when dep is an existing getter",
@@ -1041,6 +1068,46 @@ class C {
   @computed("last_read_post_number")
   get visited() {
     return this.last_read_post_number > 0;
+  }
+}`,
+    },
+    // ---- @tracked added to existing dep with surrounding properties ----
+    {
+      name: "adds @tracked to existing dep, preserves surrounding properties",
+      code: `import { tracked } from "@glimmer/tracking";
+import { equal } from "@ember/object/computed";
+class C {
+  @tracked confirmDeleteAll = false;
+
+  postId = null;
+  postAction = null;
+  postEdit = null;
+
+  @equal("postAction", "edit") editing;
+  @equal("postAction", "delete_all") deletingAll;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "addTracked" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked confirmDeleteAll = false;
+  @tracked postAction = null;
+
+  postId = null;
+  postEdit = null;
+
+  @dependentKeyCompat
+  get editing() {
+    return this.postAction === "edit";
+  }
+  @dependentKeyCompat
+  get deletingAll() {
+    return this.postAction === "delete_all";
   }
 }`,
     },
