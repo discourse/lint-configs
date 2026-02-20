@@ -81,6 +81,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked name;
+
   @dependentKeyCompat
   get myName() {
     return this.name;
@@ -117,6 +118,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked isHidden;
+
   @dependentKeyCompat
   get isVisible() {
     return !this.isHidden;
@@ -136,6 +138,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked count;
+
   @dependentKeyCompat
   get hasItems() {
     return !!this.count;
@@ -156,6 +159,7 @@ import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked pinned;
   @tracked readLastPost;
+
   @dependentKeyCompat
   get canClearPin() {
     return this.pinned && this.readLastPost;
@@ -192,6 +196,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked trust_level;
+
   @dependentKeyCompat
   get isBasic() {
     return this.trust_level === 0;
@@ -264,6 +269,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked id;
+
   @dependentKeyCompat
   get isNew() {
     return this.id == null;
@@ -379,6 +385,7 @@ import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked a;
   @tracked b;
+
   @dependentKeyCompat
   get items() {
     return [this.a === undefined ? null : this.a, this.b === undefined ? null : this.b];
@@ -518,6 +525,7 @@ import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked originalTrustLevel;
   @tracked trust_level;
+
   @dependentKeyCompat
   get dirty() {
     return !deepEqual(this.originalTrustLevel, this.trust_level);
@@ -554,6 +562,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked url;
+
   @dependentKeyCompat
   get printUrl() {
     return \`\${this.url}/print\`;
@@ -575,6 +584,7 @@ import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked id;
   @tracked username_lower;
+
   @dependentKeyCompat
   get adminPath() {
     return getURL(\`/admin/users/\${this.id}/\${this.username_lower}\`);
@@ -595,6 +605,7 @@ import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked action_type;
+
   @dependentKeyCompat
   get description() {
     return i18n(\`user_action_groups.\${this.action_type}\`);
@@ -613,6 +624,7 @@ import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked action_type;
+
   @dependentKeyCompat
   get description() {
     return i18n(\`user_action_groups.\${this.action_type}\`);
@@ -633,6 +645,7 @@ import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked bio;
+
   @dependentKeyCompat
   get safeBio() {
     return htmlSafe(this.bio);
@@ -652,6 +665,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked name;
+
   @dependentKeyCompat
   get isJsFile() {
     return this.name?.endsWith(".js");
@@ -673,6 +687,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked isHidden;
+
   @dependentKeyCompat
   get isVisible() {
     return !this.isHidden;
@@ -686,11 +701,16 @@ class C {
   headerLang = null;
   @alias("headerLang") lang;
 }`,
-      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "addTracked" },
+        { messageId: "replaceMacro" },
+      ],
       output: `import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked headerLang = null;
+
   @dependentKeyCompat
   get lang() {
     return this.headerLang;
@@ -714,6 +734,7 @@ import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked name;
+
   @dependentKeyCompat
   get title() {
     return i18n(\`group.\${this.name}.title\`);
@@ -763,6 +784,7 @@ class C {
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked enabled;
+
   @dependentKeyCompat
   get disabled() {
     return !this.enabled;
@@ -770,6 +792,113 @@ class C {
   @dependentKeyCompat
   get isDisabled() {
     return this.disabled;
+  }
+}`,
+    },
+
+    // ---- @equal with non-literal value arg ----
+    {
+      name: "@equal with constant value arg auto-fixes using source text",
+      code: `import { equal } from "@ember/object/computed";
+const CREATE_TOPIC = 1;
+class C {
+  @equal("action", CREATE_TOPIC) isCreate;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+const CREATE_TOPIC = 1;
+class C {
+  @tracked action;
+
+  @dependentKeyCompat
+  get isCreate() {
+    return this.action === CREATE_TOPIC;
+  }
+}`,
+    },
+    {
+      name: "@gte with non-literal value arg",
+      code: `import { gte } from "@ember/object/computed";
+const MIN_COUNT = 5;
+class C {
+  @gte("count", MIN_COUNT) hasEnough;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+const MIN_COUNT = 5;
+class C {
+  @tracked count;
+
+  @dependentKeyCompat
+  get hasEnough() {
+    return this.count >= MIN_COUNT;
+  }
+}`,
+    },
+    {
+      name: "@equal with member expression value arg",
+      code: `import { equal } from "@ember/object/computed";
+class C {
+  @equal("action_type", UserActionTypes.replies) isReply;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked action_type;
+
+  @dependentKeyCompat
+  get isReply() {
+    return this.action_type === UserActionTypes.replies;
+  }
+}`,
+    },
+
+    // ---- @tracked on existing member does not block other fixes ----
+    {
+      name: "@tracked on existing member does not block other property fixes",
+      code: `import { alias, gte, not } from "@ember/object/computed";
+class C {
+  @alias("model.title") title;
+  @not("isHidden") isVisible;
+  @gte("topicPostCount", 2) hasReplies;
+  topicPostCount = 0;
+  @alias("model.featured") showFeaturedTopic;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "addTracked" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { tracked } from "@glimmer/tracking";
+import { computed } from "@ember/object";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked isHidden;
+  @tracked topicPostCount = 0;
+
+  @computed("model.title")
+  get title() {
+    return this.model?.title;
+  }
+  @dependentKeyCompat
+  get isVisible() {
+    return !this.isHidden;
+  }
+  @dependentKeyCompat
+  get hasReplies() {
+    return this.topicPostCount >= 2;
+  }
+  @computed("model.featured")
+  get showFeaturedTopic() {
+    return this.model?.featured;
   }
 }`,
     },
@@ -856,15 +985,62 @@ import { tracked } from "@glimmer/tracking";
 import { computed } from "@ember/object";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
+  @tracked a;
+  @tracked b;
+
   @computed("items.length")
   get hasItems() {
     return !isEmpty(this.items);
   }
-  @tracked a;
-  @tracked b;
   @dependentKeyCompat
   get isDifferent() {
     return !deepEqual(this.a, this.b);
+  }
+}`,
+    },
+    // ---- static methods should not affect getter insertion point ----
+    {
+      name: "getters are placed after instance properties, not among static methods",
+      code: `import { alias, not } from "@ember/object/computed";
+class C {
+  static find(id) {
+    return id;
+  }
+  @tracked isHidden;
+  message = null;
+  @alias("model.title") title;
+  @not("isHidden") isVisible;
+  @computed("last_read_post_number")
+  get visited() {
+    return this.last_read_post_number > 0;
+  }
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { computed } from "@ember/object";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  static find(id) {
+    return id;
+  }
+  @tracked isHidden;
+  message = null;
+
+  @computed("model.title")
+  get title() {
+    return this.model?.title;
+  }
+  @dependentKeyCompat
+  get isVisible() {
+    return !this.isHidden;
+  }
+  @computed("last_read_post_number")
+  get visited() {
+    return this.last_read_post_number > 0;
   }
 }`,
     },
