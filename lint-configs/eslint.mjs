@@ -21,7 +21,9 @@ import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
+import noComputedMacros from "./eslint-rules/no-computed-macros.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
+import discourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
@@ -141,6 +143,8 @@ export default [
           "no-route-template": noRouteTemplate,
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
+          "no-computed-macros": noComputedMacros,
+          "no-discourse-computed": discourseComputed,
           "test-filename-suffix": testFilenameSuffix,
         },
       },
@@ -311,6 +315,8 @@ export default [
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
       "discourse/test-filename-suffix": ["error"],
+      "discourse/no-computed-macros": ["error"],
+      "discourse/no-discourse-computed": ["error"],
     },
   },
   {
