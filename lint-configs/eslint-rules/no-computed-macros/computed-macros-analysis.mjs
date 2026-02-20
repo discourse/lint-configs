@@ -65,11 +65,6 @@ export function analyzeMacroUsage(sourceCode, imports) {
       if (node.type === "PropertyDefinition" && node.decorators) {
         analyzePropertyDefinition(node, importedMacros, usages, sourceCode);
       }
-
-      // Classic .extend() usage — report but don't fix
-      if (isExtendCall(node)) {
-        analyzeExtendCall(node, importedMacros, usages);
-      }
     });
   }
 
@@ -187,79 +182,6 @@ function analyzePropertyDefinition(node, importedMacros, usages, sourceCode) {
     });
 
     usages.push(usage);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Classic .extend() analysis
-// ---------------------------------------------------------------------------
-
-/**
- * Check whether a node is a `.extend()` call on a known Ember base class.
- *
- * @param {import('estree').Node} node
- * @returns {boolean}
- */
-function isExtendCall(node) {
-  return (
-    node.type === "CallExpression" &&
-    node.callee?.type === "MemberExpression" &&
-    node.callee.property?.name === "extend"
-  );
-}
-
-/**
- * Analyze properties inside a `.extend({...})` call for macro usage.
- *
- * @param {import('estree').Node} node - CallExpression for .extend()
- * @param {Map<string, string>} importedMacros
- * @param {MacroUsage[]} usages
- */
-function analyzeExtendCall(node, importedMacros, usages) {
-  for (const arg of node.arguments) {
-    if (arg.type !== "ObjectExpression") {
-      continue;
-    }
-
-    for (const prop of arg.properties) {
-      if (prop.type !== "Property" || !prop.value) {
-        continue;
-      }
-
-      const callExpr = prop.value;
-      if (callExpr.type !== "CallExpression") {
-        continue;
-      }
-
-      const callee = callExpr.callee;
-      if (callee?.type !== "Identifier") {
-        continue;
-      }
-
-      const macroName = importedMacros.get(callee.name);
-      if (!macroName) {
-        continue;
-      }
-
-      const propName =
-        prop.key.type === "Identifier" ? prop.key.name : String(prop.key.value);
-
-      usages.push({
-        macroName,
-        localName: callee.name,
-        transform: MACRO_TRANSFORMS.get(macroName),
-        decoratorNode: null,
-        propertyNode: prop,
-        literalArgs: [],
-        argNodes: callExpr.arguments,
-        propName,
-        dependentKeys: [],
-        allLocal: false,
-        canAutoFix: false,
-        messageId: "cannotAutoFixClassic",
-        reportData: { name: macroName },
-      });
-    }
   }
 }
 
