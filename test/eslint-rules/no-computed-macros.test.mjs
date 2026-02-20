@@ -49,6 +49,13 @@ class C {
   }
 }`,
     },
+    {
+      name: "classic .extend() usage is ignored",
+      code: `import { alias } from "@ember/object/computed";
+const Foo = EmberObject.extend({
+  title: alias("model.title"),
+});`,
+    },
   ],
 
   invalid: [
@@ -962,19 +969,6 @@ class C {
     return this.pinned && this.category?.isUncategorizedCategory;
   }
 }`,
-    },
-
-    // ---- classic .extend() → report only ----
-    {
-      name: "classic .extend() class reports without fix",
-      code: `import { alias } from "@ember/object/computed";
-const Foo = EmberObject.extend({
-  title: alias("model.title"),
-});`,
-      errors: [
-        { messageId: "replaceMacro" },
-        { messageId: "cannotAutoFixClassic" },
-      ],
     },
 
     // ---- non-literal args → report only ----

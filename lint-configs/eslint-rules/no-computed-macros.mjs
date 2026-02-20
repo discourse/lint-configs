@@ -25,8 +25,6 @@ export default {
       replaceMacro: "Replace '@{{name}}' macro with a native getter.",
       addTracked:
         "Add @tracked to '{{name}}' (dependency of a converted macro).",
-      cannotAutoFixClassic:
-        "Cannot auto-fix '{{name}}' in a classic .extend() class. Convert to native ES6 class first.",
       cannotAutoFixComplex: "Cannot auto-fix '{{name}}': {{reason}}.",
       cannotAutoFixDynamic:
         "Cannot auto-fix '@{{name}}' because it has non-literal arguments.",
@@ -95,10 +93,13 @@ export default {
 
         const { usages, importedMacros, macroImportNodes } = ensureAnalysis();
 
+        // Only report specifiers that have at least one usage in a native class
+        const usedLocalNames = new Set(usages.map((u) => u.localName));
         const macroSpecifiers = node.specifiers.filter(
           (spec) =>
             spec.type === "ImportSpecifier" &&
-            importedMacros.has(spec.local.name)
+            importedMacros.has(spec.local.name) &&
+            usedLocalNames.has(spec.local.name)
         );
 
         if (macroSpecifiers.length === 0) {
@@ -173,24 +174,6 @@ export default {
           data: usage.reportData || { name: usage.macroName },
           fix,
         });
-      },
-
-      // Report on classic .extend() usage
-      CallExpression(node) {
-        const { usages } = ensureAnalysis();
-
-        for (const usage of usages) {
-          if (
-            usage.messageId === "cannotAutoFixClassic" &&
-            usage.propertyNode?.parent === node.arguments?.[0]
-          ) {
-            context.report({
-              node: usage.propertyNode,
-              messageId: usage.messageId,
-              data: usage.reportData,
-            });
-          }
-        }
       },
 
       // Report @tracked additions for existing class members.
