@@ -2,11 +2,11 @@
  * @fileoverview Fixer logic for the `no-computed-macros` ESLint rule.
  *
  * Generates a combined ESLint fixer function per class that:
- * 1. Removes each macro PropertyDefinition (replacing with @tracked
- *    declarations when needed)
- * 2. Inserts all generated getters at the correct class body position
+ * 1. Removes each macro PropertyDefinition
+ * 2. Collects all @tracked declarations (new + moved) and inserts them
+ *    at the [tracked-properties] section
+ * 3. Inserts all generated getters at the correct class body position
  *    (the [everything-else] section, after all property-like members)
- * 3. Adds @tracked to existing class members that need it
  *
  * This "remove + insert elsewhere" approach produces correct
  * sort-class-members order in a single --fix pass, avoiding the messy
@@ -17,6 +17,15 @@
 // (they come before [everything-else] in the sort order).
 const LIFECYCLE_METHODS = new Set(["constructor", "init", "willDestroy"]);
 
+// Decorators that make a property reactive (equivalent to @tracked).
+// Members with these decorators do not need @tracked added.
+const TRACKED_DECORATORS = new Set([
+  "tracked",
+  "trackedArray",
+  "dedupeTracked",
+  "resettableTracked",
+]);
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -25,8 +34,8 @@ const LIFECYCLE_METHODS = new Set(["constructor", "init", "willDestroy"]);
  * Create a combined fixer function for ALL fixable macro usages in one class.
  *
  * The returned function produces an array of Fix objects that:
- * - Remove/replace each macro PropertyDefinition
- * - Add @tracked to existing class members
+ * - Remove each macro PropertyDefinition
+ * - Collect and insert @tracked declarations at the tracked section
  * - Insert all generated getters at the correct position
  *
  * @param {import('./computed-macros-analysis.mjs').MacroUsage[]} classUsages
@@ -46,41 +55,84 @@ export function createClassFix(
     const indent = detectIndent(classUsages[0].propertyNode, sourceCode);
     const macroNodeSet = new Set(classUsages.map((u) => u.propertyNode));
 
-    // 1. Remove/replace each macro PropertyDefinition
-    const seenTrackedDeps = new Set();
+    // ---- 1. Remove all macro PropertyDefinitions ----
     for (const usage of classUsages) {
-      const start = getNodeStart(usage, sourceCode);
+      let start = getNodeStart(usage, sourceCode);
       let end = getNodeEnd(usage.propertyNode, sourceCode);
       // Consume trailing newline for clean line removal
       if (end < text.length && text[end] === "\n") {
         end++;
       }
+      // Consume one preceding blank line to avoid orphaned double blank
+      // lines after the macro is removed
+      if (start >= 2 && text[start - 1] === "\n" && text[start - 2] === "\n") {
+        start--;
+      }
+      fixes.push(fixer.replaceTextRange([start, end], ""));
+    }
 
-      let replacement = "";
+    // ---- 2. Collect @tracked declarations and insert at tracked section ----
+    // Both new declarations (from trackedDeps) and moved existing members
+    // (from existingNodesToDecorate) are placed together in the
+    // [tracked-properties] section for correct sort-class-members order.
+    const trackedLines = [];
+    const seenTrackedDeps = new Set();
+    const processedNodes = new Set();
+
+    for (const usage of classUsages) {
+      // New @tracked declarations from trackedDeps
       if (usage.allLocal && usage.trackedDeps?.length > 0) {
-        // Deduplicate tracked deps across usages in the same class
-        const newDeps = usage.trackedDeps.filter(
-          (d) => !seenTrackedDeps.has(d)
-        );
-        for (const d of newDeps) {
-          seenTrackedDeps.add(d);
-        }
-        if (newDeps.length > 0) {
-          replacement = newDeps
-            .map((dep) => `${indent}@tracked ${dep};\n`)
-            .join("");
+        for (const dep of usage.trackedDeps) {
+          if (!seenTrackedDeps.has(dep)) {
+            seenTrackedDeps.add(dep);
+            trackedLines.push(`${indent}@tracked ${dep};\n`);
+          }
         }
       }
 
-      fixes.push(fixer.replaceTextRange([start, end], replacement));
+      // Move existing members with @tracked prepended
+      if (usage.existingNodesToDecorate) {
+        for (const memberNode of usage.existingNodesToDecorate) {
+          if (processedNodes.has(memberNode)) {
+            continue;
+          }
+          processedNodes.add(memberNode);
+
+          // Capture source text (key through trailing semicolons)
+          let endPos = memberNode.range[1];
+          while (endPos < text.length && text[endPos] === ";") {
+            endPos++;
+          }
+          const memberSource = text.slice(memberNode.range[0], endPos);
+          trackedLines.push(`${indent}@tracked ${memberSource}\n`);
+
+          // Remove from original position (full line)
+          const removeStart = lineStartOf(memberNode, text);
+          let removeEnd = endPos;
+          if (removeEnd < text.length && text[removeEnd] === "\n") {
+            removeEnd++;
+          }
+          fixes.push(fixer.replaceTextRange([removeStart, removeEnd], ""));
+        }
+      }
     }
 
-    // 2. Add @tracked to existing class members
-    for (const memberNode of existingNodesToDecorate) {
-      fixes.push(fixer.insertTextBefore(memberNode, "@tracked "));
+    if (trackedLines.length > 0) {
+      const trackedInsertPos = findTrackedInsertionPoint(
+        classBody,
+        macroNodeSet,
+        existingNodesToDecorate,
+        text
+      );
+      fixes.push(
+        fixer.insertTextBeforeRange(
+          [trackedInsertPos, trackedInsertPos],
+          trackedLines.join("")
+        )
+      );
     }
 
-    // 3. Insert all getters at the correct position
+    // ---- 3. Insert all getters at the correct position ----
     const getterTexts = classUsages.map((u) =>
       buildGetterCode(u, indent, sourceCode)
     );
@@ -225,6 +277,79 @@ function findGetterInsertionPoint(classBody, macroNodeSet, sourceCode) {
 }
 
 /**
+ * Find the position to insert @tracked declarations.
+ *
+ * Strategy: insert right after the last existing @tracked property line
+ * (skipping macro nodes and members being moved). Falls back to the start
+ * of the class body (after `{\n`) if no @tracked properties exist.
+ *
+ * @param {import('estree').ClassBody} classBody
+ * @param {Set<import('estree').Node>} macroNodeSet
+ * @param {Set<import('estree').Node>} existingNodesToDecorate
+ * @param {string} text
+ * @returns {number}
+ */
+function findTrackedInsertionPoint(
+  classBody,
+  macroNodeSet,
+  existingNodesToDecorate,
+  text
+) {
+  let lastTrackedEnd = null;
+
+  for (const member of classBody.body) {
+    if (macroNodeSet.has(member) || existingNodesToDecorate.has(member)) {
+      continue;
+    }
+    if (member.type !== "PropertyDefinition") {
+      continue;
+    }
+
+    if (hasTrackedLikeDecorator(member)) {
+      let pos = member.range[1];
+      while (pos < text.length && text[pos] === ";") {
+        pos++;
+      }
+      if (pos < text.length && text[pos] === "\n") {
+        pos++;
+      }
+      lastTrackedEnd = pos;
+    }
+  }
+
+  if (lastTrackedEnd !== null) {
+    return lastTrackedEnd;
+  }
+
+  // No tracked properties found — insert at start of class body
+  let pos = classBody.range[0] + 1;
+  if (pos < text.length && text[pos] === "\n") {
+    pos++;
+  }
+  return pos;
+}
+
+/**
+ * Check whether a class member has a tracked-like decorator.
+ *
+ * @param {import('estree').Node} member
+ * @returns {boolean}
+ */
+function hasTrackedLikeDecorator(member) {
+  return (
+    member.decorators?.some((d) => {
+      const expr = d.expression;
+      return (
+        (expr.type === "Identifier" && TRACKED_DECORATORS.has(expr.name)) ||
+        (expr.type === "CallExpression" &&
+          expr.callee?.type === "Identifier" &&
+          TRACKED_DECORATORS.has(expr.callee.name))
+      );
+    }) ?? false
+  );
+}
+
+/**
  * Get the start-of-line position for a node (walks back past whitespace).
  *
  * @param {{ range?: number[], decorators?: Array<{ range: number[] }> }} node
@@ -258,12 +383,20 @@ function hasContentBeforeInsertion(
   macroNodeSet,
   insertPos
 ) {
-  // True if any macro replacement produces @tracked declarations
-  // (these are placed at the macro's original position, before the insertion)
+  // True if any macro produces @tracked declarations (placed at the
+  // tracked section, which is always before the getter insertion point)
   const hasTrackedDeps = classUsages.some(
     (u) => u.allLocal && u.trackedDeps?.length > 0
   );
   if (hasTrackedDeps) {
+    return true;
+  }
+  // True if any existing members are being moved (they get re-inserted
+  // at the tracked section, before the getter insertion point)
+  const hasExistingToDecorate = classUsages.some(
+    (u) => u.existingNodesToDecorate?.length > 0
+  );
+  if (hasExistingToDecorate) {
     return true;
   }
   // True if there are non-macro members before the insertion point
