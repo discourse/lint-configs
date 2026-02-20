@@ -1,46 +1,113 @@
 /**
  * @fileoverview Fixer logic for the `no-computed-macros` ESLint rule.
  *
- * Generates ESLint fixer functions that replace a macro-decorated
- * PropertyDefinition with a native getter, adjusting decorators.
- * New `@tracked` declarations for local deps are prepended to the replacement
- * text (rather than using a separate insertTextBefore) to avoid range overlaps.
- * Decorating *existing* class members with `@tracked` is handled centrally in
- * the import-level fix (see `no-computed-macros.mjs`) to avoid duplication.
+ * Generates a combined ESLint fixer function per class that:
+ * 1. Removes each macro PropertyDefinition (replacing with @tracked
+ *    declarations when needed)
+ * 2. Inserts all generated getters at the correct class body position
+ *    (the [everything-else] section, after all property-like members)
+ * 3. Adds @tracked to existing class members that need it
+ *
+ * This "remove + insert elsewhere" approach produces correct
+ * sort-class-members order in a single --fix pass, avoiding the messy
+ * intermediate state of in-place replacement.
  */
+
+// Names of lifecycle methods that have their own sort-class-members slot
+// (they come before [everything-else] in the sort order).
+const LIFECYCLE_METHODS = new Set(["constructor", "init", "willDestroy"]);
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /**
- * Create a fixer function for a single macro usage.
+ * Create a combined fixer function for ALL fixable macro usages in one class.
  *
- * The returned function replaces the PropertyDefinition (including its
- * decorators) with an optional block of `@tracked` declarations followed
- * by a `@computed(...)` or `@dependentKeyCompat` getter.
+ * The returned function produces an array of Fix objects that:
+ * - Remove/replace each macro PropertyDefinition
+ * - Add @tracked to existing class members
+ * - Insert all generated getters at the correct position
  *
- * Note: decorating *existing* class members with `@tracked` is NOT handled
- * here — it's aggregated in the import-level fix to avoid duplication.
- *
- * @param {import('./computed-macros-analysis.mjs').MacroUsage} usage
+ * @param {import('./computed-macros-analysis.mjs').MacroUsage[]} classUsages
+ * @param {Set<import('estree').Node>} existingNodesToDecorate
  * @param {import('eslint').SourceCode} sourceCode
- * @returns {(fixer: import('eslint').Rule.RuleFixer) => import('eslint').Rule.Fix}
+ * @returns {(fixer: import('eslint').Rule.RuleFixer) => import('eslint').Rule.Fix[]}
  */
-export function createMacroFix(usage, sourceCode) {
+export function createClassFix(
+  classUsages,
+  existingNodesToDecorate,
+  sourceCode
+) {
   return function (fixer) {
-    const indent = detectIndent(usage.propertyNode, sourceCode);
-    const getterCode = buildGetterCode(usage, indent, sourceCode);
+    const fixes = [];
+    const text = sourceCode.getText();
+    const classBody = classUsages[0].propertyNode.parent;
+    const indent = detectIndent(classUsages[0].propertyNode, sourceCode);
+    const macroNodeSet = new Set(classUsages.map((u) => u.propertyNode));
 
-    // Prepend @tracked declarations for local deps that need a NEW member
-    let trackedPrefix = "";
-    if (usage.allLocal && usage.trackedDeps?.length > 0) {
-      trackedPrefix = buildTrackedPrefix(usage, indent);
+    // 1. Remove/replace each macro PropertyDefinition
+    const seenTrackedDeps = new Set();
+    for (const usage of classUsages) {
+      const start = getNodeStart(usage, sourceCode);
+      let end = getNodeEnd(usage.propertyNode, sourceCode);
+      // Consume trailing newline for clean line removal
+      if (end < text.length && text[end] === "\n") {
+        end++;
+      }
+
+      let replacement = "";
+      if (usage.allLocal && usage.trackedDeps?.length > 0) {
+        // Deduplicate tracked deps across usages in the same class
+        const newDeps = usage.trackedDeps.filter(
+          (d) => !seenTrackedDeps.has(d)
+        );
+        for (const d of newDeps) {
+          seenTrackedDeps.add(d);
+        }
+        if (newDeps.length > 0) {
+          replacement = newDeps
+            .map((dep) => `${indent}@tracked ${dep};\n`)
+            .join("");
+        }
+      }
+
+      fixes.push(fixer.replaceTextRange([start, end], replacement));
     }
 
-    const start = getNodeStart(usage, sourceCode);
-    const end = getNodeEnd(usage.propertyNode, sourceCode);
-    return fixer.replaceTextRange([start, end], trackedPrefix + getterCode);
+    // 2. Add @tracked to existing class members
+    for (const memberNode of existingNodesToDecorate) {
+      fixes.push(fixer.insertTextBefore(memberNode, "@tracked "));
+    }
+
+    // 3. Insert all getters at the correct position
+    const getterTexts = classUsages.map((u) =>
+      buildGetterCode(u, indent, sourceCode)
+    );
+    const allGettersText = getterTexts.join("\n");
+
+    const insertPos = findGetterInsertionPoint(
+      classBody,
+      macroNodeSet,
+      sourceCode
+    );
+    const hasContent = hasContentBeforeInsertion(
+      classUsages,
+      classBody,
+      macroNodeSet,
+      insertPos
+    );
+    // Blank line before getters when there's content above (field → method)
+    const prefix = hasContent ? "\n" : "";
+
+    fixes.push(
+      fixer.insertTextBeforeRange(
+        [insertPos, insertPos],
+        prefix + allGettersText + "\n"
+      )
+    );
+
+    return fixes;
   };
 }
 
@@ -93,21 +160,116 @@ function buildGetterCode(usage, indent, sourceCode) {
 }
 
 // ---------------------------------------------------------------------------
-// @tracked prefix
+// Insertion point logic
 // ---------------------------------------------------------------------------
 
 /**
- * Build `@tracked propName;` declarations to prepend before the getter.
- * `trackedDeps` already contains only deps that need a NEW declaration
- * (not existing class members — those are handled separately via
- * `existingNodesToDecorate`).
+ * Find the character position where generated getters should be inserted.
  *
- * @param {import('./computed-macros-analysis.mjs').MacroUsage} usage
- * @param {string} indent
- * @returns {string}
+ * Strategy (matches sort-class-members order):
+ * 1. If there's a non-static, non-macro instance MethodDefinition that is NOT
+ *    a lifecycle method, insert before it (start of [everything-else] section).
+ *    Static methods come before all instance members in the sort order, so
+ *    they must be skipped.
+ * 2. Otherwise, if there's a last non-macro member, insert after it.
+ * 3. Fallback: insert before the closing `}` of the class body.
+ *
+ * @param {import('estree').ClassBody} classBody
+ * @param {Set<import('estree').Node>} macroNodeSet
+ * @param {import('eslint').SourceCode} sourceCode
+ * @returns {number} Character position at the start of a line
  */
-function buildTrackedPrefix(usage, indent) {
-  return usage.trackedDeps.map((dep) => `${indent}@tracked ${dep};\n`).join("");
+function findGetterInsertionPoint(classBody, macroNodeSet, sourceCode) {
+  const text = sourceCode.getText();
+  const members = classBody.body;
+
+  // Look for the first non-static, non-macro instance MethodDefinition
+  // that isn't a lifecycle method. Static methods come before all instance
+  // members in the sort order, so inserting among them would be wrong.
+  for (const member of members) {
+    if (macroNodeSet.has(member) || member.static) {
+      continue;
+    }
+    if (member.type === "MethodDefinition") {
+      const name = member.key?.name;
+      if (!LIFECYCLE_METHODS.has(name)) {
+        // Insert before this method's line
+        return lineStartOf(member, text);
+      }
+    }
+  }
+
+  // No existing instance method found. Insert after the last non-macro member
+  // (including static members — they precede [everything-else] in sort order).
+  let lastNonMacro = null;
+  for (const member of members) {
+    if (!macroNodeSet.has(member)) {
+      lastNonMacro = member;
+    }
+  }
+
+  if (lastNonMacro) {
+    // Position after this member's line (past semicolons and newline)
+    let pos = lastNonMacro.range[1];
+    while (pos < text.length && text[pos] === ";") {
+      pos++;
+    }
+    if (pos < text.length && text[pos] === "\n") {
+      pos++;
+    }
+    return pos;
+  }
+
+  // Fallback: before the closing `}` of the class body
+  return lineStartOf({ range: [classBody.range[1] - 1] }, text);
+}
+
+/**
+ * Get the start-of-line position for a node (walks back past whitespace).
+ *
+ * @param {{ range?: number[], decorators?: Array<{ range: number[] }> }} node
+ * @param {string} text
+ * @returns {number}
+ */
+function lineStartOf(node, text) {
+  let pos =
+    node.decorators?.length > 0 ? node.decorators[0].range[0] : node.range[0];
+
+  while (pos > 0 && text[pos - 1] !== "\n") {
+    pos--;
+  }
+  return pos;
+}
+
+/**
+ * Check whether there will be visible content before the getter insertion
+ * point after fixes are applied. Used to decide whether to add a blank-line
+ * prefix (`\n`) before the getters.
+ *
+ * @param {import('./computed-macros-analysis.mjs').MacroUsage[]} classUsages
+ * @param {import('estree').ClassBody} classBody
+ * @param {Set<import('estree').Node>} macroNodeSet
+ * @param {number} insertPos Character position where getters will be inserted
+ * @returns {boolean}
+ */
+function hasContentBeforeInsertion(
+  classUsages,
+  classBody,
+  macroNodeSet,
+  insertPos
+) {
+  // True if any macro replacement produces @tracked declarations
+  // (these are placed at the macro's original position, before the insertion)
+  const hasTrackedDeps = classUsages.some(
+    (u) => u.allLocal && u.trackedDeps?.length > 0
+  );
+  if (hasTrackedDeps) {
+    return true;
+  }
+  // True if there are non-macro members before the insertion point
+  return classBody.body.some(
+    (m) => !macroNodeSet.has(m) && m.range[0] < insertPos
+  );
 }
 
 // ---------------------------------------------------------------------------

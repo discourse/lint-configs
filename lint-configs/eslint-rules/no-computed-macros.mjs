@@ -5,7 +5,7 @@
  */
 
 import { analyzeMacroUsage } from "./no-computed-macros/computed-macros-analysis.mjs";
-import { createMacroFix } from "./no-computed-macros/computed-macros-fixer.mjs";
+import { createClassFix } from "./no-computed-macros/computed-macros-fixer.mjs";
 import { MACRO_SOURCES } from "./no-computed-macros/macro-transforms.mjs";
 import {
   collectImports,
@@ -23,6 +23,8 @@ export default {
     schema: [],
     messages: {
       replaceMacro: "Replace '@{{name}}' macro with a native getter.",
+      addTracked:
+        "Add @tracked to '{{name}}' (dependency of a converted macro).",
       cannotAutoFixClassic:
         "Cannot auto-fix '{{name}}' in a classic .extend() class. Convert to native ES6 class first.",
       cannotAutoFixComplex: "Cannot auto-fix '{{name}}': {{reason}}.",
@@ -47,6 +49,42 @@ export default {
       analysis = analyzeMacroUsage(sourceCode, importsMap);
       return analysis;
     }
+
+    // Precompute per-class fixable usages and existing nodes to decorate.
+    // Lazily initialised on first access (like analysis).
+    let classFixes = null;
+    function ensureClassFixes() {
+      if (classFixes) {
+        return classFixes;
+      }
+      const { usages } = ensureAnalysis();
+      classFixes = new Map();
+
+      for (const usage of usages) {
+        if (!usage.canAutoFix) {
+          continue;
+        }
+        const classBody = usage.propertyNode.parent;
+        if (!classFixes.has(classBody)) {
+          classFixes.set(classBody, {
+            fixableUsages: [],
+            existingNodesToDecorate: new Set(),
+          });
+        }
+        const entry = classFixes.get(classBody);
+        entry.fixableUsages.push(usage);
+        if (usage.existingNodesToDecorate) {
+          for (const node of usage.existingNodesToDecorate) {
+            entry.existingNodesToDecorate.add(node);
+          }
+        }
+      }
+
+      return classFixes;
+    }
+
+    // Track which class bodies have already had a combined fix attached
+    const classFixAttached = new Set();
 
     return {
       // Report on macro import declarations — only the import-level fix here
@@ -99,7 +137,9 @@ export default {
         }
       },
 
-      // Report on each macro usage in class bodies
+      // Report on each macro usage in class bodies.
+      // The combined class-body fix (remove macros + insert getters at the
+      // correct position) is attached to the FIRST fixable macro per class.
       PropertyDefinition(node) {
         if (!node.decorators) {
           return;
@@ -112,11 +152,26 @@ export default {
           return;
         }
 
+        let fix;
+        if (usage.canAutoFix) {
+          const classBody = node.parent;
+          const fixesMap = ensureClassFixes();
+          const classEntry = fixesMap.get(classBody);
+          if (classEntry && !classFixAttached.has(classBody)) {
+            classFixAttached.add(classBody);
+            fix = createClassFix(
+              classEntry.fixableUsages,
+              classEntry.existingNodesToDecorate,
+              sourceCode
+            );
+          }
+        }
+
         context.report({
           node: usage.decoratorNode || node,
           messageId: usage.messageId || "replaceMacro",
           data: usage.reportData || { name: usage.macroName },
-          fix: usage.canAutoFix ? createMacroFix(usage, sourceCode) : undefined,
+          fix,
         });
       },
 
@@ -137,6 +192,37 @@ export default {
           }
         }
       },
+
+      // Report @tracked additions for existing class members.
+      // The actual fix is included in the combined class-body fix
+      // (attached to the first fixable macro in each class) to avoid
+      // overlapping fix ranges.
+      "Program:exit"() {
+        const { usages } = ensureAnalysis();
+        const decorated = new Set();
+
+        for (const usage of usages) {
+          if (!usage.canAutoFix || !usage.existingNodesToDecorate) {
+            continue;
+          }
+          for (const memberNode of usage.existingNodesToDecorate) {
+            if (decorated.has(memberNode)) {
+              continue;
+            }
+            decorated.add(memberNode);
+
+            const name =
+              memberNode.key.type === "Identifier"
+                ? memberNode.key.name
+                : String(memberNode.key.value);
+            context.report({
+              node: memberNode,
+              messageId: "addTracked",
+              data: { name },
+            });
+          }
+        }
+      },
     };
   },
 };
@@ -152,10 +238,8 @@ export default {
  * duplicate new import lines when a file imports macros from both
  * `@ember/object/computed` and `discourse/lib/computed`.
  *
- * It also handles adding `@tracked` to existing class members that need it.
- * This is done here (rather than per-usage in the property fixer) so that
- * each member is decorated exactly once, even when multiple macros reference
- * the same dependency.
+ * Note: adding `@tracked` to existing class members is handled by the
+ * combined class-body fix (in `createClassFix`), not here.
  *
  * @returns {import('eslint').Rule.Fix[]}
  */
@@ -293,20 +377,6 @@ function buildImportFixes(
         newImportsPlaced = true;
       }
     }
-  }
-
-  // Add @tracked to existing class members that need it.
-  // Collecting into a Set deduplicates naturally — no per-usage hack needed.
-  const nodesToDecorate = new Set();
-  for (const usage of usages) {
-    if (usage.existingNodesToDecorate) {
-      for (const node of usage.existingNodesToDecorate) {
-        nodesToDecorate.add(node);
-      }
-    }
-  }
-  for (const memberNode of nodesToDecorate) {
-    fixes.push(fixer.insertTextBefore(memberNode, "@tracked "));
   }
 
   return fixes;

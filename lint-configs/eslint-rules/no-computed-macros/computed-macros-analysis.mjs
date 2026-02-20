@@ -308,11 +308,18 @@ function buildUsage({
     };
   }
 
-  // Extract literal arguments; bail if any arg is non-literal when we need
-  // string args (all macros except match, which has a regex second arg)
+  // Extract literal arguments; bail if any dep-key arg is non-literal.
+  // Args beyond `depKeyArgCount` are "value args" — they can be non-literal
+  // (their source text is used verbatim in the getter body via sourceCode.getText).
   const literalArgs = [];
   for (let i = 0; i < argNodes.length; i++) {
     const argNode = argNodes[i];
+
+    // Value args (beyond dep key positions) don't need to be literals
+    if (transform.depKeyArgCount != null && i >= transform.depKeyArgCount) {
+      literalArgs.push(null);
+      continue;
+    }
 
     if (argNode.type === "Literal" && typeof argNode.value === "string") {
       literalArgs.push(argNode.value);

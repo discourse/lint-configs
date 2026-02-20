@@ -80,6 +80,9 @@ export function isLocalKey(key) {
  * @property {string} source - import source where the macro lives
  * @property {boolean} canAutoFix
  * @property {string} [reason] - explanation when canAutoFix is false
+ * @property {number} [depKeyArgCount] - how many leading args must be string
+ *   literals (dep key paths); remaining args are "value args" that can be
+ *   non-literal (their source text is used verbatim in the getter body)
  * @property {RequiredImport[]} [requiredImports]
  * @property {(args: TransformArgs) => string} [toGetterBody]
  * @property {(args: TransformArgs) => string[]} [toDependentKeys]
@@ -162,11 +165,9 @@ function comparisonMacro(operator) {
   return {
     source: EMBER_SOURCE,
     canAutoFix: true,
-    toGetterBody({ literalArgs: [path], argNodes }) {
-      const valueText =
-        argNodes[1] && argNodes[1].raw !== undefined
-          ? argNodes[1].raw
-          : renderLiteral(argNodes[1] && argNodes[1].value);
+    depKeyArgCount: 1,
+    toGetterBody({ literalArgs: [path], argNodes, sourceCode }) {
+      const valueText = sourceCode.getText(argNodes[1]);
       return `return ${toAccess(path)} ${operator} ${valueText};`;
     },
     toDependentKeys({ literalArgs: [path] }) {
