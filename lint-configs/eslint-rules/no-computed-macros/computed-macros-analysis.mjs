@@ -75,6 +75,7 @@ export function analyzeMacroUsage(sourceCode, imports) {
   //    another macro that uses @computed, it must also use @computed.
   // 3. Deduplicate so each new @tracked declaration is emitted by one fixer only.
   excludeDepsBeingConverted(usages);
+  excludeImplicitInjectionDeps(usages);
   forceComputedForClassicComponents(usages, imports);
   propagateComputedRequirement(usages);
   deduplicateTrackedDeps(usages);
@@ -368,6 +369,59 @@ function excludeDepsBeingConverted(usages) {
 }
 
 // ---------------------------------------------------------------------------
+// Implicit injection exclusion
+// ---------------------------------------------------------------------------
+
+// Property names implicitly injected into Ember framework classes by
+// Discourse's registerDiscourseImplicitInjections() (see
+// discourse/app/lib/implicit-injections.js). Adding @tracked for an
+// undeclared property with one of these names would shadow the inherited
+// injection with undefined.
+const IMPLICIT_INJECTION_NAMES = new Set([
+  // commonInjections (Controller, Component, Route, RestModel, RestAdapter)
+  "appEvents",
+  "pmTopicTrackingState",
+  "store",
+  "site",
+  "searchService",
+  "session",
+  "messageBus",
+  "siteSettings",
+  "topicTrackingState",
+  "keyValueStore",
+  // Controller, Component, Route extras
+  "capabilities",
+  "currentUser",
+]);
+
+/**
+ * Promote usages to `@computed` when any of their tracked deps (new
+ * declarations, not existing members) match a known implicitly-injected
+ * property name. Inserting `@tracked currentUser;` in a controller that
+ * inherits `currentUser` via implicit injection would shadow the injection
+ * with `undefined`.
+ *
+ * @param {MacroUsage[]} usages
+ */
+function excludeImplicitInjectionDeps(usages) {
+  for (const usage of usages) {
+    if (!usage.canAutoFix || !usage.allLocal || !usage.trackedDeps) {
+      continue;
+    }
+
+    const hasImplicitDep = usage.trackedDeps.some((dep) =>
+      IMPLICIT_INJECTION_NAMES.has(dep)
+    );
+
+    if (hasImplicitDep) {
+      usage.allLocal = false;
+      usage.trackedDeps = undefined;
+      usage.existingNodesToDecorate = undefined;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Classic component detection
 // ---------------------------------------------------------------------------
 
@@ -622,15 +676,6 @@ function deduplicateTrackedDeps(usages) {
 // @tracked dependency detection
 // ---------------------------------------------------------------------------
 
-// Decorators that make a property reactive (equivalent to @tracked).
-// Members with these decorators do not need @tracked added.
-const TRACKED_DECORATORS = new Set([
-  "tracked",
-  "trackedArray",
-  "dedupeTracked",
-  "resettableTracked",
-]);
-
 /**
  * @typedef {Object} TrackedDepsInfo
  * @property {string[]} depsToInsert - Deps that need a NEW `@tracked propName;` declaration
@@ -643,9 +688,9 @@ const TRACKED_DECORATORS = new Set([
  * dependent keys need `@tracked` handling:
  *
  * - Keys matching a MethodDefinition (getter/method) → already reactive, skip
- * - Keys declared as PropertyDefinition with a tracked-like decorator
- *   (@tracked, @trackedArray, @dedupeTracked, @resettableTracked) → skip
- * - Keys declared as PropertyDefinition without tracking → need `@tracked` added
+ * - Keys declared as PropertyDefinition with any decorator → already managed
+ *   by something (@service, @tracked, @inject, etc.), skip
+ * - Keys declared as PropertyDefinition without decorators → need `@tracked` added
  * - Keys not declared as any class member → need a new `@tracked propName;` inserted
  *
  * @param {import('estree').Node} propertyNode - The PropertyDefinition node
@@ -658,7 +703,7 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
     return { depsToInsert: [...dependentKeys], existingNodesToDecorate: [] };
   }
 
-  const reactiveMembers = new Set(); // getters, methods, and tracked properties
+  const reactiveMembers = new Set(); // getters, methods, and decorated properties
   const untrackedMemberNodes = new Map(); // name → AST node
 
   for (const member of classBody.body) {
@@ -681,18 +726,9 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
         ? member.key.name
         : String(member.key.value);
 
-    const hasTrackedLike =
-      member.decorators?.some((d) => {
-        const expr = d.expression;
-        return (
-          (expr.type === "Identifier" && TRACKED_DECORATORS.has(expr.name)) ||
-          (expr.type === "CallExpression" &&
-            expr.callee?.type === "Identifier" &&
-            TRACKED_DECORATORS.has(expr.callee.name))
-        );
-      }) ?? false;
-
-    if (hasTrackedLike) {
+    // Any decorated property is already managed by its decorator
+    // (@tracked, @service, @inject, etc.) — adding @tracked would be wrong.
+    if (member.decorators?.length > 0) {
       reactiveMembers.add(name);
     } else {
       untrackedMemberNodes.set(name, member);
@@ -704,7 +740,7 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
 
   for (const key of dependentKeys) {
     if (reactiveMembers.has(key)) {
-      continue; // already reactive (getter, method, or @tracked)
+      continue; // already reactive (getter, method, or decorated property)
     }
     if (untrackedMemberNodes.has(key)) {
       existingNodesToDecorate.push(untrackedMemberNodes.get(key));

@@ -1263,6 +1263,58 @@ class C {
 }`,
     },
 
+    // ---- decorated property treated as reactive (no @tracked added) ----
+    {
+      name: "decorated property (@service) is treated as reactive",
+      code: `import { not } from "@ember/object/computed";
+class C {
+  @service currentUser;
+  @not("currentUser") isAnonymous;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @service currentUser;
+
+  @dependentKeyCompat
+  get isAnonymous() {
+    return !this.currentUser;
+  }
+}`,
+    },
+
+    // ---- implicit injection exclusion: promote to @computed ----
+    {
+      name: "undeclared auto-injected dep promotes to @computed",
+      code: `import { not } from "@ember/object/computed";
+class C {
+  @not("currentUser") isAnonymous;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { computed } from "@ember/object";
+class C {
+  @computed("currentUser")
+  get isAnonymous() {
+    return !this.currentUser;
+  }
+}`,
+    },
+    {
+      name: "mix of auto-injected and normal deps promotes entire usage to @computed",
+      code: `import { and } from "@ember/object/computed";
+class C {
+  @and("currentUser", "isEnabled") canEdit;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { computed } from "@ember/object";
+class C {
+  @computed("currentUser", "isEnabled")
+  get canEdit() {
+    return this.currentUser && this.isEnabled;
+  }
+}`,
+    },
+
     // ---- classic component detection: force @computed ----
     {
       name: "classic component: forces @computed instead of @dependentKeyCompat",
