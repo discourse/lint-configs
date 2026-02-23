@@ -71,8 +71,12 @@ export function analyzeMacroUsage(sourceCode, imports) {
   // Post-process tracked deps:
   // 1. Remove deps that are themselves macro properties being converted to
   //    getters — adding @tracked to something that will become a getter is wrong.
-  // 2. Deduplicate so each new @tracked declaration is emitted by one fixer only.
+  // 2. Propagate @computed requirement transitively — if a macro depends on
+  //    another macro that uses @computed, it must also use @computed.
+  // 3. Deduplicate so each new @tracked declaration is emitted by one fixer only.
   excludeDepsBeingConverted(usages);
+  forceComputedForClassicComponents(usages, imports);
+  propagateComputedRequirement(usages);
   deduplicateTrackedDeps(usages);
 
   return { usages, importedMacros, macroImportNodes };
@@ -361,6 +365,230 @@ function excludeDepsBeingConverted(usages) {
       );
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Classic component detection
+// ---------------------------------------------------------------------------
+
+// Decorators from @ember-decorators/component that are exclusively used on
+// classic Ember components (those extending @ember/component).
+const CLASSIC_COMPONENT_DECORATORS = new Set([
+  "classNames",
+  "classNameBindings",
+  "tagName",
+  "attributeBindings",
+]);
+
+/**
+ * Determine whether a class declaration represents a classic Ember component.
+ *
+ * Classic components use Ember's two-way binding system and cannot use
+ * `@tracked` + `@dependentKeyCompat` — they must use `@computed` instead.
+ *
+ * Detection signals:
+ * 1. Direct: superclass is `Component` imported from `@ember/component`
+ * 2. Decorator: class has decorators from `@ember-decorators/component`
+ * 3. Naming: superclass name ends with "Component" (and is NOT from `@glimmer/component`)
+ *
+ * @param {import('estree').Node} classNode - ClassDeclaration or ClassExpression
+ * @param {Map<string, {node: import('estree').ImportDeclaration, specifiers: Array}>} importsMap
+ * @returns {boolean}
+ */
+function isClassicComponent(classNode, importsMap) {
+  const superClass = classNode.superClass;
+  if (!superClass) {
+    return false;
+  }
+
+  // 1. Direct: extends Component from @ember/component
+  if (superClass.type === "Identifier") {
+    const componentImport = importsMap.get("@ember/component");
+    if (componentImport) {
+      const defaultSpec = componentImport.specifiers.find(
+        (s) => s.type === "ImportDefaultSpecifier"
+      );
+      if (defaultSpec && defaultSpec.local.name === superClass.name) {
+        return true;
+      }
+    }
+
+    // Explicit exclusion: @glimmer/component is NOT classic
+    const glimmerImport = importsMap.get("@glimmer/component");
+    if (glimmerImport) {
+      const defaultSpec = glimmerImport.specifiers.find(
+        (s) => s.type === "ImportDefaultSpecifier"
+      );
+      if (defaultSpec && defaultSpec.local.name === superClass.name) {
+        return false;
+      }
+    }
+  }
+
+  // 2. Decorator signal: @classNames, @tagName, etc. from @ember-decorators/component
+  if (classNode.decorators?.length > 0) {
+    const emberDecImport = importsMap.get("@ember-decorators/component");
+    if (emberDecImport) {
+      const importedNames = new Set(
+        emberDecImport.specifiers
+          .filter(
+            (s) =>
+              s.type === "ImportSpecifier" &&
+              CLASSIC_COMPONENT_DECORATORS.has(s.imported.name)
+          )
+          .map((s) => s.local.name)
+      );
+      const hasClassicDecorator = classNode.decorators.some((d) => {
+        const expr = d.expression;
+        const name =
+          expr.type === "Identifier"
+            ? expr.name
+            : expr.type === "CallExpression" &&
+                expr.callee?.type === "Identifier"
+              ? expr.callee.name
+              : null;
+        return name && importedNames.has(name);
+      });
+      if (hasClassicDecorator) {
+        return true;
+      }
+    }
+  }
+
+  // 3. Naming convention: superclass name ends with "Component"
+  const superName =
+    superClass.type === "Identifier"
+      ? superClass.name
+      : superClass.type === "MemberExpression"
+        ? superClass.property?.name
+        : null;
+  if (superName?.endsWith("Component")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Force `@computed` (instead of `@dependentKeyCompat` + `@tracked`) for all
+ * fixable macros inside classic Ember components.
+ *
+ * Classic components rely on Ember's two-way binding system. Adding `@tracked`
+ * bypasses classic property notifications and breaks template bindings. Using
+ * `@computed` keeps everything within the classic property system.
+ *
+ * Must run before `propagateComputedRequirement` so that forced-computed macros
+ * seed the transitive propagation.
+ *
+ * @param {MacroUsage[]} usages
+ * @param {Map<string, {node: import('estree').ImportDeclaration, specifiers: Array}>} importsMap
+ */
+function forceComputedForClassicComponents(usages, importsMap) {
+  for (const usage of usages) {
+    if (!usage.canAutoFix || !usage.allLocal) {
+      continue;
+    }
+
+    const classBody = usage.propertyNode.parent;
+    const classNode = classBody.parent;
+    if (isClassicComponent(classNode, importsMap)) {
+      usage.allLocal = false;
+      usage.trackedDeps = undefined;
+      usage.existingNodesToDecorate = undefined;
+    }
+  }
+}
+
+/**
+ * Propagate the @computed requirement transitively through macro dependencies.
+ *
+ * A `@dependentKeyCompat` getter cannot observe a `@computed` getter.  So when
+ * a fixable macro depends on a `@computed` getter — either another macro being
+ * converted or an *existing* `@computed` getter already in the class — the macro
+ * must also use `@computed`.  This propagation is transitive.
+ *
+ * For each promoted macro we clear `trackedDeps` and `existingNodesToDecorate`
+ * because `@computed` getters don't require `@tracked` on their deps.
+ *
+ * @param {MacroUsage[]} usages
+ */
+function propagateComputedRequirement(usages) {
+  const classBuckets = new Map();
+  for (const usage of usages) {
+    if (!usage.canAutoFix) {
+      continue;
+    }
+    const classBody = usage.propertyNode.parent;
+    if (!classBuckets.has(classBody)) {
+      classBuckets.set(classBody, []);
+    }
+    classBuckets.get(classBody).push(usage);
+  }
+
+  for (const classUsages of classBuckets.values()) {
+    const classBody = classUsages[0].propertyNode.parent;
+
+    // Seed from macros being converted that already have nested deps
+    const computedPropNames = new Set();
+    for (const usage of classUsages) {
+      if (!usage.allLocal) {
+        computedPropNames.add(usage.propName);
+      }
+    }
+
+    // Seed from existing @computed getters already in the class
+    for (const member of classBody.body) {
+      if (member.type === "MethodDefinition" && hasComputedDecorator(member)) {
+        const name =
+          member.key.type === "Identifier"
+            ? member.key.name
+            : String(member.key.value);
+        computedPropNames.add(name);
+      }
+    }
+
+    if (computedPropNames.size === 0) {
+      continue;
+    }
+
+    // Fixed-point loop: keep propagating until no new promotions occur
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const usage of classUsages) {
+        if (!usage.allLocal) {
+          continue;
+        }
+        if (usage.dependentKeys.some((k) => computedPropNames.has(k))) {
+          usage.allLocal = false;
+          usage.trackedDeps = undefined;
+          usage.existingNodesToDecorate = undefined;
+          computedPropNames.add(usage.propName);
+          changed = true;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Check whether a class member has a `@computed` decorator.
+ *
+ * @param {import('estree').Node} member
+ * @returns {boolean}
+ */
+function hasComputedDecorator(member) {
+  return (
+    member.decorators?.some((d) => {
+      const expr = d.expression;
+      return (
+        (expr.type === "Identifier" && expr.name === "computed") ||
+        (expr.type === "CallExpression" &&
+          expr.callee?.type === "Identifier" &&
+          expr.callee.name === "computed")
+      );
+    }) ?? false
+  );
 }
 
 /**

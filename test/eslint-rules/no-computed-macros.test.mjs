@@ -67,11 +67,14 @@ class C {
   @alias("model.title") title;
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
-      output: `import { computed } from "@ember/object";
+      output: `import { computed, set } from "@ember/object";
 class C {
   @computed("model.title")
   get title() {
     return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
   }
 }`,
     },
@@ -92,6 +95,9 @@ class C {
   @dependentKeyCompat
   get myName() {
     return this.name;
+  }
+  set myName(value) {
+    this.name = value;
   }
 }`,
     },
@@ -722,6 +728,9 @@ class C {
   get lang() {
     return this.headerLang;
   }
+  set lang(value) {
+    this.headerLang = value;
+  }
 }`,
     },
     {
@@ -827,6 +836,9 @@ class C {
   get isDisabled() {
     return this.disabled;
   }
+  set isDisabled(value) {
+    this.disabled = value;
+  }
 }`,
     },
 
@@ -912,7 +924,7 @@ class C {
         { messageId: "replaceMacro" },
       ],
       output: `import { tracked } from "@glimmer/tracking";
-import { computed } from "@ember/object";
+import { computed, set } from "@ember/object";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   @tracked isHidden;
@@ -921,6 +933,9 @@ class C {
   @computed("model.title")
   get title() {
     return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
   }
   @dependentKeyCompat
   get isVisible() {
@@ -934,6 +949,9 @@ class C {
   get showFeaturedTopic() {
     return this.model?.featured;
   }
+  set showFeaturedTopic(value) {
+    set(this, "model.featured", value);
+  }
 }`,
     },
 
@@ -945,11 +963,14 @@ class C {
   @emberAlias("model.title") title;
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
-      output: `import { computed } from "@ember/object";
+      output: `import { computed, set } from "@ember/object";
 class C {
   @computed("model.title")
   get title() {
     return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
   }
 }`,
     },
@@ -1042,7 +1063,7 @@ class C {
         { messageId: "replaceMacro" },
         { messageId: "replaceMacro" },
       ],
-      output: `import { computed } from "@ember/object";
+      output: `import { computed, set } from "@ember/object";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
   static find(id) {
@@ -1054,6 +1075,9 @@ class C {
   @computed("model.title")
   get title() {
     return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
   }
   @dependentKeyCompat
   get isVisible() {
@@ -1102,6 +1126,221 @@ class C {
   @dependentKeyCompat
   get deletingAll() {
     return this.postAction === "delete_all";
+  }
+}`,
+    },
+
+    // ---- @computed propagation: dep is another macro with nested deps ----
+    {
+      name: "macro depending on @computed macro also uses @computed",
+      code: `import { alias, not } from "@ember/object/computed";
+class C {
+  @alias("model.title") title;
+  @not("title") noTitle;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { computed, set } from "@ember/object";
+class C {
+  @computed("model.title")
+  get title() {
+    return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
+  }
+  @computed("title")
+  get noTitle() {
+    return !this.title;
+  }
+}`,
+    },
+    {
+      name: "transitive @computed propagation through macro chain",
+      code: `import { alias, not, bool } from "@ember/object/computed";
+class C {
+  @alias("model.title") title;
+  @not("title") noTitle;
+  @bool("noTitle") hasNoTitle;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { computed, set } from "@ember/object";
+class C {
+  @computed("model.title")
+  get title() {
+    return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
+  }
+  @computed("title")
+  get noTitle() {
+    return !this.title;
+  }
+  @computed("noTitle")
+  get hasNoTitle() {
+    return !!this.noTitle;
+  }
+}`,
+    },
+    {
+      name: "mixed @computed propagation and @dependentKeyCompat",
+      code: `import { alias, not, equal } from "@ember/object/computed";
+class C {
+  @alias("model.title") title;
+  @not("title") noTitle;
+  @equal("status", "active") isActive;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { tracked } from "@glimmer/tracking";
+import { computed, set } from "@ember/object";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked status;
+
+  @computed("model.title")
+  get title() {
+    return this.model?.title;
+  }
+  set title(value) {
+    set(this, "model.title", value);
+  }
+  @computed("title")
+  get noTitle() {
+    return !this.title;
+  }
+  @dependentKeyCompat
+  get isActive() {
+    return this.status === "active";
+  }
+}`,
+    },
+
+    // ---- @computed propagation from existing @computed getter ----
+    {
+      name: "macro depending on existing @computed getter uses @computed",
+      code: `import { computed } from "@ember/object";
+import { alias } from "@ember/object/computed";
+class C {
+  @computed("categories.[]", "shortcuts")
+  get categoriesWithShortcuts() {
+    return this.shortcuts.concat(this.categories);
+  }
+  @alias("categoriesWithShortcuts") content;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { computed, set } from "@ember/object";
+class C {
+  @computed("categoriesWithShortcuts")
+  get content() {
+    return this.categoriesWithShortcuts;
+  }
+  set content(value) {
+    set(this, "categoriesWithShortcuts", value);
+  }
+  @computed("categories.[]", "shortcuts")
+  get categoriesWithShortcuts() {
+    return this.shortcuts.concat(this.categories);
+  }
+}`,
+    },
+
+    // ---- classic component detection: force @computed ----
+    {
+      name: "classic component: forces @computed instead of @dependentKeyCompat",
+      code: `import Component from "@ember/component";
+import { alias } from "@ember/object/computed";
+class C extends Component {
+  @alias("name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import Component from "@ember/component";
+import { computed, set } from "@ember/object";
+class C extends Component {
+  @computed("name")
+  get myName() {
+    return this.name;
+  }
+  set myName(value) {
+    set(this, "name", value);
+  }
+}`,
+    },
+    {
+      name: "classic component detected via @classNames decorator",
+      code: `import { classNames } from "@ember-decorators/component";
+import { not } from "@ember/object/computed";
+@classNames("my-component")
+class C extends SomeBase {
+  @not("isHidden") isVisible;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { classNames } from "@ember-decorators/component";
+import { computed } from "@ember/object";
+@classNames("my-component")
+class C extends SomeBase {
+  @computed("isHidden")
+  get isVisible() {
+    return !this.isHidden;
+  }
+}`,
+    },
+    {
+      name: "classic component detected via superclass name ending in Component",
+      code: `import { alias } from "@ember/object/computed";
+class C extends ComboBoxComponent {
+  @alias("name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { computed, set } from "@ember/object";
+class C extends ComboBoxComponent {
+  @computed("name")
+  get myName() {
+    return this.name;
+  }
+  set myName(value) {
+    set(this, "name", value);
+  }
+}`,
+    },
+    {
+      name: "glimmer component is not treated as classic",
+      code: `import GlimmerComponent from "@glimmer/component";
+import { alias } from "@ember/object/computed";
+class C extends GlimmerComponent {
+  @alias("name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import GlimmerComponent from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C extends GlimmerComponent {
+  @tracked name;
+
+  @dependentKeyCompat
+  get myName() {
+    return this.name;
+  }
+  set myName(value) {
+    this.name = value;
   }
 }`,
     },

@@ -258,6 +258,15 @@ function buildImportFixes(
   if (needsComputed) {
     addToImportSet(newImports, "@ember/object", "computed");
   }
+  // Setter-specific imports (e.g. set from @ember/object for alias).
+  // Added after computed so that named imports appear in the right order.
+  for (const usage of usages) {
+    if (!usage.allLocal && usage.transform.setterRequiredImports) {
+      for (const req of usage.transform.setterRequiredImports) {
+        addToImportSet(newImports, req.source, req.name, req.isDefault);
+      }
+    }
+  }
   if (needsDependentKeyCompat) {
     addToImportSet(newImports, "@ember/object/compat", "dependentKeyCompat");
   }

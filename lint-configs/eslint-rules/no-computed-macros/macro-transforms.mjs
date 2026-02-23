@@ -84,7 +84,10 @@ export function isLocalKey(key) {
  *   literals (dep key paths); remaining args are "value args" that can be
  *   non-literal (their source text is used verbatim in the getter body)
  * @property {RequiredImport[]} [requiredImports]
+ * @property {RequiredImport[]} [setterRequiredImports] - extra imports needed
+ *   only when the setter uses Ember's `set()` (the `!allLocal` / `@computed` path)
  * @property {(args: TransformArgs) => string} [toGetterBody]
+ * @property {(args: SetterTransformArgs) => string} [toSetterBody]
  * @property {(args: TransformArgs) => string[]} [toDependentKeys]
  */
 
@@ -94,6 +97,12 @@ export function isLocalKey(key) {
  * @property {import('estree').Node[]} argNodes - raw AST argument nodes
  * @property {string} propName - the decorated property name
  * @property {import('eslint').SourceCode} sourceCode
+ */
+
+/**
+ * @typedef {TransformArgs & { useEmberSet: boolean }} SetterTransformArgs
+ * `useEmberSet` is true when the `@computed` path requires Ember's `set()`,
+ * false when the `@dependentKeyCompat` path uses native assignment.
  */
 
 const EMBER_SOURCE = "@ember/object/computed";
@@ -112,7 +121,16 @@ const simpleAccess = {
   },
 };
 
-const alias = { ...simpleAccess };
+const alias = {
+  ...simpleAccess,
+  setterRequiredImports: [{ name: "set", source: "@ember/object" }],
+  toSetterBody({ literalArgs: [path], useEmberSet }) {
+    if (useEmberSet) {
+      return `set(this, ${JSON.stringify(path)}, value);`;
+    }
+    return `this.${path} = value;`;
+  },
+};
 const readOnly = { ...simpleAccess };
 const reads = { ...simpleAccess };
 const oneWay = { ...simpleAccess };

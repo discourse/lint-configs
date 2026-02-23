@@ -203,12 +203,31 @@ function buildGetterCode(usage, indent, sourceCode) {
     .map((line) => `${bodyIndent}${line}`)
     .join("\n");
 
-  return [
+  const parts = [
     decoratorLine,
     `${indent}get ${propName}() {`,
     formattedBody,
     `${indent}}`,
-  ].join("\n");
+  ];
+
+  // Append setter for bidirectional macros (e.g. alias)
+  if (transform.toSetterBody) {
+    const setterBody = transform.toSetterBody({
+      ...transformArgs,
+      useEmberSet: !allLocal,
+    });
+    const setterLines = setterBody.split("\n");
+    const formattedSetterBody = setterLines
+      .map((line) => `${bodyIndent}${line}`)
+      .join("\n");
+    parts.push(
+      `${indent}set ${propName}(value) {`,
+      formattedSetterBody,
+      `${indent}}`
+    );
+  }
+
+  return parts.join("\n");
 }
 
 // ---------------------------------------------------------------------------
