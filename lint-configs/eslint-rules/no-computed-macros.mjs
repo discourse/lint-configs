@@ -247,8 +247,9 @@ function buildImportFixes(
   const needsDependentKeyCompat = usages.some((u) => u.allLocal);
   const needsTracked = usages.some(
     (u) =>
-      u.allLocal &&
-      (u.trackedDeps?.length > 0 || u.existingNodesToDecorate?.length > 0)
+      (u.allLocal &&
+        (u.trackedDeps?.length > 0 || u.existingNodesToDecorate?.length > 0)) ||
+      u.transform.overrideTrackedFields
   );
 
   // Add in the order we want them to appear in the output

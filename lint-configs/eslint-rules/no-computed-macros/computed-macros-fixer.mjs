@@ -3,8 +3,10 @@
  *
  * Generates a combined ESLint fixer function per class that:
  * 1. Removes each macro PropertyDefinition
- * 2. Collects all @tracked declarations (new + moved) and inserts them
- *    at the [tracked-properties] section
+ * 2. Collects @tracked declarations and inserts them at the correct
+ *    sort-class-members section:
+ *    - Regular tracked → [tracked-properties]
+ *    - Override fields (e.g. oneWay `_propOverride`) → [private-properties]
  * 3. Inserts all generated getters at the correct class body position
  *    (the [everything-else] section, after all property-like members)
  *
@@ -71,16 +73,31 @@ export function createClassFix(
       fixes.push(fixer.replaceTextRange([start, end], ""));
     }
 
-    // ---- 2. Collect @tracked declarations and insert at tracked section ----
-    // Both new declarations (from trackedDeps) and moved existing members
-    // (from existingNodesToDecorate) are placed together in the
-    // [tracked-properties] section for correct sort-class-members order.
+    // ---- 2. Collect @tracked declarations ----
+    // Regular tracked (from trackedDeps / existingNodesToDecorate) go to
+    // [tracked-properties]; override fields (from overrideTrackedFields,
+    // e.g. oneWay's `_propOverride`) go to [private-properties] because
+    // their `_` prefix matches the sort-class-members private pattern.
     const trackedLines = [];
+    const privateTrackedLines = [];
     const seenTrackedDeps = new Set();
     const processedNodes = new Set();
 
     for (const usage of classUsages) {
-      // New @tracked declarations from trackedDeps
+      // Override tracked fields → [private-properties] section
+      if (usage.transform.overrideTrackedFields) {
+        for (const field of usage.transform.overrideTrackedFields({
+          propName: usage.propName,
+        })) {
+          const line =
+            field.initializer != null
+              ? `${indent}@tracked ${field.name} = ${field.initializer};\n`
+              : `${indent}@tracked ${field.name};\n`;
+          privateTrackedLines.push(line);
+        }
+      }
+
+      // New @tracked declarations from trackedDeps → [tracked-properties]
       if (usage.allLocal && usage.trackedDeps?.length > 0) {
         for (const dep of usage.trackedDeps) {
           if (!seenTrackedDeps.has(dep)) {
@@ -90,7 +107,7 @@ export function createClassFix(
         }
       }
 
-      // Move existing members with @tracked prepended
+      // Move existing members with @tracked prepended → [tracked-properties]
       if (usage.existingNodesToDecorate) {
         for (const memberNode of usage.existingNodesToDecorate) {
           if (processedNodes.has(memberNode)) {
@@ -117,19 +134,71 @@ export function createClassFix(
       }
     }
 
-    if (trackedLines.length > 0) {
-      const trackedInsertPos = findTrackedInsertionPoint(
-        classBody,
-        macroNodeSet,
-        existingNodesToDecorate,
-        text
-      );
+    // Compute insertion positions
+    const trackedInsertPos =
+      trackedLines.length > 0
+        ? findTrackedInsertionPoint(
+            classBody,
+            macroNodeSet,
+            existingNodesToDecorate,
+            text
+          )
+        : null;
+
+    const privateInsertPos =
+      privateTrackedLines.length > 0
+        ? findPrivatePropertyInsertionPoint(
+            classBody,
+            macroNodeSet,
+            existingNodesToDecorate,
+            text
+          )
+        : null;
+
+    // ESLint rejects overlapping fixes at the same position, so when both
+    // insertions target the same point (e.g. class with only macro members),
+    // combine them into a single insertion: tracked first, then private.
+    if (
+      trackedInsertPos !== null &&
+      privateInsertPos !== null &&
+      trackedInsertPos === privateInsertPos
+    ) {
       fixes.push(
         fixer.insertTextBeforeRange(
           [trackedInsertPos, trackedInsertPos],
-          trackedLines.join("")
+          trackedLines.join("") + "\n" + privateTrackedLines.join("")
         )
       );
+    } else {
+      if (trackedInsertPos !== null) {
+        fixes.push(
+          fixer.insertTextBeforeRange(
+            [trackedInsertPos, trackedInsertPos],
+            trackedLines.join("")
+          )
+        );
+      }
+
+      // Insert override fields at [private-properties] section (after all
+      // other PropertyDefinitions, before methods/getters).
+      if (privateInsertPos !== null) {
+        // Blank line separator before the private section when there are
+        // other property-like members above
+        const hasPropertiesAbove = classBody.body.some(
+          (m) =>
+            !macroNodeSet.has(m) &&
+            !existingNodesToDecorate.has(m) &&
+            m.type === "PropertyDefinition" &&
+            m.range[1] <= privateInsertPos
+        );
+        const privatePrefix = hasPropertiesAbove ? "\n" : "";
+        fixes.push(
+          fixer.insertTextBeforeRange(
+            [privateInsertPos, privateInsertPos],
+            privatePrefix + privateTrackedLines.join("")
+          )
+        );
+      }
     }
 
     // ---- 3. Insert all getters at the correct position ----
@@ -349,6 +418,59 @@ function findTrackedInsertionPoint(
 }
 
 /**
+ * Find the position to insert override tracked fields (e.g. oneWay's
+ * `_propOverride`). These use a `_` prefix, so sort-class-members classifies
+ * them as [private-properties], which comes after [properties] and before
+ * lifecycle methods / [everything-else].
+ *
+ * Strategy: insert after the last non-macro, non-moved PropertyDefinition.
+ * This places private tracked fields after all other property-like members.
+ *
+ * @param {import('estree').ClassBody} classBody
+ * @param {Set<import('estree').Node>} macroNodeSet
+ * @param {Set<import('estree').Node>} existingNodesToDecorate
+ * @param {string} text
+ * @returns {number}
+ */
+function findPrivatePropertyInsertionPoint(
+  classBody,
+  macroNodeSet,
+  existingNodesToDecorate,
+  text
+) {
+  let lastPropertyEnd = null;
+
+  for (const member of classBody.body) {
+    if (macroNodeSet.has(member) || existingNodesToDecorate.has(member)) {
+      continue;
+    }
+    if (member.type !== "PropertyDefinition") {
+      continue;
+    }
+
+    let pos = member.range[1];
+    while (pos < text.length && text[pos] === ";") {
+      pos++;
+    }
+    if (pos < text.length && text[pos] === "\n") {
+      pos++;
+    }
+    lastPropertyEnd = pos;
+  }
+
+  if (lastPropertyEnd !== null) {
+    return lastPropertyEnd;
+  }
+
+  // No properties found — insert at start of class body
+  let pos = classBody.range[0] + 1;
+  if (pos < text.length && text[pos] === "\n") {
+    pos++;
+  }
+  return pos;
+}
+
+/**
  * Check whether a class member has a tracked-like decorator.
  *
  * @param {import('estree').Node} member
@@ -404,10 +526,12 @@ function hasContentBeforeInsertion(
 ) {
   // True if any macro produces @tracked declarations (placed at the
   // tracked section, which is always before the getter insertion point)
-  const hasTrackedDeps = classUsages.some(
-    (u) => u.allLocal && u.trackedDeps?.length > 0
+  const hasTrackedContent = classUsages.some(
+    (u) =>
+      (u.allLocal && u.trackedDeps?.length > 0) ||
+      u.transform.overrideTrackedFields
   );
-  if (hasTrackedDeps) {
+  if (hasTrackedContent) {
     return true;
   }
   // True if any existing members are being moved (they get re-inserted

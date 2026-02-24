@@ -119,6 +119,86 @@ class C {
 }`,
     },
 
+    // ---- oneWay (local) — diverge-from-source setter ----
+    {
+      name: "@oneWay with local dep → override setter + @dependentKeyCompat",
+      code: `import { oneWay } from "@ember/object/computed";
+class C {
+  @oneWay("name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked name;
+
+  @tracked _myNameOverride;
+
+  @dependentKeyCompat
+  get myName() {
+    if (this._myNameOverride !== undefined) {
+      return this._myNameOverride;
+    }
+    return this.name;
+  }
+  set myName(value) {
+    this._myNameOverride = value;
+  }
+}`,
+    },
+
+    // ---- oneWay (nested) — diverge-from-source setter ----
+    {
+      name: "@oneWay with nested dep → override setter + @computed",
+      code: `import { oneWay } from "@ember/object/computed";
+class C {
+  @oneWay("model.name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { computed } from "@ember/object";
+class C {
+  @tracked _myNameOverride;
+
+  @computed("model.name")
+  get myName() {
+    if (this._myNameOverride !== undefined) {
+      return this._myNameOverride;
+    }
+    return this.model?.name;
+  }
+  set myName(value) {
+    this._myNameOverride = value;
+  }
+}`,
+    },
+
+    // ---- reads (alias for oneWay) ----
+    {
+      name: "@reads with nested dep (alias for oneWay)",
+      code: `import { reads } from "@ember/object/computed";
+class C {
+  @reads("model.title") title;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { computed } from "@ember/object";
+class C {
+  @tracked _titleOverride;
+
+  @computed("model.title")
+  get title() {
+    if (this._titleOverride !== undefined) {
+      return this._titleOverride;
+    }
+    return this.model?.title;
+  }
+  set title(value) {
+    this._titleOverride = value;
+  }
+}`,
+    },
+
     // ---- not (local) ----
     {
       name: "@not with local dep",
@@ -319,7 +399,7 @@ class C {
 class C {
   @computed("themes.@each.name")
   get themeNames() {
-    return this.themes?.map((item) => item.name) ?? [];
+    return this.themes?.map?.((item) => item.name) ?? [];
   }
 }`,
     },
@@ -336,7 +416,7 @@ class C {
 class C {
   @computed("groups.@each.has_messages")
   get groupsWithMessages() {
-    return this.groups?.filter((item) => item.has_messages) ?? [];
+    return this.groups?.filter?.((item) => item.has_messages) ?? [];
   }
 }`,
     },
@@ -353,7 +433,7 @@ class C {
 class C {
   @computed("model.@each.is_favorite")
   get favoriteBadges() {
-    return this.model?.filter((item) => item.is_favorite === true) ?? [];
+    return this.model?.filter?.((item) => item.is_favorite === true) ?? [];
   }
 }`,
     },
@@ -371,7 +451,11 @@ import { computed } from "@ember/object";
 class C {
   @computed("categories.[]", "sortDef.[]")
   get sorted() {
-    return [...(this.categories ?? [])].sort((a, b) => {
+    const arr = this.categories;
+    if (!Array.isArray(arr)) {
+      return [];
+    }
+    return [...arr].sort((a, b) => {
       for (const s of this.sortDef ?? []) {
         const [prop, dir = "asc"] = s.split(":");
         const result = compare(a[prop], b[prop]);
@@ -454,7 +538,7 @@ class C {
 class C {
   @computed("a.[]", "b.[]")
   get common() {
-    return (this.b ?? []).filter((item) => (this.a ?? []).includes(item));
+    return this.b?.filter?.((item) => this.a?.includes?.(item)) ?? [];
   }
 }`,
     },
@@ -471,7 +555,7 @@ class C {
 class C {
   @computed("a.[]", "b.[]")
   get diff() {
-    return (this.a ?? []).filter((item) => !(this.b ?? []).includes(item));
+    return this.a?.filter?.((item) => !this.b?.includes?.(item)) ?? [];
   }
 }`,
     },
@@ -488,7 +572,7 @@ class C {
 class C {
   @computed("values.[]")
   get total() {
-    return this.values?.reduce((s, v) => s + v, 0) ?? 0;
+    return this.values?.reduce?.((s, v) => s + v, 0) ?? 0;
   }
 }`,
     },

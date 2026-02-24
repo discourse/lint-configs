@@ -132,8 +132,35 @@ const alias = {
   },
 };
 const readOnly = { ...simpleAccess };
-const reads = { ...simpleAccess };
-const oneWay = { ...simpleAccess };
+
+// oneWay/reads: one-way binding that can be overridden locally.
+// Getter reads from source until the setter is called, then the property
+// permanently diverges. Uses a single `@tracked _propOverride` field (placed
+// in the [private-properties] section via the `_` prefix). Checking against
+// `undefined` distinguishes "never set" from "set to a value".
+const oneWayTransform = {
+  source: EMBER_SOURCE,
+  canAutoFix: true,
+  overrideTrackedFields({ propName }) {
+    return [{ name: `_${propName}Override` }];
+  },
+  toGetterBody({ literalArgs: [path], propName }) {
+    return [
+      `if (this._${propName}Override !== undefined) {`,
+      `  return this._${propName}Override;`,
+      `}`,
+      `return ${toAccess(path)};`,
+    ].join("\n");
+  },
+  toSetterBody({ propName }) {
+    return `this._${propName}Override = value;`;
+  },
+  toDependentKeys({ literalArgs: [path] }) {
+    return [path];
+  },
+};
+const reads = { ...oneWayTransform };
+const oneWay = { ...oneWayTransform };
 
 const not = {
   source: EMBER_SOURCE,
@@ -251,7 +278,7 @@ const mapBy = {
   source: EMBER_SOURCE,
   canAutoFix: true,
   toGetterBody({ literalArgs: [arrPath, prop] }) {
-    return `return ${toAccess(arrPath)}?.map((item) => item.${prop}) ?? [];`;
+    return `return ${toAccess(arrPath)}?.map?.((item) => item.${prop}) ?? [];`;
   },
   toDependentKeys({ literalArgs: [arrPath, prop] }) {
     return [`${arrPath}.@each.${prop}`];
@@ -269,9 +296,9 @@ const filterBy = {
         argNodes[2].raw !== undefined
           ? argNodes[2].raw
           : renderLiteral(argNodes[2].value);
-      return `return ${toAccess(arrPath)}?.filter((item) => item.${prop} === ${valueText}) ?? [];`;
+      return `return ${toAccess(arrPath)}?.filter?.((item) => item.${prop} === ${valueText}) ?? [];`;
     }
-    return `return ${toAccess(arrPath)}?.filter((item) => item.${prop}) ?? [];`;
+    return `return ${toAccess(arrPath)}?.filter?.((item) => item.${prop}) ?? [];`;
   },
   toDependentKeys({ literalArgs: [arrPath, prop] }) {
     return [`${arrPath}.@each.${prop}`];
@@ -299,7 +326,7 @@ const sum = {
   source: EMBER_SOURCE,
   canAutoFix: true,
   toGetterBody({ literalArgs: [path] }) {
-    return `return ${toAccess(path)}?.reduce((s, v) => s + v, 0) ?? 0;`;
+    return `return ${toAccess(path)}?.reduce?.((s, v) => s + v, 0) ?? 0;`;
   },
   toDependentKeys({ literalArgs: [path] }) {
     return [`${path}.[]`];
@@ -310,7 +337,7 @@ const max = {
   source: EMBER_SOURCE,
   canAutoFix: true,
   toGetterBody({ literalArgs: [path] }) {
-    return `return ${toAccess(path)}?.reduce((m, v) => Math.max(m, v), -Infinity) ?? -Infinity;`;
+    return `return ${toAccess(path)}?.reduce?.((m, v) => Math.max(m, v), -Infinity) ?? -Infinity;`;
   },
   toDependentKeys({ literalArgs: [path] }) {
     return [`${path}.[]`];
@@ -321,7 +348,7 @@ const min = {
   source: EMBER_SOURCE,
   canAutoFix: true,
   toGetterBody({ literalArgs: [path] }) {
-    return `return ${toAccess(path)}?.reduce((m, v) => Math.min(m, v), Infinity) ?? Infinity;`;
+    return `return ${toAccess(path)}?.reduce?.((m, v) => Math.min(m, v), Infinity) ?? Infinity;`;
   },
   toDependentKeys({ literalArgs: [path] }) {
     return [`${path}.[]`];
@@ -373,9 +400,9 @@ const intersect = {
     const last = literalArgs[literalArgs.length - 1];
     const rest = literalArgs.slice(0, -1);
     const conditions = rest
-      .map((p) => `(${toAccess(p)} ?? []).includes(item)`)
+      .map((p) => `${toAccess(p)}?.includes?.(item)`)
       .join(" && ");
-    return `return (${toAccess(last)} ?? []).filter((item) => ${conditions});`;
+    return `return ${toAccess(last)}?.filter?.((item) => ${conditions}) ?? [];`;
   },
   toDependentKeys({ literalArgs }) {
     return literalArgs.map((p) => `${p}.[]`);
@@ -386,7 +413,7 @@ const setDiff = {
   source: EMBER_SOURCE,
   canAutoFix: true,
   toGetterBody({ literalArgs: [a, b] }) {
-    return `return (${toAccess(a)} ?? []).filter((item) => !(${toAccess(b)} ?? []).includes(item));`;
+    return `return ${toAccess(a)}?.filter?.((item) => !${toAccess(b)}?.includes?.(item)) ?? [];`;
   },
   toDependentKeys({ literalArgs: [a, b] }) {
     return [`${a}.[]`, `${b}.[]`];
@@ -399,7 +426,11 @@ const sort = {
   requiredImports: [{ name: "compare", source: "@ember/utils" }],
   toGetterBody({ literalArgs: [arrPath, sortDefPath] }) {
     return [
-      `return [...(${toAccess(arrPath)} ?? [])].sort((a, b) => {`,
+      `const arr = ${toAccess(arrPath)};`,
+      `if (!Array.isArray(arr)) {`,
+      `  return [];`,
+      `}`,
+      `return [...arr].sort((a, b) => {`,
       `  for (const s of ${toAccess(sortDefPath)} ?? []) {`,
       `    const [prop, dir = "asc"] = s.split(":");`,
       `    const result = compare(a[prop], b[prop]);`,
