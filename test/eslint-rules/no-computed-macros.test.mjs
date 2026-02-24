@@ -447,9 +447,13 @@ class C {
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
       output: `import { compare } from "@ember/utils";
-import { computed } from "@ember/object";
+import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
 class C {
-  @computed("categories.[]", "sortDef.[]")
+  @tracked categories;
+  @tracked sortDef;
+
+  @dependentKeyCompat
   get sorted() {
     const arr = this.categories;
     if (!Array.isArray(arr)) {
@@ -499,9 +503,12 @@ class C {
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
       output: `import { uniqueItemsFromArray } from "discourse/lib/array-tools";
-import { computed } from "@ember/object";
+import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
 class C {
-  @computed("items.[]")
+  @tracked items;
+
+  @dependentKeyCompat
   get uniqueItems() {
     return uniqueItemsFromArray(this.items ?? []);
   }
@@ -517,9 +524,13 @@ class C {
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
       output: `import { uniqueItemsFromArray } from "discourse/lib/array-tools";
-import { computed } from "@ember/object";
+import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
 class C {
-  @computed("a.[]", "b.[]")
+  @tracked a;
+  @tracked b;
+
+  @dependentKeyCompat
   get combined() {
     return uniqueItemsFromArray([...(this.a ?? []), ...(this.b ?? [])]);
   }
@@ -534,9 +545,13 @@ class C {
   @intersect("a", "b") common;
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
-      output: `import { computed } from "@ember/object";
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
 class C {
-  @computed("a.[]", "b.[]")
+  @tracked a;
+  @tracked b;
+
+  @dependentKeyCompat
   get common() {
     return this.b?.filter?.((item) => this.a?.includes?.(item)) ?? [];
   }
@@ -551,9 +566,13 @@ class C {
   @setDiff("a", "b") diff;
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
-      output: `import { computed } from "@ember/object";
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
 class C {
-  @computed("a.[]", "b.[]")
+  @tracked a;
+  @tracked b;
+
+  @dependentKeyCompat
   get diff() {
     return this.a?.filter?.((item) => !this.b?.includes?.(item)) ?? [];
   }
@@ -568,9 +587,12 @@ class C {
   @sum("values") total;
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
-      output: `import { computed } from "@ember/object";
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
 class C {
-  @computed("values.[]")
+  @tracked values;
+
+  @dependentKeyCompat
   get total() {
     return this.values?.reduce?.((s, v) => s + v, 0) ?? 0;
   }

@@ -329,7 +329,7 @@ const sum = {
     return `return ${toAccess(path)}?.reduce?.((s, v) => s + v, 0) ?? 0;`;
   },
   toDependentKeys({ literalArgs: [path] }) {
-    return [`${path}.[]`];
+    return [path];
   },
 };
 
@@ -340,7 +340,7 @@ const max = {
     return `return ${toAccess(path)}?.reduce?.((m, v) => Math.max(m, v), -Infinity) ?? -Infinity;`;
   },
   toDependentKeys({ literalArgs: [path] }) {
-    return [`${path}.[]`];
+    return [path];
   },
 };
 
@@ -351,7 +351,7 @@ const min = {
     return `return ${toAccess(path)}?.reduce?.((m, v) => Math.min(m, v), Infinity) ?? Infinity;`;
   },
   toDependentKeys({ literalArgs: [path] }) {
-    return [`${path}.[]`];
+    return [path];
   },
 };
 
@@ -371,7 +371,7 @@ const uniq = {
     return `return uniqueItemsFromArray([${spreads}]);`;
   },
   toDependentKeys({ literalArgs }) {
-    return literalArgs.map((p) => `${p}.[]`);
+    return [...literalArgs];
   },
 };
 
@@ -385,7 +385,7 @@ const uniqBy = {
     return `return uniqueItemsFromArray(${toAccess(arrPath)} ?? [], ${renderLiteral(key)});`;
   },
   toDependentKeys({ literalArgs: [arrPath] }) {
-    return [`${arrPath}.[]`];
+    return [arrPath];
   },
 };
 
@@ -405,7 +405,7 @@ const intersect = {
     return `return ${toAccess(last)}?.filter?.((item) => ${conditions}) ?? [];`;
   },
   toDependentKeys({ literalArgs }) {
-    return literalArgs.map((p) => `${p}.[]`);
+    return [...literalArgs];
   },
 };
 
@@ -416,7 +416,7 @@ const setDiff = {
     return `return ${toAccess(a)}?.filter?.((item) => !${toAccess(b)}?.includes?.(item)) ?? [];`;
   },
   toDependentKeys({ literalArgs: [a, b] }) {
-    return [`${a}.[]`, `${b}.[]`];
+    return [a, b];
   },
 };
 
@@ -443,7 +443,7 @@ const sort = {
     ].join("\n");
   },
   toDependentKeys({ literalArgs: [arrPath, sortDefPath] }) {
-    return [`${arrPath}.[]`, `${sortDefPath}.[]`];
+    return [arrPath, sortDefPath];
   },
 };
 
