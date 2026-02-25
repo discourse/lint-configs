@@ -632,8 +632,14 @@ export const MACRO_TRANSFORMS = new Map([
   ["endWith", endWith],
 ]);
 
-/** The two import sources this rule targets. */
+/** The import sources this rule targets. */
 export const MACRO_SOURCES = new Set([
   "@ember/object/computed",
   "discourse/lib/computed",
+  "discourse/lib/decorators",
+]);
+
+/** Maps alternative import sources to the canonical source they alias. */
+export const SOURCE_ALIASES = new Map([
+  ["discourse/lib/decorators", "@ember/object/computed"],
 ]);

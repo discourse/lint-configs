@@ -1068,6 +1068,26 @@ class C {
 }`,
     },
 
+    // ---- discourse/lib/decorators alias source ----
+    {
+      name: "macro imported from discourse/lib/decorators",
+      code: `import { not } from "discourse/lib/decorators";
+class C {
+  @not("loading") loaded;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class C {
+  @tracked loading;
+
+  @dependentKeyCompat
+  get loaded() {
+    return !this.loading;
+  }
+}`,
+    },
+
     // ---- mixed local/nested deps → @computed wins ----
     {
       name: "mixed local and nested deps → uses @computed",

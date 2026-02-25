@@ -2,11 +2,17 @@
  * @fileoverview Analysis helpers for the `no-computed-macros` ESLint rule.
  *
  * Performs read-only AST traversal to detect usages of computed property macros
- * from `@ember/object/computed` and `discourse/lib/computed`, determines whether
+ * from `@ember/object/computed`, `discourse/lib/computed`, and
+ * `discourse/lib/decorators`, determines whether
  * each usage can be auto-fixed, and collects the information the fixer needs.
  */
 
-import { isLocalKey, MACRO_TRANSFORMS } from "./macro-transforms.mjs";
+import {
+  isLocalKey,
+  MACRO_SOURCES,
+  MACRO_TRANSFORMS,
+  SOURCE_ALIASES,
+} from "./macro-transforms.mjs";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,7 +95,7 @@ export function analyzeMacroUsage(sourceCode, imports) {
 // ---------------------------------------------------------------------------
 
 /**
- * Scan the imports map for macro names from both target sources.
+ * Scan the imports map for macro names from all target sources.
  * Returns a map from local identifier name → canonical macro name.
  *
  * @param {Map<string, {node: import('estree').ImportDeclaration, specifiers: Array}>} imports
@@ -115,6 +121,25 @@ function collectMacroImports(imports) {
     }
   }
 
+  // Check alias sources (e.g. discourse/lib/decorators → @ember/object/computed)
+  for (const [aliasSource, canonicalSource] of SOURCE_ALIASES) {
+    const importInfo = imports.get(aliasSource);
+    if (!importInfo) {
+      continue;
+    }
+
+    for (const spec of importInfo.specifiers) {
+      if (spec.type !== "ImportSpecifier") {
+        continue;
+      }
+      const importedName = spec.imported.name;
+      const transform = MACRO_TRANSFORMS.get(importedName);
+      if (transform && transform.source === canonicalSource) {
+        result.set(spec.local.name, importedName);
+      }
+    }
+  }
+
   return result;
 }
 
@@ -127,7 +152,7 @@ function collectMacroImports(imports) {
 function collectMacroImportNodes(imports) {
   const result = new Map();
 
-  for (const source of ["@ember/object/computed", "discourse/lib/computed"]) {
+  for (const source of MACRO_SOURCES) {
     const importInfo = imports.get(source);
     if (importInfo) {
       result.set(source, importInfo.node);
