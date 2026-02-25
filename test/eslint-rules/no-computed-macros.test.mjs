@@ -446,8 +446,7 @@ class C {
   @sort("categories", "sortDef") sorted;
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
-      output: `import { compare } from "@ember/utils";
-import { get } from "@ember/object";
+      output: `import { arraySortedByProperties } from "discourse/lib/array-tools";
 import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
@@ -456,20 +455,7 @@ class C {
 
   @dependentKeyCompat
   get sorted() {
-    const arr = this.categories;
-    if (!Array.isArray(arr)) {
-      return [];
-    }
-    return [...arr].sort((a, b) => {
-      for (const s of this.sortDef ?? []) {
-        const [prop, dir = "asc"] = s.split(":");
-        const result = compare(get(a, prop), get(b, prop));
-        if (result !== 0) {
-          return dir === "desc" ? -result : result;
-        }
-      }
-      return 0;
-    });
+    return arraySortedByProperties(this.categories, this.sortDef);
   }
 }`,
     },

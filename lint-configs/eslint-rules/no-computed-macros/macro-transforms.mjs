@@ -424,26 +424,10 @@ const sort = {
   source: EMBER_SOURCE,
   canAutoFix: true,
   requiredImports: [
-    { name: "compare", source: "@ember/utils" },
-    { name: "get", source: "@ember/object" },
+    { name: "arraySortedByProperties", source: "discourse/lib/array-tools" },
   ],
   toGetterBody({ literalArgs: [arrPath, sortDefPath] }) {
-    return [
-      `const arr = ${toAccess(arrPath)};`,
-      `if (!Array.isArray(arr)) {`,
-      `  return [];`,
-      `}`,
-      `return [...arr].sort((a, b) => {`,
-      `  for (const s of ${toAccess(sortDefPath)} ?? []) {`,
-      `    const [prop, dir = "asc"] = s.split(":");`,
-      `    const result = compare(get(a, prop), get(b, prop));`,
-      `    if (result !== 0) {`,
-      `      return dir === "desc" ? -result : result;`,
-      `    }`,
-      `  }`,
-      `  return 0;`,
-      `});`,
-    ].join("\n");
+    return `return arraySortedByProperties(${toAccess(arrPath)}, ${toAccess(sortDefPath)});`;
   },
   toDependentKeys({ literalArgs: [arrPath, sortDefPath] }) {
     return [arrPath, sortDefPath];
