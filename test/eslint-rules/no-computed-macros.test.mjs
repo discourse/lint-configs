@@ -447,6 +447,7 @@ class C {
 }`,
       errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
       output: `import { compare } from "@ember/utils";
+import { get } from "@ember/object";
 import { tracked } from "@glimmer/tracking";
 import { dependentKeyCompat } from "@ember/object/compat";
 class C {
@@ -462,7 +463,7 @@ class C {
     return [...arr].sort((a, b) => {
       for (const s of this.sortDef ?? []) {
         const [prop, dir = "asc"] = s.split(":");
-        const result = compare(a[prop], b[prop]);
+        const result = compare(get(a, prop), get(b, prop));
         if (result !== 0) {
           return dir === "desc" ? -result : result;
         }
@@ -1499,6 +1500,94 @@ class C extends GlimmerComponent {
   }
   set myName(value) {
     this.name = value;
+  }
+}`,
+    },
+
+    // ---- undeclared dep exclusion for unknown superclasses ----
+    {
+      name: "unknown superclass with undeclared dep: promotes to @computed",
+      code: `import { alias } from "@ember/object/computed";
+import User from "discourse/models/user";
+class AdminUser extends User {
+  @alias("staff") isStaff;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { computed, set } from "@ember/object";
+import User from "discourse/models/user";
+class AdminUser extends User {
+  @computed("staff")
+  get isStaff() {
+    return this.staff;
+  }
+  set isStaff(value) {
+    set(this, "staff", value);
+  }
+}`,
+    },
+    {
+      name: "unknown superclass with declared local dep: still uses @tracked",
+      code: `import { not } from "@ember/object/computed";
+import User from "discourse/models/user";
+class AdminUser extends User {
+  isHidden = false;
+  @not("isHidden") isVisible;
+}`,
+      errors: [
+        { messageId: "replaceMacro" },
+        { messageId: "addTracked" },
+        { messageId: "replaceMacro" },
+      ],
+      output: `import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+import User from "discourse/models/user";
+class AdminUser extends User {
+  @tracked isHidden = false;
+
+  @dependentKeyCompat
+  get isVisible() {
+    return !this.isHidden;
+  }
+}`,
+    },
+    {
+      name: "known framework superclass with undeclared dep: still uses @tracked",
+      code: `import Controller from "@ember/controller";
+import { alias } from "@ember/object/computed";
+class MyController extends Controller {
+  @alias("name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import Controller from "@ember/controller";
+import { tracked } from "@glimmer/tracking";
+import { dependentKeyCompat } from "@ember/object/compat";
+class MyController extends Controller {
+  @tracked name;
+
+  @dependentKeyCompat
+  get myName() {
+    return this.name;
+  }
+  set myName(value) {
+    this.name = value;
+  }
+}`,
+    },
+    {
+      name: "non-Identifier superclass with undeclared dep: promotes to @computed",
+      code: `import { alias } from "@ember/object/computed";
+class C extends getBaseClass() {
+  @alias("name") myName;
+}`,
+      errors: [{ messageId: "replaceMacro" }, { messageId: "replaceMacro" }],
+      output: `import { computed, set } from "@ember/object";
+class C extends getBaseClass() {
+  @computed("name")
+  get myName() {
+    return this.name;
+  }
+  set myName(value) {
+    set(this, "name", value);
   }
 }`,
     },

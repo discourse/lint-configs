@@ -423,7 +423,10 @@ const setDiff = {
 const sort = {
   source: EMBER_SOURCE,
   canAutoFix: true,
-  requiredImports: [{ name: "compare", source: "@ember/utils" }],
+  requiredImports: [
+    { name: "compare", source: "@ember/utils" },
+    { name: "get", source: "@ember/object" },
+  ],
   toGetterBody({ literalArgs: [arrPath, sortDefPath] }) {
     return [
       `const arr = ${toAccess(arrPath)};`,
@@ -433,7 +436,7 @@ const sort = {
       `return [...arr].sort((a, b) => {`,
       `  for (const s of ${toAccess(sortDefPath)} ?? []) {`,
       `    const [prop, dir = "asc"] = s.split(":");`,
-      `    const result = compare(a[prop], b[prop]);`,
+      `    const result = compare(get(a, prop), get(b, prop));`,
       `    if (result !== 0) {`,
       `      return dir === "desc" ? -result : result;`,
       `    }`,

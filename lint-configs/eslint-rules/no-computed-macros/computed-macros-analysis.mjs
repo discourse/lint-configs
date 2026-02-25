@@ -77,6 +77,7 @@ export function analyzeMacroUsage(sourceCode, imports) {
   excludeDepsBeingConverted(usages);
   excludeImplicitInjectionDeps(usages);
   forceComputedForClassicComponents(usages, imports);
+  excludeUndeclaredDepsInSubclasses(usages, imports);
   propagateComputedRequirement(usages);
   deduplicateTrackedDeps(usages);
 
@@ -551,6 +552,96 @@ function forceComputedForClassicComponents(usages, importsMap) {
       usage.existingNodesToDecorate = undefined;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Undeclared dep exclusion for subclasses
+// ---------------------------------------------------------------------------
+
+/**
+ * Promote usages to `@computed` when a class extends an unknown (non-framework)
+ * superclass and the fixer would insert NEW `@tracked` declarations for deps
+ * not found in the current class body.
+ *
+ * Without cross-file analysis we cannot know whether an undeclared dep is
+ * genuinely new local state or an inherited property (computed getter,
+ * injection, etc.) from the parent class. Inserting `@tracked propName;`
+ * for an inherited property shadows it with `undefined`, breaking runtime
+ * behavior. Promoting to `@computed` uses Ember's string-based observation
+ * which works correctly through the prototype chain.
+ *
+ * Classes extending known Ember/Glimmer framework base classes (`@ember/*`,
+ * `@glimmer/*`, `ember-data/*`) are safe — their APIs are well-documented and
+ * the `IMPLICIT_INJECTION_NAMES` exclusion already handles their dangerous
+ * properties.
+ *
+ * Deps that ARE declared in the current class body (`existingNodesToDecorate`)
+ * are safe — the property is visibly local, so there is no shadowing risk.
+ *
+ * Must run after `forceComputedForClassicComponents` (so classic component
+ * usages already have `trackedDeps` cleared) and before
+ * `propagateComputedRequirement`.
+ *
+ * @param {MacroUsage[]} usages
+ * @param {Map<string, {node: import('estree').ImportDeclaration, specifiers: Array}>} importsMap
+ */
+function excludeUndeclaredDepsInSubclasses(usages, importsMap) {
+  for (const usage of usages) {
+    if (!usage.canAutoFix || !usage.allLocal || !usage.trackedDeps?.length) {
+      continue;
+    }
+
+    const classNode = usage.propertyNode.parent.parent;
+    if (!classNode.superClass) {
+      continue;
+    }
+
+    // Known Ember/Glimmer framework classes have well-documented APIs.
+    // IMPLICIT_INJECTION_NAMES already handles their dangerous properties.
+    if (isKnownFrameworkSuperclass(classNode, importsMap)) {
+      continue;
+    }
+
+    // Unknown superclass — could define computed getters or other
+    // properties we'd shadow. Promote to @computed for safety.
+    usage.allLocal = false;
+    usage.trackedDeps = undefined;
+    usage.existingNodesToDecorate = undefined;
+  }
+}
+
+/**
+ * Check whether a class's superclass is a default import from a known
+ * Ember/Glimmer framework package (`@ember/*`, `@glimmer/*`, `ember-data/*`).
+ *
+ * @param {import('estree').Node} classNode - ClassDeclaration or ClassExpression
+ * @param {Map<string, {node: import('estree').ImportDeclaration, specifiers: Array}>} importsMap
+ * @returns {boolean}
+ */
+function isKnownFrameworkSuperclass(classNode, importsMap) {
+  const superClass = classNode.superClass;
+  if (!superClass || superClass.type !== "Identifier") {
+    return false;
+  }
+
+  for (const [source, importInfo] of importsMap) {
+    if (
+      !source.startsWith("@ember/") &&
+      !source.startsWith("@glimmer/") &&
+      !source.startsWith("ember-data")
+    ) {
+      continue;
+    }
+
+    const defaultSpec = importInfo.specifiers.find(
+      (s) => s.type === "ImportDefaultSpecifier"
+    );
+    if (defaultSpec && defaultSpec.local.name === superClass.name) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
