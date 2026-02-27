@@ -21,6 +21,7 @@ import keepArraySorted from "./eslint-rules/keep-array-sorted.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
+import migrateTrackedBuiltInsToEmberCollections from "./eslint-rules/migrate-tracked-built-ins-to-ember-collections.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
@@ -146,6 +147,8 @@ export default [
           "moved-packages-import-paths": movedPackagesImportPaths,
           "no-discourse-computed": noDiscourseComputed,
           "test-filename-suffix": testFilenameSuffix,
+          "migrate-tracked-built-ins-to-ember-collections":
+            migrateTrackedBuiltInsToEmberCollections,
         },
       },
     },
@@ -317,6 +320,7 @@ export default [
       "discourse/test-filename-suffix": ["error"],
       "discourse/keep-array-sorted": ["error"],
       "discourse/no-discourse-computed": ["error"],
+      "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
     },
   },
   {
