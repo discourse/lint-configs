@@ -13,6 +13,8 @@ import {
 } from "./utils/analyze-imports.mjs";
 import { buildImportStatement, fixImport } from "./utils/fix-import.mjs";
 
+const USE_NATIVE_GETTER_INSTEAD = "Use a native getter instead of `@{{name}}`";
+
 export default {
   meta: {
     type: "suggestion",
@@ -22,14 +24,12 @@ export default {
     fixable: "code",
     schema: [],
     messages: {
-      replaceMacro: "Replace '@{{name}}' macro with a native getter.",
+      replaceMacro: `${USE_NATIVE_GETTER_INSTEAD}.`,
       addTracked:
-        "Add @tracked to '{{name}}' (dependency of a converted macro).",
-      cannotAutoFixComplex: "Cannot auto-fix '{{name}}': {{reason}}.",
-      cannotAutoFixDynamic:
-        "Cannot auto-fix '@{{name}}' because it has non-literal arguments.",
-      cannotAutoFixSelfReference:
-        "Cannot auto-fix '@{{name}}' because property '{{propName}}' references itself.",
+        "Add `@tracked` to `{{name}}` (dependency of a converted macro).",
+      cannotAutoFixComplex: `${USE_NATIVE_GETTER_INSTEAD}: {{reason}}.`,
+      cannotAutoFixDynamic: `${USE_NATIVE_GETTER_INSTEAD}: it has non-literal arguments (convert manually).`,
+      cannotAutoFixSelfReference: `${USE_NATIVE_GETTER_INSTEAD}: \`{{propName}}\` references itself (convert manually).`,
     },
   },
 
