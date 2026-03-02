@@ -55,7 +55,7 @@ export function getImportedLocalNames(sourceCode) {
 
   for (const { specifiers } of imports.values()) {
     specifiers.forEach((spec) => {
-      if (spec && spec.local && spec.local.name) {
+      if (spec?.local?.name) {
         names.add(spec.local.name);
       }
     });
