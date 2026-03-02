@@ -124,6 +124,35 @@ describe("analyzeDiscourseComputedUsage", () => {
     assert.strictEqual(info.hasClassicClassDecorators, true);
   });
 
+  it("identifies arguments usage as non-fixable", () => {
+    const code = `
+      class MyClass {
+        @discourseComputed("text", "textParams")
+        translatedText(text) {
+          if (text) {
+            return i18n(...arguments);
+          }
+        }
+      }
+    `;
+    const info = getAnalysis(code);
+    assert.strictEqual(info.hasFixableDecorators, false);
+    assert.strictEqual(info.hasParameterReassignments, true);
+  });
+
+  it("does not block fix when arguments is only inside a nested non-arrow function", () => {
+    const code = `
+      class MyClass {
+        @discourseComputed("value")
+        computed(value) {
+          return someHelper(function() { return arguments[0]; }, value);
+        }
+      }
+    `;
+    const info = getAnalysis(code);
+    assert.strictEqual(info.hasFixableDecorators, true);
+  });
+
   it("identifies guard clause reassignment as fixable", () => {
     const code = `
       class MyClass {

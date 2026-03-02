@@ -189,6 +189,48 @@ export function analyzeDiscourseComputedUsage(
     });
   }
 
+  /**
+   * Returns true if funcNode's body references `arguments` at the outer function
+   * scope — i.e., not inside a nested non-arrow function (which has its own
+   * `arguments` object unrelated to the method's parameters).
+   *
+   * @param {import('estree').Function} funcNode
+   * @returns {boolean}
+   */
+  function containsArgumentsReference(funcNode) {
+    let found = false;
+    function visit(node, insideNestedNonArrow) {
+      if (found || !node || typeof node !== "object") {
+        return;
+      }
+      if (
+        node.type === "Identifier" &&
+        node.name === "arguments" &&
+        !insideNestedNonArrow
+      ) {
+        found = true;
+        return;
+      }
+      const childFlag =
+        insideNestedNonArrow ||
+        node.type === "FunctionDeclaration" ||
+        node.type === "FunctionExpression";
+      for (const key of Object.keys(node)) {
+        if (key === "parent" || key === "range" || key === "loc") {
+          continue;
+        }
+        const child = node[key];
+        if (Array.isArray(child)) {
+          child.forEach((item) => visit(item, childFlag));
+        } else {
+          visit(child, childFlag);
+        }
+      }
+    }
+    visit(funcNode.body, false);
+    return found;
+  }
+
   function analyzeMethodUsage(methodNode, decoratorNode) {
     const decoratorExpression = decoratorNode.expression;
     let decoratorArgs = [];
@@ -200,6 +242,14 @@ export function analyzeDiscourseComputedUsage(
 
     const functionNode = methodNode.value;
     const paramNames = functionNode.params.map((p) => p.name);
+
+    if (containsArgumentsReference(functionNode)) {
+      return {
+        canAutoFix: false,
+        messageId: "cannotAutoFixArguments",
+        reportData: { name: discourseComputedLocalName },
+      };
+    }
 
     if (paramNames.length === 0) {
       return { canAutoFix: true };

@@ -1215,6 +1215,44 @@ class MyClass {
   }
 }`,
     },
+    {
+      name: "discourseComputed with ...arguments usage - no auto-fix",
+      code: `import discourseComputed from "discourse/lib/decorators";
+class MyClass {
+  @discourseComputed("text", "textParams")
+  translatedText(text) {
+    if (text) {
+      return i18n(...arguments);
+    }
+  }
+}`,
+      errors: [
+        { messageId: "replaceImport" },
+        { messageId: "cannotAutoFixArguments" },
+      ],
+      output: null,
+    },
+    {
+      name: "discourseComputed with arguments in nested non-arrow function - still auto-fixable",
+      code: `import discourseComputed from "discourse/lib/decorators";
+class MyClass {
+  @discourseComputed("value")
+  computed(value) {
+    return someHelper(function() { return arguments[0]; }, value);
+  }
+}`,
+      errors: [
+        { messageId: "replaceImport" },
+        { messageId: "replaceDecorator" },
+      ],
+      output: `import { computed } from "@ember/object";
+class MyClass {
+  @computed("value")
+  get computed() {
+    return someHelper(function() { return arguments[0]; }, this.value);
+  }
+}`,
+    },
     // Note: Test for classic Ember classes (Component.extend) with @discourseComputed decorator
     // is not included here because the test environment doesn't have the Babel transformer
     // needed to parse decorator syntax on object properties. This functionality should be

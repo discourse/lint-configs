@@ -182,6 +182,8 @@ export default {
         "Cannot auto-fix @{{name}} because parameter '{{param}}' is reassigned inside a nested block. Convert to getter manually using a local variable (e.g. 'let {{param}} = this.{{propertyPath}}; if (...) { {{param}} = ... }').",
       cannotAutoFixSpread:
         "Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator. Example manual fix: '...(this.{{propertyPath}} || [])'.",
+      cannotAutoFixArguments:
+        "Use `@computed` from `@ember/object` instead of `@{{name}}`: replace `...arguments` with explicit `this.propertyName` access.",
       cannotAutoFixGeneric:
         "Cannot auto-fix @{{name}} because parameter '{{param}}' has complex patterns. Convert to getter manually using 'this.{{propertyPath}}'.",
     },
