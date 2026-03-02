@@ -80,6 +80,35 @@ The following guidelines ensure the codebase is readable, maintainable, and easy
 - **JSDoc Types**: Provide JSDoc headers for all exported functions and complex data structures (using `@typedef`). This improves editor tooling and helps other developers understand the data flow.
 - **Consistent Rule Metadata**: Ensure every rule has a comprehensive `meta` object with a clear description and descriptive message IDs.
 
+### 4. Error Messages
+
+Error messages are displayed on the flagged code — the user may not be aware that an auto-fixer exists. Write messages that **prompt the user to act**, not messages that describe why the auto-fix failed.
+
+**Pattern:** `"Use <preferred> instead of <current>: <specific guidance>."`
+
+- **Use template variables** (`{{name}}`, `{{param}}`) instead of hardcoding identifiers. Always provide the matching `data` object in `context.report()`.
+- **Use backticks** for all inline code references, not single quotes.
+- **Extract a shared constant** when multiple messages share a common prefix, to keep them consistent and easy to update:
+  ```js
+  const USE_COMPUTED_INSTEAD = "Use `@computed` instead of `@{{name}}`";
+  // ...
+  messages: {
+    replaceDecorator: `${USE_COMPUTED_INSTEAD}.`,
+    cannotAutoFixClassic: `${USE_COMPUTED_INSTEAD}: convert this classic Ember class to a native ES6 class first.`,
+  }
+  ```
+- **Avoid "Cannot auto-fix"** as a message opener — it's confusing when the user hasn't run `--fix`. Instead, lead with the desired outcome and follow with what requires manual attention.
+
+**Good:**
+```
+Use `@computed` instead of `@{{name}}`: `{{param}}` is used in a spread. Convert manually (e.g. `...(this.{{propertyPath}} || [])`).
+```
+
+**Avoid:**
+```
+Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread operator.
+```
+
 ## Available ESLint Utilities
 
 - `fixImport(fixer, importNode, options)`: Manage named/default imports.
