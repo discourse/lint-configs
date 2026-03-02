@@ -252,7 +252,10 @@ export function analyzeDiscourseComputedUsage(
     }
 
     if (paramNames.length === 0) {
-      return { canAutoFix: true };
+      return {
+        canAutoFix: true,
+        reportData: { name: discourseComputedLocalName },
+      };
     }
 
     // Use ESLint scope analysis to find all references to parameters
@@ -557,6 +560,7 @@ export function analyzeDiscourseComputedUsage(
     return {
       canAutoFix: true,
       simpleReassignments,
+      reportData: { name: discourseComputedLocalName },
     };
   }
 
@@ -585,7 +589,7 @@ export function analyzeDiscourseComputedUsage(
             canAutoFix: false,
             isClassic: true,
             messageId: "cannotAutoFixClassic",
-            reportData: { name: `@${discourseComputedLocalName}` },
+            reportData: { name: discourseComputedLocalName },
           });
         }
       }
