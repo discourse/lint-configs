@@ -1,12 +1,13 @@
 import { generateRuleTests } from "ember-template-lint";
+import { beforeEach, describe, it } from "mocha";
 import plugin from "../../lint-configs/template-lint-rules/index.mjs";
 
 generateRuleTests({
   name: "discourse/no-at-class",
 
-  groupMethodBefore: globalThis.beforeEach,
-  groupingMethod: globalThis.describe,
-  testMethod: globalThis.it,
+  groupMethodBefore: beforeEach,
+  groupingMethod: describe,
+  testMethod: it,
   plugins: [plugin],
 
   config: true,
