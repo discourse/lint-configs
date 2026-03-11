@@ -6,7 +6,7 @@ const ruleTester = new RuleTester();
 ruleTester.run("deprecated-imports", rule, {
   valid: [
     `import getUrl from "discourse/lib/get-url";`,
-    `import { htmlSafe } from "@ember/template";`,
+    `import { trustHTML } from "@ember/template";`,
     `import { getOwner } from "@ember/owner";`,
     `import { isArray } from "@ember/array";`,
     `import { registerTransformer } from "discourse/lib/registry/transformers";`,
@@ -40,7 +40,37 @@ ruleTester.run("deprecated-imports", rule, {
             "Use '@ember/template' instead of 'discourse/helpers/html-safe'",
         },
       ],
-      output: `import { htmlSafe } from "@ember/template";`,
+      output: `import { trustHTML } from "@ember/template";`,
+    },
+    {
+      code: `import { htmlSafe } from "@ember/template";`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML } from "@ember/template";`,
+    },
+    {
+      code: `import { htmlSafe } from "@ember/template";\nhtmlSafe("<b>bold</b>");`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML } from "@ember/template";\ntrustHTML("<b>bold</b>");`,
+    },
+    {
+      code: `import { htmlSafe as emberHtmlSafe } from "@ember/template";`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML as emberHtmlSafe } from "@ember/template";`,
     },
     {
       code: `import { getOwner } from "@ember/application";`,
