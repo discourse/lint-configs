@@ -17,11 +17,13 @@ import deprecatedPluginApis from "./eslint-rules/deprecated-plugin-apis.mjs";
 import discourseCommonImports from "./eslint-rules/discourse-common-imports.mjs";
 import i18nImport from "./eslint-rules/i18n-import-location.mjs";
 import i18nT from "./eslint-rules/i18n-t.mjs";
+import keepArraySorted from "./eslint-rules/keep-array-sorted.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
+import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
@@ -123,6 +125,7 @@ export default [
         rules: {
           "i18n-import-location": i18nImport,
           "i18n-t": i18nT,
+          "keep-array-sorted": keepArraySorted,
           "service-inject-import": serviceInjectImport,
           "truth-helpers-imports": truthHelpersImports,
           "no-unused-services": noUnusedServices,
@@ -142,6 +145,7 @@ export default [
           "no-route-template": noRouteTemplate,
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
+          "no-discourse-computed": noDiscourseComputed,
           "test-filename-suffix": testFilenameSuffix,
           "no-unnecessary-tracked": noUnnecessaryTracked,
         },
@@ -313,6 +317,8 @@ export default [
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
       "discourse/test-filename-suffix": ["error"],
+      "discourse/keep-array-sorted": ["error"],
+      "discourse/no-discourse-computed": ["error"],
       "discourse/no-unnecessary-tracked": ["warn"],
     },
   },
