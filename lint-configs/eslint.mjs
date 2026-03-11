@@ -27,6 +27,7 @@ import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
+import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
@@ -146,6 +147,7 @@ export default [
           "moved-packages-import-paths": movedPackagesImportPaths,
           "no-discourse-computed": noDiscourseComputed,
           "test-filename-suffix": testFilenameSuffix,
+          "no-unnecessary-tracked": noUnnecessaryTracked,
         },
       },
     },
@@ -317,6 +319,7 @@ export default [
       "discourse/test-filename-suffix": ["error"],
       "discourse/keep-array-sorted": ["error"],
       "discourse/no-discourse-computed": ["error"],
+      "discourse/no-unnecessary-tracked": ["warn"],
     },
   },
   {
