@@ -111,6 +111,47 @@ describe("ui-kit-imports", function () {
           errors: [{ messageId: "rename" }],
         },
 
+        // Shorthand property — expand to preserve key name
+        {
+          code: [
+            `import basePath from "discourse/helpers/base-path";`,
+            `someFunction({ basePath });`,
+          ].join("\n"),
+          output: [
+            `import dBasePath from "discourse/ui-kit/helpers/d-base-path";`,
+            `someFunction({ basePath: dBasePath });`,
+          ].join("\n"),
+          errors: [{ messageId: "rename" }],
+        },
+
+        // Shorthand property with shadowed local — leave alone
+        {
+          code: [
+            `import basePath from "discourse/helpers/base-path";`,
+            `function foo(basePath) { return { basePath }; }`,
+            `console.log(basePath);`,
+          ].join("\n"),
+          output: [
+            `import dBasePath from "discourse/ui-kit/helpers/d-base-path";`,
+            `function foo(basePath) { return { basePath }; }`,
+            `console.log(dBasePath);`,
+          ].join("\n"),
+          errors: [{ messageId: "rename" }],
+        },
+
+        // Non-shorthand property — rename normally
+        {
+          code: [
+            `import basePath from "discourse/helpers/base-path";`,
+            `someFunction({ key: basePath });`,
+          ].join("\n"),
+          output: [
+            `import dBasePath from "discourse/ui-kit/helpers/d-base-path";`,
+            `someFunction({ key: dBasePath });`,
+          ].join("\n"),
+          errors: [{ messageId: "rename" }],
+        },
+
         // Naming conflict — no autofix
         {
           code: [

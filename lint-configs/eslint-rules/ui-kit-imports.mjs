@@ -330,7 +330,20 @@ function buildCombinedFix(fixer, reports, sourceText) {
     if (variable) {
       for (const ref of variable.references) {
         if (ref.identifier !== defaultSpecifier.local) {
-          addFix(fixer.replaceText(ref.identifier, newName));
+          // When a renamed identifier is used as a shorthand property
+          // (e.g. { basePath }), naively renaming it to { dBasePath }
+          // changes both the key and value. Instead, expand to explicit
+          // key-value form: { basePath: dBasePath }.
+          const parent = ref.identifier.parent;
+          if (
+            parent?.type === "Property" &&
+            parent.shorthand &&
+            parent.value === ref.identifier
+          ) {
+            addFix(fixer.replaceText(parent, `${localName}: ${newName}`));
+          } else {
+            addFix(fixer.replaceText(ref.identifier, newName));
+          }
 
           // For component elements with closing tags (e.g. <NavItem>...</NavItem>),
           // variable.references only covers the opening tag. We must also
