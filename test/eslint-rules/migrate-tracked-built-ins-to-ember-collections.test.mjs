@@ -29,6 +29,13 @@ function importMessage(
   );
 }
 
+function namingConflictMessage(oldName, newName) {
+  return (
+    `Use \`${newName}\` from '@ember/reactive/collections' instead of \`${oldName}\`:` +
+    ` \`${newName}\` conflicts with an existing binding. Rename the conflicting identifier first.`
+  );
+}
+
 function nonNewMessage(oldName, newName) {
   return (
     `'${oldName}' must be migrated to '@ember/reactive/collections', but this usage requires manual review.` +
@@ -404,6 +411,82 @@ ruleTester.run("migrate-tracked-built-ins-to-ember-collections", rule, {
         },
       ],
       output: `import { TrackedArray } from "tracked-built-ins";\nimport { trackedSet } from "@ember/reactive/collections";\nconst arr = new TrackedArray();\nconst isTracked = arr instanceof TrackedArray;\nconst set = trackedSet();`,
+    },
+
+    // --- Duplicate import prevention ---
+
+    // Existing import from new source: merge specifiers
+    {
+      code: `import { trackedMap } from "@ember/reactive/collections";\nimport { TrackedArray } from "@ember-compat/tracked-built-ins";\nconst arr = new TrackedArray();`,
+      errors: [
+        {
+          message: importMessage([
+            { old: "TrackedArray", new: "trackedArray" },
+          ]),
+        },
+      ],
+      output: `import { trackedMap, trackedArray } from "@ember/reactive/collections";\n\nconst arr = trackedArray();`,
+    },
+
+    // Existing import from new source with alias: reuse alias at usage sites
+    {
+      code: `import { trackedArray as ta } from "@ember/reactive/collections";\nimport { TrackedArray } from "@ember-compat/tracked-built-ins";\nconst arr = new TrackedArray();`,
+      errors: [
+        {
+          message: importMessage([
+            { old: "TrackedArray", new: "trackedArray" },
+          ]),
+        },
+      ],
+      output: `import { trackedArray as ta } from "@ember/reactive/collections";\n\nconst arr = ta();`,
+    },
+
+    // --- Naming conflict prevention ---
+
+    // Naming conflict: no autofix when new name conflicts with existing binding
+    {
+      code: `import { TrackedArray } from "@ember-compat/tracked-built-ins";\nconst trackedArray = [1, 2, 3];\nconst arr = new TrackedArray();`,
+      errors: [
+        {
+          message: importMessage([
+            { old: "TrackedArray", new: "trackedArray" },
+          ]),
+        },
+        {
+          message: namingConflictMessage("TrackedArray", "trackedArray"),
+        },
+      ],
+      output: null,
+    },
+
+    // Partial naming conflict: TrackedArray conflicts, TrackedSet doesn't
+    {
+      code: `import { TrackedArray, TrackedSet } from "@ember-compat/tracked-built-ins";\nconst trackedArray = [1, 2, 3];\nconst arr = new TrackedArray();\nconst set = new TrackedSet();`,
+      errors: [
+        {
+          message: importMessage([
+            { old: "TrackedArray", new: "trackedArray" },
+            { old: "TrackedSet", new: "trackedSet" },
+          ]),
+        },
+        {
+          message: namingConflictMessage("TrackedArray", "trackedArray"),
+        },
+      ],
+      output: `import { TrackedArray } from "@ember-compat/tracked-built-ins";\nimport { trackedSet } from "@ember/reactive/collections";\nconst trackedArray = [1, 2, 3];\nconst arr = new TrackedArray();\nconst set = trackedSet();`,
+    },
+
+    // Aliased import avoids naming conflict (alias preserved, no conflict)
+    {
+      code: `import { TrackedArray as TA } from "@ember-compat/tracked-built-ins";\nconst trackedArray = [1, 2, 3];\nconst arr = new TA();`,
+      errors: [
+        {
+          message: importMessage([
+            { old: "TrackedArray", new: "trackedArray", local: "TA" },
+          ]),
+        },
+      ],
+      output: `import { trackedArray as TA } from "@ember/reactive/collections";\nconst trackedArray = [1, 2, 3];\nconst arr = TA();`,
     },
   ],
 });

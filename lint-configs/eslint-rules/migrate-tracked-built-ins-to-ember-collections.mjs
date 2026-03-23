@@ -1,3 +1,6 @@
+import { collectImports } from "./utils/analyze-imports.mjs";
+import { fixImport } from "./utils/fix-import.mjs";
+
 const SPECIFIER_MAPPING = {
   TrackedArray: "trackedArray",
   TrackedObject: "trackedObject",
@@ -46,6 +49,16 @@ function buildNonNewMessage(specifier) {
   );
 }
 
+function buildNamingConflictMessage(specifier) {
+  const oldName = specifier.imported.name;
+  const newName = SPECIFIER_MAPPING[oldName];
+
+  return (
+    `Use \`${newName}\` from '${NEW_SOURCE}' instead of \`${oldName}\`:` +
+    ` \`${newName}\` conflicts with an existing binding. Rename the conflicting identifier first.`
+  );
+}
+
 function isNewExpression(ref) {
   const parent = ref.identifier.parent;
   return parent.type === "NewExpression" && parent.callee === ref.identifier;
@@ -70,6 +83,58 @@ function buildOldSpecifier(specifier) {
     return oldName;
   }
   return `${oldName} as ${localName}`;
+}
+
+/**
+ * Checks whether the new function name for a specifier would conflict with
+ * an existing binding in the module scope (excluding the old import itself).
+ *
+ * @param {import('estree').ImportSpecifier} specifier
+ * @param {import('eslint').Scope.Scope} moduleScope
+ * @returns {boolean}
+ */
+function hasNamingConflict(specifier, moduleScope) {
+  // Aliased imports won't introduce a new name — the alias stays the same
+  if (specifier.local.name !== specifier.imported.name) {
+    return false;
+  }
+
+  const newName = SPECIFIER_MAPPING[specifier.imported.name];
+  const variable = moduleScope?.variables.find((v) => v.name === newName);
+
+  // No variable with that name exists — no conflict
+  if (!variable) {
+    return false;
+  }
+
+  // If the variable's only definition is an import from one of the old sources,
+  // that's the import we're replacing — not a real conflict
+  const isFromOldImport = variable.defs.every(
+    (def) =>
+      def.type === "ImportBinding" && OLD_SOURCES.has(def.parent?.source?.value)
+  );
+
+  return !isFromOldImport;
+}
+
+/**
+ * Looks up the local name already used for a given new specifier name in the
+ * existing import from NEW_SOURCE. Returns the alias if found, or null.
+ *
+ * @param {string} newName - The new imported name (e.g. "trackedArray")
+ * @param {object|undefined} existingImportInfo - From collectImports
+ * @returns {string|null} The local alias, or null if not already imported
+ */
+function getExistingLocalName(newName, existingImportInfo) {
+  if (!existingImportInfo) {
+    return null;
+  }
+
+  const spec = existingImportInfo.specifiers.find(
+    (s) => s.type === "ImportSpecifier" && s.imported.name === newName
+  );
+
+  return spec ? spec.local.name : null;
 }
 
 export default {
@@ -124,10 +189,14 @@ export default {
           (s) => s.type === "module"
         );
 
+        const imports = collectImports(context.sourceCode);
+        const existingNewSourceImport = imports.get(NEW_SOURCE);
+
         // Classify each specifier as fixable or unfixable
         const fixable = [];
         const unfixable = [];
         const nonNewRefs = [];
+        const namingConflicts = [];
 
         for (const specifier of specifiersToTransform) {
           const variable = moduleScope?.variables.find(
@@ -142,6 +211,21 @@ export default {
                 specifierIsFixable = false;
                 nonNewRefs.push({ ref, specifier });
               }
+            }
+          }
+
+          // Check naming conflicts only for specifiers that would otherwise
+          // be fixable and that don't already exist in the new source import
+          if (specifierIsFixable) {
+            const newName = SPECIFIER_MAPPING[specifier.imported.name];
+            const alreadyImported = getExistingLocalName(
+              newName,
+              existingNewSourceImport
+            );
+
+            if (!alreadyImported && hasNamingConflict(specifier, moduleScope)) {
+              specifierIsFixable = false;
+              namingConflicts.push(specifier);
             }
           }
 
@@ -173,7 +257,43 @@ export default {
                   ...unmappedSpecifiers.map(buildOldSpecifier),
                 ];
 
-                if (keepOnOld.length === 0) {
+                if (existingNewSourceImport) {
+                  // Merge into existing import from NEW_SOURCE
+                  const specifiersToAdd = [];
+
+                  for (const specifier of fixable) {
+                    const newName = SPECIFIER_MAPPING[specifier.imported.name];
+                    const alreadyImported = getExistingLocalName(
+                      newName,
+                      existingNewSourceImport
+                    );
+
+                    if (!alreadyImported) {
+                      specifiersToAdd.push(buildNewSpecifier(specifier));
+                    }
+                  }
+
+                  // Add new specifiers to the existing import
+                  if (specifiersToAdd.length > 0) {
+                    fixes.push(
+                      fixImport(fixer, existingNewSourceImport.node, {
+                        namedImportsToAdd: specifiersToAdd,
+                      })
+                    );
+                  }
+
+                  // Remove or trim the old import
+                  if (keepOnOld.length === 0) {
+                    fixes.push(fixer.remove(node));
+                  } else {
+                    fixes.push(
+                      fixer.replaceText(
+                        node,
+                        `import { ${keepOnOld.join(", ")} } from "${oldSource}";`
+                      )
+                    );
+                  }
+                } else if (keepOnOld.length === 0) {
                   // All fixable: replace entire import with new source
                   const newSpecifiers =
                     specifiersToTransform.map(buildNewSpecifier);
@@ -204,6 +324,14 @@ export default {
                   const newFunctionName =
                     SPECIFIER_MAPPING[specifier.imported.name];
 
+                  // Determine the name to use at call sites — if the new
+                  // source already imports this with an alias, use that alias
+                  const existingLocal = getExistingLocalName(
+                    newFunctionName,
+                    existingNewSourceImport
+                  );
+                  const callSiteName = existingLocal || newFunctionName;
+
                   const variable = moduleScope?.variables.find(
                     (v) => v.name === localName
                   );
@@ -226,10 +354,15 @@ export default {
                         ])
                       );
 
-                      // Rename identifier if not aliased
-                      if (!isAliased) {
+                      // Rename identifier to the correct call-site name
+                      if (existingLocal) {
+                        // Use the alias from the existing import
                         fixes.push(
-                          fixer.replaceText(ref.identifier, newFunctionName)
+                          fixer.replaceText(ref.identifier, existingLocal)
+                        );
+                      } else if (!isAliased) {
+                        fixes.push(
+                          fixer.replaceText(ref.identifier, callSiteName)
                         );
                       }
                     }
@@ -246,6 +379,14 @@ export default {
           context.report({
             node: ref.identifier,
             message: buildNonNewMessage(specifier),
+          });
+        }
+
+        // Report on each naming conflict
+        for (const specifier of namingConflicts) {
+          context.report({
+            node: specifier,
+            message: buildNamingConflictMessage(specifier),
           });
         }
       },
