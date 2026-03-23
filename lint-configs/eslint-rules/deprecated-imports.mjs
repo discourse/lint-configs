@@ -140,6 +140,38 @@ export default {
           denyDefaultImport(
             "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead."
           );
+        } else if (node.source.value === "discourse/lib/tracked-tools") {
+          denyImporting(
+            "trackedArray",
+            () =>
+              "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+            (fixer, specifier) => {
+              const fixes = [
+                fixer.replaceText(specifier.imported, "autoTrackedArray"),
+              ];
+
+              if (specifier.local.name === specifier.imported.name) {
+                const moduleScope = context.sourceCode.scopeManager.scopes.find(
+                  (s) => s.type === "module"
+                );
+                const variable = moduleScope?.variables.find(
+                  (v) => v.name === specifier.local.name
+                );
+
+                if (variable) {
+                  for (const ref of variable.references) {
+                    if (ref.identifier !== specifier.local) {
+                      fixes.push(
+                        fixer.replaceText(ref.identifier, "autoTrackedArray")
+                      );
+                    }
+                  }
+                }
+              }
+
+              return fixes;
+            }
+          );
         }
       },
     };
