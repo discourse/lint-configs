@@ -281,14 +281,7 @@ export default [
               "",
               // Internal
               "^discourse/",
-              "^discourse-common/",
               "^discourse-.+",
-              "^admin/",
-              "^wizard/",
-              "^I18n$",
-              "^select-kit/",
-              "^float-kit/",
-              "^truth-helpers/",
               // Plugins
               "^discourse/plugins/",
               // Relative
