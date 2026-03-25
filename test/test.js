@@ -21,7 +21,7 @@ const expectedEslintOutput = `
 
 const expectedStylelintOutput = `
 style.scss
-  21:3  ✖  Replace "@include breakpoint(...)" with "@include viewport.until(...)"  discourse/no-breakpoint-mixin
+  23:3  ✖  Replace "@include breakpoint(...)" with "@include viewport.until(...)"  discourse/no-breakpoint-mixin
 
 ✖ 1 problem (1 error, 0 warnings)
   1 error potentially fixable with the "--fix" option.

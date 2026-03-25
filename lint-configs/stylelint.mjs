@@ -33,6 +33,12 @@ export default {
       true,
       { ignoreKeywords: ["break-word"] },
     ],
+    "value-keyword-case": [
+      "lower",
+      {
+        ignoreProperties: ["/^\\$/", "font", "font-family"],
+      },
+    ],
 
     "discourse/no-breakpoint-mixin": true,
   },
