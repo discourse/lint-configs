@@ -21,6 +21,7 @@ import keepArraySorted from "./eslint-rules/keep-array-sorted.mjs";
 import lineAfterImports from "./eslint-rules/line-after-imports.mjs";
 import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.mjs";
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
+import migrateTrackedBuiltInsToEmberCollections from "./eslint-rules/migrate-tracked-built-ins-to-ember-collections.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
 import noComputedMacros from "./eslint-rules/no-computed-macros.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
@@ -28,6 +29,7 @@ import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
+import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
@@ -148,6 +150,9 @@ export default [
           "no-computed-macros": noComputedMacros,
           "no-discourse-computed": noDiscourseComputed,
           "test-filename-suffix": testFilenameSuffix,
+          "no-unnecessary-tracked": noUnnecessaryTracked,
+          "migrate-tracked-built-ins-to-ember-collections":
+            migrateTrackedBuiltInsToEmberCollections,
         },
       },
     },
@@ -278,14 +283,7 @@ export default [
               "",
               // Internal
               "^discourse/",
-              "^discourse-common/",
               "^discourse-.+",
-              "^admin/",
-              "^wizard/",
-              "^I18n$",
-              "^select-kit/",
-              "^float-kit/",
-              "^truth-helpers/",
               // Plugins
               "^discourse/plugins/",
               // Relative
@@ -320,6 +318,8 @@ export default [
       "discourse/no-computed-macros": ["error"],
       "discourse/no-discourse-computed": ["error"],
       "discourse/keep-array-sorted": ["error"],
+      "discourse/no-unnecessary-tracked": ["warn"],
+      "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
     },
   },
   {

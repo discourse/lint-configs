@@ -1,15 +1,28 @@
+import EmberEslintParser from "ember-eslint-parser";
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/deprecated-imports.mjs";
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester({
+  languageOptions: {
+    ecmaVersion: 2022,
+    sourceType: "module",
+  },
+});
 
 ruleTester.run("deprecated-imports", rule, {
   valid: [
     `import getUrl from "discourse/lib/get-url";`,
-    `import { htmlSafe } from "@ember/template";`,
+    `import { trustHTML } from "@ember/template";`,
     `import { getOwner } from "@ember/owner";`,
     `import { isArray } from "@ember/array";`,
     `import { registerTransformer } from "discourse/lib/registry/transformers";`,
+    // tracked-tools: already migrated
+    `import { autoTrackedArray } from "discourse/lib/tracked-tools";`,
+    // tracked-tools: different modules (import + usage untouched)
+    `import { trackedArray } from "@ember/reactive/collections";\nconst arr = trackedArray([1]);`,
+    `import { trackedArray } from "some-other-package";\nconst arr = trackedArray([1]);`,
+    // tracked-tools: unrelated specifier
+    `import { dedupeTracked } from "discourse/lib/tracked-tools";`,
   ],
   invalid: [
     {
@@ -40,7 +53,37 @@ ruleTester.run("deprecated-imports", rule, {
             "Use '@ember/template' instead of 'discourse/helpers/html-safe'",
         },
       ],
-      output: `import { htmlSafe } from "@ember/template";`,
+      output: `import { trustHTML } from "@ember/template";`,
+    },
+    {
+      code: `import { htmlSafe } from "@ember/template";`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML } from "@ember/template";`,
+    },
+    {
+      code: `import { htmlSafe } from "@ember/template";\nhtmlSafe("<b>bold</b>");`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML } from "@ember/template";\ntrustHTML("<b>bold</b>");`,
+    },
+    {
+      code: `import { htmlSafe as emberHtmlSafe } from "@ember/template";`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML as emberHtmlSafe } from "@ember/template";`,
     },
     {
       code: `import { getOwner } from "@ember/application";`,
@@ -199,6 +242,79 @@ ruleTester.run("deprecated-imports", rule, {
         },
       ],
       output: null,
+    },
+
+    // trackedArray → autoTrackedArray: basic usage
+    {
+      code: `import { trackedArray } from "discourse/lib/tracked-tools";\nconst x = trackedArray;`,
+      errors: [
+        {
+          message:
+            "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+        },
+      ],
+      output: `import { autoTrackedArray } from "discourse/lib/tracked-tools";\nconst x = autoTrackedArray;`,
+    },
+
+    // trackedArray → autoTrackedArray: aliased import (alias preserved, no usage change)
+    {
+      code: `import { trackedArray as TA } from "discourse/lib/tracked-tools";\nconst x = TA;`,
+      errors: [
+        {
+          message:
+            "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+        },
+      ],
+      output: `import { autoTrackedArray as TA } from "discourse/lib/tracked-tools";\nconst x = TA;`,
+    },
+
+    // trackedArray → autoTrackedArray: with other specifiers (only trackedArray renamed)
+    {
+      code: `import { trackedArray, dedupeTracked } from "discourse/lib/tracked-tools";\nconst x = trackedArray;`,
+      errors: [
+        {
+          message:
+            "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+        },
+      ],
+      output: `import { autoTrackedArray, dedupeTracked } from "discourse/lib/tracked-tools";\nconst x = autoTrackedArray;`,
+    },
+
+    // trackedArray → autoTrackedArray: function call usage
+    {
+      code: `import { trackedArray } from "discourse/lib/tracked-tools";\nconst arr = trackedArray([1, 2]);`,
+      errors: [
+        {
+          message:
+            "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+        },
+      ],
+      output: `import { autoTrackedArray } from "discourse/lib/tracked-tools";\nconst arr = autoTrackedArray([1, 2]);`,
+    },
+
+    // trackedArray → autoTrackedArray: multiple usages
+    {
+      code: `import { trackedArray } from "discourse/lib/tracked-tools";\nconst a = trackedArray([1]);\nconst b = trackedArray([2]);`,
+      errors: [
+        {
+          message:
+            "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+        },
+      ],
+      output: `import { autoTrackedArray } from "discourse/lib/tracked-tools";\nconst a = autoTrackedArray([1]);\nconst b = autoTrackedArray([2]);`,
+    },
+
+    // trackedArray → autoTrackedArray: decorator usage
+    {
+      languageOptions: { parser: EmberEslintParser },
+      code: `import { trackedArray } from "discourse/lib/tracked-tools";\nclass MyComponent {\n  @trackedArray items = [];\n}`,
+      errors: [
+        {
+          message:
+            "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+        },
+      ],
+      output: `import { autoTrackedArray } from "discourse/lib/tracked-tools";\nclass MyComponent {\n  @autoTrackedArray items = [];\n}`,
     },
   ],
 });

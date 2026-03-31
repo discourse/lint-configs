@@ -11,7 +11,7 @@ export default {
   create(context) {
     return {
       ImportDeclaration(node) {
-        function denyImporting(symbolName, messageTemplate) {
+        function denyImporting(symbolName, messageTemplate, fixFn) {
           const specifier = node.specifiers.find(
             (spec) => spec.imported && spec.imported.name === symbolName
           );
@@ -20,6 +20,7 @@ export default {
             context.report({
               node: specifier,
               message: messageTemplate(symbolName),
+              fix: fixFn ? (fixer) => fixFn(fixer, specifier) : undefined,
             });
           }
         }
@@ -69,7 +70,7 @@ export default {
             fix(fixer) {
               return fixer.replaceText(
                 node,
-                `import { htmlSafe } from "@ember/template";`
+                `import { trustHTML } from "@ember/template";`
               );
             },
           });
@@ -88,6 +89,38 @@ export default {
               );
             },
           });
+        } else if (node.source.value === "@ember/template") {
+          denyImporting(
+            "htmlSafe",
+            () =>
+              "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+            (fixer, specifier) => {
+              const fixes = [
+                fixer.replaceText(specifier.imported, "trustHTML"),
+              ];
+
+              if (specifier.local.name === specifier.imported.name) {
+                const moduleScope = context.sourceCode.scopeManager.scopes.find(
+                  (s) => s.type === "module"
+                );
+                const variable = moduleScope?.variables.find(
+                  (v) => v.name === specifier.local.name
+                );
+
+                if (variable) {
+                  for (const ref of variable.references) {
+                    if (ref.identifier !== specifier.local) {
+                      fixes.push(
+                        fixer.replaceText(ref.identifier, "trustHTML")
+                      );
+                    }
+                  }
+                }
+              }
+
+              return fixes;
+            }
+          );
         } else if (node.source.value === "@ember/array") {
           const messageTemplate = (symbolName) =>
             `Importing '${symbolName}' from '@ember/array' is deprecated. Use tracked arrays or native JavaScript arrays instead.`;
@@ -106,6 +139,38 @@ export default {
         } else if (node.source.value === "@ember/array/proxy") {
           denyDefaultImport(
             "Importing ArrayProxy (default) from '@ember/array/proxy' is deprecated. Use tracked arrays or native JavaScript arrays instead."
+          );
+        } else if (node.source.value === "discourse/lib/tracked-tools") {
+          denyImporting(
+            "trackedArray",
+            () =>
+              "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
+            (fixer, specifier) => {
+              const fixes = [
+                fixer.replaceText(specifier.imported, "autoTrackedArray"),
+              ];
+
+              if (specifier.local.name === specifier.imported.name) {
+                const moduleScope = context.sourceCode.scopeManager.scopes.find(
+                  (s) => s.type === "module"
+                );
+                const variable = moduleScope?.variables.find(
+                  (v) => v.name === specifier.local.name
+                );
+
+                if (variable) {
+                  for (const ref of variable.references) {
+                    if (ref.identifier !== specifier.local) {
+                      fixes.push(
+                        fixer.replaceText(ref.identifier, "autoTrackedArray")
+                      );
+                    }
+                  }
+                }
+              }
+
+              return fixes;
+            }
           );
         }
       },
