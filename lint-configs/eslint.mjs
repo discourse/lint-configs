@@ -36,6 +36,7 @@ import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs"
 import testFilenameSuffix from "./eslint-rules/test-filename-suffix.mjs";
 import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
+import uiKitImports from "./eslint-rules/ui-kit-imports.mjs";
 
 let decoratorsPluginPath = import.meta
   .resolve("@babel/plugin-proposal-decorators")
@@ -151,6 +152,7 @@ export default [
           "no-unnecessary-tracked": noUnnecessaryTracked,
           "migrate-tracked-built-ins-to-ember-collections":
             migrateTrackedBuiltInsToEmberCollections,
+          "ui-kit-imports": uiKitImports,
         },
       },
     },
@@ -317,6 +319,7 @@ export default [
       "discourse/no-discourse-computed": ["error"],
       "discourse/no-unnecessary-tracked": ["warn"],
       "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
+      "discourse/ui-kit-imports": ["error"],
     },
   },
   {
