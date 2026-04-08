@@ -386,7 +386,8 @@ const MAPPINGS = {
     "discourse/ui-kit/d-breadcrumbs-item",
   "discourse/components/d-button": "discourse/ui-kit/d-button",
   "discourse/components/d-combo-button": "discourse/ui-kit/d-combo-button",
-  "discourse/components/d-icon-grid-picker": "discourse/ui-kit/d-icon-grid-picker",
+  "discourse/components/d-icon-grid-picker":
+    "discourse/ui-kit/d-icon-grid-picker",
   "discourse/components/d-editor": "discourse/ui-kit/d-editor",
   "discourse/components/d-modal": "discourse/ui-kit/d-modal",
   "discourse/components/d-modal-cancel": "discourse/ui-kit/d-modal-cancel",
