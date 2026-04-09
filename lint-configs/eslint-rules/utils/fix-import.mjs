@@ -10,7 +10,7 @@
  */
 export function buildImportStatement(
   source,
-  { defaultImport = null, namedImports = [], quote = '"' } = {}
+  { defaultImport = null, namedImports = [] } = {}
 ) {
   let stmt = "import ";
   if (defaultImport) {
@@ -22,7 +22,7 @@ export function buildImportStatement(
   if (namedImports.length > 0) {
     stmt += `{ ${namedImports.join(", ")} }`;
   }
-  stmt += ` from ${quote}${source}${quote};`;
+  stmt += ` from "${source}";`;
   return stmt;
 }
 

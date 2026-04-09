@@ -32,7 +32,6 @@ export default {
                   : `${sourceName} as ${localName}`;
               code = buildImportStatement("truth-helpers", {
                 namedImports: [namedImport],
-                quote: "'",
               });
 
               return fixer.replaceText(node, code);
