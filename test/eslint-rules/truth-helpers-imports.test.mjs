@@ -6,7 +6,7 @@ const ruleTester = new RuleTester();
 ruleTester.run("truth-helpers-imports", rule, {
   valid: [
     {
-      code: "import { and, eq } from 'truth-helpers';",
+      code: 'import { and, eq } from "truth-helpers";',
     },
   ],
   invalid: [
@@ -18,7 +18,7 @@ ruleTester.run("truth-helpers-imports", rule, {
             "It is recommended to use 'truth-helpers' import instead of 'truth-helpers/helpers/not'.",
         },
       ],
-      output: "import { not } from 'truth-helpers';",
+      output: 'import { not } from "truth-helpers";',
     },
     {
       code: "import notEq from 'truth-helpers/helpers/not-eq';",
@@ -28,7 +28,7 @@ ruleTester.run("truth-helpers-imports", rule, {
             "It is recommended to use 'truth-helpers' import instead of 'truth-helpers/helpers/not-eq'.",
         },
       ],
-      output: "import { notEq } from 'truth-helpers';",
+      output: 'import { notEq } from "truth-helpers";',
     },
     {
       code: "import or0 from 'truth-helpers/helpers/or';",
@@ -38,7 +38,7 @@ ruleTester.run("truth-helpers-imports", rule, {
             "It is recommended to use 'truth-helpers' import instead of 'truth-helpers/helpers/or'.",
         },
       ],
-      output: "import { or as or0 } from 'truth-helpers';",
+      output: 'import { or as or0 } from "truth-helpers";',
     },
   ],
 });
