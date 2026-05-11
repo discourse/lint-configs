@@ -127,6 +127,49 @@ ruleTester.run("no-unnecessary-tracked", rule, {
         }
       `,
     },
+    // D-prefixed ui-kit components should be recognized as mutating
+    {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked capsLockOn = false;
+
+          <template>
+            <DPasswordField @capsLockOn={{this.capsLockOn}} />
+          </template>
+        }
+      `,
+    },
+    {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked status = "ready";
+
+          <template>
+            <DTextField @value={{this.status}} />
+          </template>
+        }
+      `,
+    },
+    {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked selectedId;
+
+          <template>
+            <DRadioButton @selection={{this.selectedId}} />
+          </template>
+        }
+      `,
+    },
   ],
   invalid: [
     {
