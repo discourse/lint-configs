@@ -1,3 +1,5 @@
+import { buildImportStatement } from "./utils/fix-import.mjs";
+
 export default {
   meta: {
     type: "suggestion",
@@ -24,11 +26,13 @@ export default {
                 sourceName = "notEq";
               }
 
-              if (localName === sourceName) {
-                code = `import { ${localName} } from 'truth-helpers';`;
-              } else {
-                code = `import { ${sourceName} as ${localName} } from 'truth-helpers';`;
-              }
+              const namedImport =
+                localName === sourceName
+                  ? localName
+                  : `${sourceName} as ${localName}`;
+              code = buildImportStatement("truth-helpers", {
+                namedImports: [namedImport],
+              });
 
               return fixer.replaceText(node, code);
             },

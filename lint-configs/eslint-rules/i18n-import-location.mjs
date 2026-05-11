@@ -1,4 +1,4 @@
-import { fixImport } from "./utils/fix-import.mjs";
+import { buildImportStatement, fixImport } from "./utils/fix-import.mjs";
 
 export default {
   meta: {
@@ -43,13 +43,11 @@ export default {
 
               const localName = node.specifiers[0].local.name;
               let sourceName = node.source.value.match(/([^/]+)$/)[0];
-              let importString;
 
-              if (localName === sourceName) {
-                importString = `${localName}`;
-              } else {
-                importString = `${sourceName} as ${localName}`;
-              }
+              const namedImport =
+                localName === sourceName
+                  ? localName
+                  : `${sourceName} as ${localName}`;
 
               const existingImport = context
                 .getSourceCode()
@@ -63,13 +61,15 @@ export default {
                 return [
                   fixer.remove(node),
                   fixImport(fixer, existingImport, {
-                    namedImportsToAdd: [importString],
+                    namedImportsToAdd: [namedImport],
                   }),
                 ];
               } else {
                 return fixer.replaceText(
                   node,
-                  `import { ${importString} } from "discourse-i18n";`
+                  buildImportStatement("discourse-i18n", {
+                    namedImports: [namedImport],
+                  })
                 );
               }
             },

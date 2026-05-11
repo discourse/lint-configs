@@ -4,7 +4,7 @@ import {
   collectImports,
   getImportedLocalNames,
 } from "./utils/analyze-imports.mjs";
-import { fixImport } from "./utils/fix-import.mjs";
+import { buildImportStatement, fixImport } from "./utils/fix-import.mjs";
 
 const USE_COMPUTED_INSTEAD = "Use `@computed` instead of `@{{name}}`";
 
@@ -75,12 +75,10 @@ function fixDiscourseImport(
             })
           );
         } else {
-          fixes.push(
-            fixer.insertTextAfter(
-              importNode,
-              `\nimport { ${computedImportString} } from "@ember/object";`
-            )
-          );
+          const newImport = buildImportStatement("@ember/object", {
+            namedImports: [computedImportString],
+          });
+          fixes.push(fixer.insertTextAfter(importNode, `\n${newImport}`));
         }
       }
     } else {
@@ -103,7 +101,9 @@ function fixDiscourseImport(
           fixes.push(
             fixer.replaceText(
               importNode,
-              `import { ${computedImportString} } from "@ember/object";`
+              buildImportStatement("@ember/object", {
+                namedImports: [computedImportString],
+              })
             )
           );
         }
@@ -128,13 +128,15 @@ function fixDiscourseImport(
         }
       });
 
-      let newImportStatement = "import discourseComputed";
-      if (namedImportStrings.length > 0) {
-        newImportStatement += `, { ${namedImportStrings.join(", ")} }`;
-      }
-      newImportStatement += ` from "${importNode.source.value}";`;
-
-      fixes.push(fixer.replaceText(importNode, newImportStatement));
+      fixes.push(
+        fixer.replaceText(
+          importNode,
+          buildImportStatement(importNode.source.value, {
+            defaultImport: "discourseComputed",
+            namedImports: namedImportStrings,
+          })
+        )
+      );
     }
 
     if (!hasComputedImport) {
@@ -145,12 +147,10 @@ function fixDiscourseImport(
           })
         );
       } else {
-        fixes.push(
-          fixer.insertTextAfter(
-            importNode,
-            `\nimport { ${computedImportString} } from "@ember/object";`
-          )
-        );
+        const newImport = buildImportStatement("@ember/object", {
+          namedImports: [computedImportString],
+        });
+        fixes.push(fixer.insertTextAfter(importNode, `\n${newImport}`));
       }
     }
   }
