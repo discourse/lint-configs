@@ -30,6 +30,7 @@ import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
+import noTemplateLintDirectives from "./eslint-rules/no-template-lint-directives.mjs";
 import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
@@ -169,6 +170,7 @@ export default [
           "ui-kit-imports": uiKitImports,
           "no-at-class": noAtClass,
           "plugin-outlet-lazy-hash": pluginOutletLazyHash,
+          "no-template-lint-directives": noTemplateLintDirectives,
         },
       },
     },
@@ -243,11 +245,16 @@ export default [
       "ember/template-no-positive-tabindex": "off",
       "ember/template-require-mandatory-role-attributes": "off",
       "ember/template-require-media-caption": "off",
+      "ember/template-builtin-component-arguments": "off",
+      "ember/template-no-builtin-form-components": "off",
+      "ember/template-no-unknown-arguments-for-builtin-components": "off",
 
       // Pending default template rules
       "ember/template-link-href-attributes": "off",
       "ember/template-no-at-ember-render-modifiers": "off",
+      "ember/template-no-curly-component-invocation": "off",
       "ember/template-no-duplicate-landmark-elements": "off",
+      "ember/template-no-implicit-this": "off",
       "ember/template-no-inline-styles": "off",
       "ember/template-no-link-to-tagname": "off",
       "ember/template-no-passed-in-event-handlers": "off",
@@ -368,6 +375,7 @@ export default [
       "discourse/ui-kit-imports": ["error"],
       "discourse/no-at-class": ["error"],
       "discourse/plugin-outlet-lazy-hash": ["error"],
+      "discourse/no-template-lint-directives": ["error"],
     },
   },
 ];
