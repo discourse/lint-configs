@@ -268,7 +268,6 @@ export default [
 
       // From `ember-template-lint`'s old `stylistic` preset
       "ember/template-linebreak-style": "error",
-      "ember/template-no-multiple-empty-lines": "error",
       "ember/template-no-trailing-spaces": "error",
       "ember/template-no-unnecessary-concat": "error",
 
