@@ -2,7 +2,7 @@ import { or } from "truth-helpers";
 import { service } from "@ember/service";
 import Component from "@glimmer/component";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
-
+import DButton from "discourse/components/d-button";
 
 export default class MyComponent extends Component{
    @service currentUser;
@@ -11,10 +11,9 @@ export default class MyComponent extends Component{
 
   <template>
     {{#if (or @foo settings.bar)}}
-       <span class='boop' {{didInsert this.loadData}}>
+       <DButton @class='boop' {{didInsert this.loadData}}>
         hey {{this.currentUser.username}}!
-      </span >
+      </DButton>
     {{/if}}
-    {{log "oops"}}
   </template>
 }

@@ -11,11 +11,6 @@ This guide covers creating and fixing lint rules for the Discourse lint-configs 
 - Test files: `test/eslint-rules/`
 - Utilities: `lint-configs/eslint-rules/utils/`
 
-### Template Lint (Ember)
-- Rule files: `lint-configs/template-lint-rules/`
-- Test files: `test/template-lint-rules/`
-- Rule index: `lint-configs/template-lint-rules/index.mjs`
-
 ### Stylelint
 - Rule files: `lint-configs/stylelint-rules/`
 - Test files: `test/stylelint-rules/`
@@ -31,10 +26,9 @@ cd lint-configs && pnpm test
 ### Individual Rule Testing
 To run tests for a specific type of rule:
 - ESLint: `cd test/eslint-rules && pnpm test`
-- Template Lint: `cd test/template-lint-rules && pnpm test`
 - Stylelint: `cd test/stylelint-rules && pnpm test` (uses Node's native test runner)
 
-To run a single test file (ESLint/Template Lint):
+To run a single ESLint test file:
 ```bash
 cd test/eslint-rules && npx mocha rule-name.test.mjs
 ```
@@ -122,8 +116,7 @@ Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread oper
 ## Key Development Patterns
 
 ### 1. Prefer AST Over Regex
-- **ESLint**: Uses `context.getSourceCode().ast`.
-- **Template Lint**: Uses a `visitor()` pattern for Glimmer AST.
+- **ESLint**: Uses `context.getSourceCode().ast`. For Glimmer templates (.gjs/.gts/.hbs), use the `Glimmer*` node types exposed by `ember-eslint-parser`.
 - **Stylelint**: Uses PostCSS AST (`root.walkAtRules`, etc.).
 - AST analysis avoids false positives in comments/strings and handles whitespace automatically.
 
@@ -132,12 +125,8 @@ Cannot auto-fix @{{name}} because parameter '{{param}}' is used in a spread oper
 #### ESLint
 - Track state (like imports) at the top of `create(context)`.
 - Use `ImportDeclaration` visitor to scan all imports at the start to avoid race conditions when fixing.
+- For Glimmer templates, visit `Glimmer*` nodes (e.g. `GlimmerElementNode`, `GlimmerMustacheStatement`, `GlimmerPathExpression`).
 - When fixing, use `context.report({ fix(fixer) { ... } })`.
-
-#### Template Lint
-- Extend `Rule` from `ember-template-lint`.
-- Implement `visitor()` returning an object with node handlers (e.g., `MustacheStatement`, `PathExpression`).
-- For autofix, modify the node directly in the visitor when `this.mode === 'fix'`.
 
 #### Stylelint
 - Use `stylelint.createPlugin(ruleName, ruleFunction)`.

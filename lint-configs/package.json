@@ -22,11 +22,7 @@
     "./prettier": {
       "require": "./.prettierrc.cjs"
     },
-    "./stylelint": "./stylelint.mjs",
-    "./template-lint": {
-      "require": "./template-lint.config.cjs"
-    },
-    "./template-lint-rules": "./template-lint-rules/index.mjs"
+    "./stylelint": "./stylelint.mjs"
   },
   "scripts": {
     "lint": "eslint --no-error-on-unmatched-pattern \"**/*.{cjs,mjs,js}\" && pnpm prettier --check \"**/*.{cjs,mjs,js}\"",
@@ -37,11 +33,9 @@
     "@babel/eslint-parser": "^7.28.6",
     "@babel/plugin-proposal-decorators": "^7.29.0",
     "@eslint/js": "^9.39.2",
-    "ember-eslint-parser": "^0.5.13",
-    "ember-template-lint": "^7.9.3",
     "eslint": "^9.39.2",
     "eslint-plugin-decorator-position": "^6.0.0",
-    "eslint-plugin-ember": "^12.7.5",
+    "eslint-plugin-ember": "^13.2.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-qunit": "^8.2.6",
     "eslint-plugin-simple-import-sort": "^12.1.1",
@@ -56,7 +50,6 @@
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "ember-template-lint": "7.9.3",
     "eslint": "9.39.2",
     "prettier": "3.8.1",
     "stylelint": "17.5.0"

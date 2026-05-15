@@ -33,9 +33,3 @@ export default {
   extends: ["@discourse/lint-configs/stylelint"],
 };
 ```
-
-### .template-lintrc.cjs
-
-```js
-module.exports = require("@discourse/lint-configs/template-lint");
-```

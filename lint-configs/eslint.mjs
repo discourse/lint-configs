@@ -1,9 +1,9 @@
 import BabelParser from "@babel/eslint-parser";
 import js from "@eslint/js";
-import EmberESLintParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
 import EmberRecommended from "eslint-plugin-ember/configs/recommended";
+import EmberTemplateLintMigration from "eslint-plugin-ember/configs/template-lint-migration";
 import ImportPlugin from "eslint-plugin-import";
 import QUnitPlugin from "eslint-plugin-qunit";
 import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
@@ -23,6 +23,7 @@ import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.m
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import migrateTrackedBuiltInsToEmberCollections from "./eslint-rules/migrate-tracked-built-ins-to-ember-collections.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
+import noAtClass from "./eslint-rules/no-at-class.mjs";
 import noComputedMacros from "./eslint-rules/no-computed-macros.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
@@ -32,6 +33,7 @@ import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
+import pluginOutletLazyHash from "./eslint-rules/plugin-outlet-lazy-hash.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs";
 import testFilenameSuffix from "./eslint-rules/test-filename-suffix.mjs";
@@ -50,14 +52,25 @@ export default [
   js.configs.recommended,
   QUnitRecommended,
   ...EmberRecommended,
+  ...EmberTemplateLintMigration,
   {
     ignores: ["assets/vendor/**/*", "public/**/*"],
+  },
+  {
+    // Scope the Babel parser to non-template JS so it doesn't clobber the
+    // ember-eslint-parser that the upstream `base` config sets up for
+    // .gjs/.gts files. The parserOptions live in the main block below so
+    // they also flow through to ember-eslint-parser, which delegates the JS
+    // portion of gjs/gts to @babel/eslint-parser internally.
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      parser: BabelParser,
+    },
   },
   {
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
-      parser: BabelParser,
       parserOptions: {
         useBabel: true,
         requireConfigFile: false,
@@ -66,7 +79,6 @@ export default [
           plugins: [[decoratorsPluginPath, { legacy: true }]],
         },
       },
-
       globals: {
         ...globals.browser,
         ...globals.node,
@@ -155,6 +167,8 @@ export default [
           "migrate-tracked-built-ins-to-ember-collections":
             migrateTrackedBuiltInsToEmberCollections,
           "ui-kit-imports": uiKitImports,
+          "no-at-class": noAtClass,
+          "plugin-outlet-lazy-hash": pluginOutletLazyHash,
         },
       },
     },
@@ -223,6 +237,35 @@ export default [
       "ember/no-unnecessary-service-injection-argument": "error",
       "ember/no-replace-test-comments": "error",
       "ember/route-path-style": "error",
+
+      // Intentionally disabled template rules
+      "ember/template-no-autofocus-attribute": "off",
+      "ember/template-no-positive-tabindex": "off",
+      "ember/template-require-mandatory-role-attributes": "off",
+      "ember/template-require-media-caption": "off",
+
+      // Pending default template rules
+      "ember/template-link-href-attributes": "off",
+      "ember/template-no-at-ember-render-modifiers": "off",
+      "ember/template-no-duplicate-landmark-elements": "off",
+      "ember/template-no-inline-styles": "off",
+      "ember/template-no-link-to-tagname": "off",
+      "ember/template-no-passed-in-event-handlers": "off",
+      "ember/template-no-route-action": "off",
+      "ember/template-require-input-label": "off",
+      "ember/template-require-presentational-children": "off",
+      "ember/template-require-valid-alt-text": "off",
+
+      // Non-default rules
+      "ember/template-no-chained-this": "error",
+      "ember/template-require-strict-mode": "error",
+
+      // From `ember-template-lint`'s old `stylistic` preset
+      "ember/template-linebreak-style": "error",
+      "ember/template-no-multiple-empty-lines": "error",
+      "ember/template-no-trailing-spaces": "error",
+      "ember/template-no-unnecessary-concat": "error",
+
       "qunit/no-loose-assertions": "error",
       "qunit/no-identical-names": "off", // the rule doesn't consider that tests might be in different `acceptance` modules
       "sort-class-members/sort-class-members": [
@@ -323,12 +366,8 @@ export default [
       "discourse/no-unnecessary-tracked": ["warn"],
       "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
       "discourse/ui-kit-imports": ["error"],
-    },
-  },
-  {
-    files: ["**/*.gjs", "**/*.gts"],
-    languageOptions: {
-      parser: EmberESLintParser,
+      "discourse/no-at-class": ["error"],
+      "discourse/plugin-outlet-lazy-hash": ["error"],
     },
   },
 ];

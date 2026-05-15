@@ -1,3 +1,21 @@
+const THIS_BINDING_TYPES = new Set([
+  "ClassDeclaration",
+  "ClassExpression",
+  "FunctionDeclaration",
+  "FunctionExpression",
+]);
+
+function findThisBindingAncestor(target) {
+  let current = target.parent;
+  while (current) {
+    if (THIS_BINDING_TYPES.has(current.type)) {
+      return current;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
 export default {
   meta: {
     type: "suggestion",
@@ -24,16 +42,15 @@ export default {
           (ref) => ref.identifier.parent !== node
         );
 
+        const declarationThisBinding = findThisBindingAncestor(node);
+
         const referencedOnlyInAdjacentTemplateTag = references.every((ref) => {
           if (ref.identifier.type !== "VarHead") {
             return false;
           }
-
-          const hasSameVariableScope =
-            context.sourceCode.getScope(ref.identifier).variableScope ===
-            context.sourceCode.getScope(node).variableScope;
-
-          return hasSameVariableScope;
+          return (
+            findThisBindingAncestor(ref.identifier) === declarationThisBinding
+          );
         });
 
         if (referencedOnlyInAdjacentTemplateTag) {

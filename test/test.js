@@ -12,11 +12,13 @@ const expectedEslintConcurrencyOutput = `
 
 const expectedEslintOutput = `
 /path-prefix/my-component.gjs
-  1:1  error  Use 'discourse/truth-helpers' instead of 'truth-helpers'  discourse/moved-packages-import-paths
-  1:1  error  Run autofix to sort these imports!                        simple-import-sort/imports
+   1:1   error  Use 'discourse/truth-helpers' instead of 'truth-helpers'                    discourse/moved-packages-import-paths
+   1:1   error  Run autofix to sort these imports!                                          simple-import-sort/imports
+   5:1   error  Use \`discourse/ui-kit/d-button\` instead of \`discourse/components/d-button\`  discourse/ui-kit-imports
+  14:17  error  Use \`class\` instead of \`@class\` for DButton                                 discourse/no-at-class
 
-✖ 2 problems (2 errors, 0 warnings)
-  2 errors and 0 warnings potentially fixable with the \`--fix\` option.
+✖ 4 problems (4 errors, 0 warnings)
+  4 errors and 0 warnings potentially fixable with the \`--fix\` option.
 `;
 
 const expectedStylelintOutput = `
@@ -25,16 +27,6 @@ style.scss
 
 ✖ 1 problem (1 error, 0 warnings)
   1 error potentially fixable with the "--fix" option.
-`;
-
-const expectedTemplateLintOutput = `
-Linting 1 Total Files with TemplateLint
-	.gjs: 1
-
-my-component.gjs
-  18:4  error  Unexpected {{log}} usage.  no-log
-
-✖ 1 problems (1 errors, 0 warnings)
 `;
 
 function eslintConcurrency() {
@@ -161,26 +153,6 @@ function stylelint() {
   }
 }
 
-function templateLint() {
-  stdout.write("ember-template-lint... ");
-
-  let actual;
-  try {
-    actual = execSync("pnpm ember-template-lint my-component.gjs").toString();
-  } catch (e) {
-    actual = e.stdout.toString();
-  }
-
-  if (expectedTemplateLintOutput.trim() === actual.trim()) {
-    console.log("✅");
-  } else {
-    process.exitCode = 1;
-    console.error(
-      `failed\n\nexpected:\n${expectedTemplateLintOutput}\nactual:\n${actual}`
-    );
-  }
-}
-
 eslintConcurrency();
 
 console.log("\ncjs:");
@@ -190,7 +162,6 @@ eslintAutofix();
 prettier();
 prettierScss();
 stylelint();
-templateLint();
 chdir("..");
 
 console.log("\ncjs theme:");
@@ -200,16 +171,10 @@ eslintAutofix();
 prettier();
 prettierScss();
 stylelint();
-templateLint();
 chdir("..");
 
 console.log("eslint-rules");
 chdir("eslint-rules");
-execSync("pnpm test", { stdio: "inherit" });
-chdir("..");
-
-console.log("template-lint-rules");
-chdir("template-lint-rules");
 execSync("pnpm test", { stdio: "inherit" });
 chdir("..");
 
