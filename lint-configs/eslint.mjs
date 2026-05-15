@@ -254,7 +254,6 @@ export default [
       "ember/template-no-at-ember-render-modifiers": "off",
       "ember/template-no-curly-component-invocation": "off",
       "ember/template-no-duplicate-landmark-elements": "off",
-      "ember/template-no-implicit-this": "off",
       "ember/template-no-inline-styles": "off",
       "ember/template-no-link-to-tagname": "off",
       "ember/template-no-passed-in-event-handlers": "off",
