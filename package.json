@@ -1,4 +1,9 @@
 {
   "private": true,
-  "packageManager": "pnpm@10.28.0"
+  "packageManager": "pnpm@10.28.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "ember-eslint-parser@0.12.0": "patches/ember-eslint-parser@0.12.0.patch"
+    }
+  }
 }
