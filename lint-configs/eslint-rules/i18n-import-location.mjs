@@ -49,13 +49,11 @@ export default {
                   ? localName
                   : `${sourceName} as ${localName}`;
 
-              const existingImport = context
-                .getSourceCode()
-                .ast.body.find(
-                  (n) =>
-                    n.type === "ImportDeclaration" &&
-                    n.source.value === "discourse-i18n"
-                );
+              const existingImport = context.sourceCode.ast.body.find(
+                (n) =>
+                  n.type === "ImportDeclaration" &&
+                  n.source.value === "discourse-i18n"
+              );
 
               if (existingImport) {
                 return [

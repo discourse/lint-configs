@@ -24,7 +24,7 @@ export default {
             node,
             messageId: "removeRouteTemplate",
             fix(fixer) {
-              const sourceCode = context.getSourceCode();
+              const sourceCode = context.sourceCode;
               const arg = node.declaration.arguments[0];
               // Find import of RouteTemplate
               const importDecl = sourceCode.ast.body.find(

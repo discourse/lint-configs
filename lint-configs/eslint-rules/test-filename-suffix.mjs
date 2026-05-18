@@ -20,7 +20,7 @@ export default {
   create(context) {
     return {
       Program(node) {
-        const filename = context.getFilename();
+        const filename = context.filename;
 
         if (!isTestFile(filename)) {
           return;

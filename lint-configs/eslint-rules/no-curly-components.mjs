@@ -46,7 +46,7 @@ function lintCurlyComponent(node, context) {
   if (importedModuleName.startsWith(".")) {
     const cwd = context.cwd;
     const sourceDirectoryFromCwd = path.dirname(
-      path.relative(cwd, context.getFilename())
+      path.relative(cwd, context.filename)
     );
 
     resolvedModuleName = path.join(sourceDirectoryFromCwd, importedModuleName);
