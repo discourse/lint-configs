@@ -183,7 +183,7 @@ export default {
   },
 
   create(context) {
-    const sourceCode = context.getSourceCode();
+    const sourceCode = context.sourceCode;
     let hasComputedImport = false;
     let emberObjectImportNode = null;
     let discourseComputedInfo = null; // Cache info about discourseComputed decorators
