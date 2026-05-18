@@ -31,11 +31,9 @@ ruleTester.run("no-curly-components", rule, {
       errors: [
         {
           message: "Use angle bracket syntax for components.",
-          type: "GlimmerMustacheStatement",
         },
         {
           message: "Use angle bracket syntax for components.",
-          type: "GlimmerMustacheStatement",
         },
       ],
       output: `
@@ -58,7 +56,6 @@ ruleTester.run("no-curly-components", rule, {
       errors: [
         {
           message: "Use angle bracket syntax for components.",
-          type: "GlimmerMustacheStatement",
         },
       ],
       output: `
@@ -82,7 +79,6 @@ ruleTester.run("no-curly-components", rule, {
       errors: [
         {
           message: "Use angle bracket syntax for components.",
-          type: "GlimmerBlockStatement",
         },
       ],
       output: `
