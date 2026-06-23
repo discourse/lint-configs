@@ -33,6 +33,7 @@ import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
+import pluginImports from "./eslint-rules/plugin-imports.mjs";
 import pluginOutletLazyHash from "./eslint-rules/plugin-outlet-lazy-hash.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs";
@@ -145,6 +146,7 @@ export default [
           "truth-helpers-imports": truthHelpersImports,
           "no-unused-services": noUnusedServices,
           "plugin-api-no-version": pluginApiNoVersion,
+          "plugin-imports": pluginImports,
           "theme-imports": themeImports,
           "no-simple-query-selector": noSimpleQuerySelector,
           "deprecated-lookups": deprecatedLookups,
@@ -347,6 +349,7 @@ export default [
       "discourse/truth-helpers-imports": ["error"],
       "discourse/no-unused-services": ["error"],
       "discourse/plugin-api-no-version": ["error"],
+      "discourse/plugin-imports": ["error"],
       "discourse/theme-imports": ["error"],
       "discourse/no-simple-query-selector": ["error"],
       "discourse/deprecated-lookups": ["error"],
