@@ -26,8 +26,8 @@ importers:
         specifier: ^9.39.2
         version: 9.39.2
       eslint-plugin-decorator-position:
-        specifier: ^6.0.0
-        version: 6.0.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.2))(eslint@9.39.2)
+        specifier: ^6.1.0
+        version: 6.1.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.2))(eslint@9.39.2)
       eslint-plugin-ember:
         specifier: ^13.3.0
         version: 13.3.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.2))(@typescript-eslint/parser@8.16.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)
@@ -1005,12 +1005,12 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
 
-  eslint-plugin-decorator-position@6.0.0:
-    resolution: {integrity: sha512-AUbZbt3JXnmP7Typfba4BIEFkSCc2rA6BkutsYiywIcEoX/yRL7jzqAp4UMpSDNhCMUUAfGt48k3141PhKC07w==}
+  eslint-plugin-decorator-position@6.1.0:
+    resolution: {integrity: sha512-UsxMoWwnFxBwWwyyHIhHbg5vNixU3lu+EGPX0gXFSNLomImFihfulHR/tjBllqAE+NPXGZ+yJpVfE4hcbBQsmg==}
     engines: {node: '>=14'}
     peerDependencies:
       '@babel/eslint-parser': ^7.18.2
-      eslint: ^7.31.0 || ^8.0.0 || ^9.0.0
+      eslint: ^7.31.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
     peerDependenciesMeta:
       '@babel/eslint-parser':
         optional: true
@@ -1837,6 +1837,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.8.1:
+    resolution: {integrity: sha512-rkVq3IXh+4FDGch+KwzX3aV9W3kO54GyEgpvBzSyctDA6Xtd7RJQV1xmXbeQp5v7+VzLOfVqiutSE6GICgPFvg==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
 
@@ -2638,7 +2643,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.9
-      semver: 7.8.0
+      semver: 7.8.1
       ts-api-utils: 1.4.3(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -3094,7 +3099,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-decorator-position@6.0.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.2))(eslint@9.39.2):
+  eslint-plugin-decorator-position@6.1.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.2))(eslint@9.39.2):
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0)
@@ -3985,6 +3990,9 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.8.0: {}
+
+  semver@7.8.1:
+    optional: true
 
   serialize-javascript@6.0.2:
     dependencies:
