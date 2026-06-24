@@ -4,7 +4,6 @@ import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
 import EmberRecommended from "eslint-plugin-ember/configs/recommended";
 import EmberTemplateLintMigration from "eslint-plugin-ember/configs/template-lint-migration";
-import ImportPlugin from "eslint-plugin-import";
 import QUnitPlugin from "eslint-plugin-qunit";
 import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
@@ -27,6 +26,7 @@ import noAtClass from "./eslint-rules/no-at-class.mjs";
 import noComputedMacros from "./eslint-rules/no-computed-macros.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
+import noDuplicateImports from "./eslint-rules/no-duplicate-imports.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
@@ -135,7 +135,6 @@ export default [
       "decorator-position": DecoratorPosition,
       "simple-import-sort": SimpleImportSort,
       qunit: QUnitPlugin,
-      import: ImportPlugin,
       discourse: {
         rules: {
           "i18n-import-location": i18nImport,
@@ -162,6 +161,7 @@ export default [
           "moved-packages-import-paths": movedPackagesImportPaths,
           "no-computed-macros": noComputedMacros,
           "no-discourse-computed": noDiscourseComputed,
+          "no-duplicate-imports": noDuplicateImports,
           "test-filename-suffix": testFilenameSuffix,
           "no-unnecessary-tracked": noUnnecessaryTracked,
           "migrate-tracked-built-ins-to-ember-collections":
@@ -212,7 +212,7 @@ export default [
       radix: "error",
       "valid-typeof": "error",
       curly: "error",
-      "import/no-duplicates": "error",
+      "discourse/no-duplicate-imports": "error",
       "object-shorthand": ["error", "properties"],
       "no-dupe-class-members": "error",
       "ember/no-component-lifecycle-hooks": "off", // too much noise for now; classic components should be converted to glimmer wholesale instead
