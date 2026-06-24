@@ -11,6 +11,10 @@ ruleTester.run("no-duplicate-imports", rule, {
     { code: 'import { a } from "foo";\nimport { b } from "bar";' },
     // Default + named in one statement is fine.
     { code: 'import foo, { a } from "foo";' },
+    // A namespace import can't be combined with named imports, so it's allowed.
+    { code: 'import * as foo from "foo";\nimport { a } from "foo";' },
+    // Conflicting default names can't be combined, so they're left alone.
+    { code: 'import foo from "foo";\nimport bar from "foo";' },
   ],
   invalid: [
     // Two named imports merge into one.
@@ -49,17 +53,12 @@ ruleTester.run("no-duplicate-imports", rule, {
       errors: [{ messageId: "duplicate" }],
       output: 'import { a } from "foo";\n',
     },
-    // A namespace import alongside named imports can't be auto-merged.
+    // Mergeable named imports collapse even when a namespace import sits
+    // between them; the namespace import is left untouched.
     {
-      code: 'import * as foo from "foo";\nimport { a } from "foo";',
-      errors: [{ messageId: "duplicateManual" }],
-      output: null,
-    },
-    // Conflicting default names can't be auto-merged.
-    {
-      code: 'import foo from "foo";\nimport bar from "foo";',
-      errors: [{ messageId: "duplicateManual" }],
-      output: null,
+      code: 'import { a } from "foo";\nimport * as ns from "foo";\nimport { b } from "foo";',
+      errors: [{ messageId: "duplicate" }],
+      output: 'import { a, b } from "foo";\nimport * as ns from "foo";\n',
     },
   ],
 });

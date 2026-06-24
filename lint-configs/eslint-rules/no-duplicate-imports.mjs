@@ -1,8 +1,5 @@
 import { buildImportStatement } from "./utils/fix-import.mjs";
 
-const MERGE_MESSAGE =
-  "`{{source}}` is imported more than once: merge the imports into a single statement";
-
 export default {
   meta: {
     type: "problem",
@@ -12,8 +9,8 @@ export default {
     fixable: "code",
     schema: [],
     messages: {
-      duplicate: `${MERGE_MESSAGE}.`,
-      duplicateManual: `${MERGE_MESSAGE} manually (a namespace or conflicting default import prevents an automatic fix).`,
+      duplicate:
+        "`{{source}}` is imported more than once: merge the imports into a single statement.",
     },
   },
 
@@ -33,9 +30,7 @@ export default {
 
       "Program:exit"() {
         for (const declarations of groups.values()) {
-          if (declarations.length > 1) {
-            reportDuplicateGroup(context, sourceCode, declarations);
-          }
+          reportDuplicateGroup(context, sourceCode, declarations);
         }
       },
     };
@@ -43,18 +38,31 @@ export default {
 };
 
 function reportDuplicateGroup(context, sourceCode, declarations) {
-  const [first, ...rest] = declarations;
+  // A namespace import can't be combined with anything, so only count plain
+  // default/named statements as mergeable duplicates and leave the rest alone.
+  const combinable = declarations.filter(
+    (declaration) =>
+      !declaration.specifiers.some(
+        (specifier) => specifier.type === "ImportNamespaceSpecifier"
+      )
+  );
+
+  const merged = combinable.length > 1 ? mergeSpecifiers(combinable) : null;
+  if (!merged) {
+    return;
+  }
+
+  const [first, ...rest] = combinable;
   const source = first.source.value;
-  const merged = mergeSpecifiers(declarations);
 
   rest.forEach((node, index) => {
     context.report({
       node,
-      messageId: merged ? "duplicate" : "duplicateManual",
+      messageId: "duplicate",
       data: { source },
       // One fix collapses the whole group; attach it once to avoid overlaps.
       fix:
-        merged && index === 0
+        index === 0
           ? (fixer) => [
               fixer.replaceText(first, merged),
               ...rest.map((duplicate) =>
@@ -70,34 +78,25 @@ function reportDuplicateGroup(context, sourceCode, declarations) {
 function mergeSpecifiers(declarations) {
   const defaultNames = new Set();
   const namedImports = new Set();
-  let hasNamespace = false;
   let hasUnsupportedSpecifier = false;
 
   for (const declaration of declarations) {
     for (const specifier of declaration.specifiers) {
-      switch (specifier.type) {
-        case "ImportDefaultSpecifier":
-          defaultNames.add(specifier.local.name);
-          break;
-        case "ImportNamespaceSpecifier":
-          hasNamespace = true;
-          break;
-        case "ImportSpecifier":
-          if (specifier.imported.type !== "Identifier") {
-            hasUnsupportedSpecifier = true;
-            break;
-          }
-          namedImports.add(
-            specifier.imported.name === specifier.local.name
-              ? specifier.local.name
-              : `${specifier.imported.name} as ${specifier.local.name}`
-          );
-          break;
+      if (specifier.type === "ImportDefaultSpecifier") {
+        defaultNames.add(specifier.local.name);
+      } else if (specifier.imported.type !== "Identifier") {
+        hasUnsupportedSpecifier = true;
+      } else {
+        namedImports.add(
+          specifier.imported.name === specifier.local.name
+            ? specifier.local.name
+            : `${specifier.imported.name} as ${specifier.local.name}`
+        );
       }
     }
   }
 
-  if (hasNamespace || hasUnsupportedSpecifier || defaultNames.size > 1) {
+  if (hasUnsupportedSpecifier || defaultNames.size > 1) {
     return null;
   }
 
