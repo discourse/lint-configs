@@ -3,7 +3,7 @@
   "private": "true",
   "devDependencies": {
     "@discourse/lint-configs": "workspace:*",
-    "eslint": "10.4.0",
+    "eslint": "10.5.0",
     "prettier": "3.8.1",
     "stylelint": "17.5.0"
   }
