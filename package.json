@@ -1,9 +1,4 @@
 {
   "private": true,
-  "packageManager": "pnpm@10.28.0",
-  "pnpm": {
-    "overrides": {
-      "ember-eslint-parser": "^0.14.0"
-    }
-  }
+  "packageManager": "pnpm@10.28.0"
 }

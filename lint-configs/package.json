@@ -35,7 +35,7 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.5.0",
     "eslint-plugin-decorator-position": "^6.1.0",
-    "eslint-plugin-ember": "^13.3.2",
+    "eslint-plugin-ember": "^13.4.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-qunit": "^8.2.6",
     "eslint-plugin-simple-import-sort": "^12.1.1",
