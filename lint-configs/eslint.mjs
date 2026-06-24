@@ -76,7 +76,7 @@ export default [
         requireConfigFile: false,
         babelOptions: {
           configFile: false,
-          plugins: [[decoratorsPluginPath, { legacy: true }]],
+          plugins: [[decoratorsPluginPath, { version: "legacy" }]],
         },
       },
       globals: {
