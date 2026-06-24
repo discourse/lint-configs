@@ -11,6 +11,8 @@ export default {
     messages: {
       duplicate:
         "`{{source}}` is imported more than once: merge the imports into a single statement.",
+      duplicateManual:
+        "`{{source}}` is imported more than once: merge the imports into a single statement manually.",
     },
   },
 
@@ -47,22 +49,24 @@ function reportDuplicateGroup(context, sourceCode, declarations) {
       )
   );
 
-  const merged = combinable.length > 1 ? mergeSpecifiers(combinable) : null;
-  if (!merged) {
+  if (combinable.length < 2) {
     return;
   }
 
   const [first, ...rest] = combinable;
   const source = first.source.value;
+  // null when the combinable statements still can't merge (e.g. two default
+  // names); those are reported without a fix.
+  const merged = mergeSpecifiers(combinable);
 
   rest.forEach((node, index) => {
     context.report({
       node,
-      messageId: "duplicate",
+      messageId: merged ? "duplicate" : "duplicateManual",
       data: { source },
       // One fix collapses the whole group; attach it once to avoid overlaps.
       fix:
-        index === 0
+        merged && index === 0
           ? (fixer) => [
               fixer.replaceText(first, merged),
               ...rest.map((duplicate) =>
