@@ -37,7 +37,7 @@
     "eslint-plugin-decorator-position": "^6.1.0",
     "eslint-plugin-ember": "^13.4.0",
     "eslint-plugin-qunit": "^8.2.6",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-sort-class-members": "^1.22.1",
     "globals": "^17.4.0",
     "prettier": "^3.8.1",
