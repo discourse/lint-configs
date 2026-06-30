@@ -1,6 +1,6 @@
 {
   "name": "@discourse/lint-configs",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Shareable lint configs for Discourse core, plugins, and themes",
   "author": "Discourse",
   "license": "MIT",
@@ -36,7 +36,6 @@
     "eslint": "^10.5.0",
     "eslint-plugin-decorator-position": "^6.1.0",
     "eslint-plugin-ember": "^13.4.0",
-    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-qunit": "^8.2.6",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sort-class-members": "^1.22.1",
