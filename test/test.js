@@ -21,6 +21,20 @@ const expectedEslintOutput = `
   4 errors and 0 warnings potentially fixable with the \`--fix\` option.
 `;
 
+const expectedEslintTsOutput = `
+/path-prefix/my-ts-file.ts
+  2:9  error  'unused' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 1 problem (1 error, 0 warnings)
+`;
+
+const expectedEslintGtsOutput = `
+/path-prefix/my-ts-component.gts
+  4:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 1 problem (1 error, 0 warnings)
+`;
+
 const expectedStylelintOutput = `
 style.scss
   23:3  ✖  Replace "@include breakpoint(...)" with "@include viewport.until(...)"  discourse/no-breakpoint-mixin
@@ -83,6 +97,70 @@ function eslintAutofix() {
     process.exitCode = 1;
     console.error(`failed\n${e.stdout}`);
     return;
+  }
+}
+
+function eslintTs() {
+  stdout.write("eslint - TS... ");
+
+  let actual;
+  try {
+    actual = execSync("pnpm eslint my-ts-file.ts").toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
+  }
+
+  if (expectedEslintTsOutput.trim() === actual.trim()) {
+    console.log("✅");
+  } else {
+    process.exitCode = 1;
+    console.error(
+      `failed\n\nexpected:\n${expectedEslintTsOutput}\nactual:\n${actual}`
+    );
+  }
+}
+
+function eslintGts() {
+  stdout.write("eslint - Glimmer TS... ");
+
+  let actual;
+  try {
+    actual = execSync("pnpm eslint my-ts-component.gts").toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+    actual = actual.replace(/^\/.+\/test\/(cjs|cjs-theme)\//m, "/path-prefix/");
+  }
+
+  if (expectedEslintGtsOutput.trim() === actual.trim()) {
+    console.log("✅");
+  } else {
+    process.exitCode = 1;
+    console.error(
+      `failed\n\nexpected:\n${expectedEslintGtsOutput}\nactual:\n${actual}`
+    );
+  }
+}
+
+function prettierTs() {
+  stdout.write("prettier - TS... ");
+
+  const expected = readFileSync("my-ts-file.ts", "utf8");
+  let actual;
+
+  try {
+    actual = execSync(
+      "cat my-ts-file.ts | pnpm prettier --stdin-filepath=my-ts-file.ts"
+    ).toString();
+  } catch (e) {
+    actual = e.stdout.toString();
+  }
+
+  if (expected.trim() === actual.trim()) {
+    console.log("✅");
+  } else {
+    process.exitCode = 1;
+    console.error(`failed\n\nexpected:\n${expected}\nactual:\n${actual}`);
   }
 }
 
@@ -159,7 +237,10 @@ console.log("\ncjs:");
 chdir("cjs");
 eslint();
 eslintAutofix();
+eslintTs();
+eslintGts();
 prettier();
+prettierTs();
 prettierScss();
 stylelint();
 chdir("..");
