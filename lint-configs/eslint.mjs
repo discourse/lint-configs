@@ -1,5 +1,6 @@
 import BabelParser from "@babel/eslint-parser";
 import js from "@eslint/js";
+import EmberParser from "ember-eslint-parser";
 import DecoratorPosition from "eslint-plugin-decorator-position";
 import EmberPlugin from "eslint-plugin-ember";
 import EmberRecommended from "eslint-plugin-ember/configs/recommended";
@@ -9,6 +10,7 @@ import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
 import globals from "globals";
+import tseslint from "typescript-eslint";
 import capitalComponents from "./eslint-rules/capital-components.mjs";
 import deprecatedImports from "./eslint-rules/deprecated-imports.mjs";
 import deprecatedLookups from "./eslint-rules/deprecated-lookups.mjs";
@@ -372,5 +374,15 @@ export default [
       "discourse/no-at-class": ["error"],
       "discourse/plugin-outlet-lazy-hash": ["error"],
     },
+  },
+
+  {
+    files: ["**/*.{ts,mts,cts,tsx,gts}"],
+    languageOptions: { parser: EmberParser },
+    plugins: { "@typescript-eslint": tseslint.plugin },
+    rules: Object.assign(
+      {},
+      ...tseslint.configs.recommended.map((config) => config.rules)
+    ),
   },
 ];

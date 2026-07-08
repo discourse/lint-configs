@@ -1,0 +1,1 @@
+../shared/my-ts-file.ts

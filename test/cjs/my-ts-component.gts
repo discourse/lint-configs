@@ -1,0 +1,1 @@
+../shared/my-ts-component.gts
