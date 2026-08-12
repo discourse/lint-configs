@@ -9,6 +9,7 @@ import QUnitPlugin from "eslint-plugin-qunit";
 import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
 import SortClassMembers from "eslint-plugin-sort-class-members";
+import TSDoc from "eslint-plugin-tsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import capitalComponents from "./eslint-rules/capital-components.mjs";
@@ -379,10 +380,11 @@ export default [
   {
     files: ["**/*.{ts,mts,cts,tsx,gts}"],
     languageOptions: { parser: EmberParser },
-    plugins: { "@typescript-eslint": tseslint.plugin },
+    plugins: { "@typescript-eslint": tseslint.plugin, tsdoc: TSDoc },
     rules: Object.assign(
       {},
-      ...tseslint.configs.recommended.map((config) => config.rules)
+      ...tseslint.configs.recommended.map((config) => config.rules),
+      { "tsdoc/syntax": "error" }
     ),
   },
 ];
