@@ -67,6 +67,16 @@ describe("ui-kit-imports", function () {
           errors: [{ messageId: "rename" }],
         },
         {
+          code: `import DSelect from "discourse/components/d-select";\nDSelect;`,
+          output: `import DNativeSelect from "discourse/ui-kit/d-native-select";\nDNativeSelect;`,
+          errors: [{ messageId: "rename" }],
+        },
+        {
+          code: `import DSelect from "discourse/ui-kit/d-select";\nDSelect;`,
+          output: `import DNativeSelect from "discourse/ui-kit/d-native-select";\nDNativeSelect;`,
+          errors: [{ messageId: "rename" }],
+        },
+        {
           code: `import AvatarFlair from "discourse/components/avatar-flair";\nAvatarFlair;`,
           output: `import DAvatarFlair from "discourse/ui-kit/d-avatar-flair";\nDAvatarFlair;`,
           errors: [{ messageId: "rename" }],

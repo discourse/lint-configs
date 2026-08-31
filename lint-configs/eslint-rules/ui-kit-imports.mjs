@@ -399,10 +399,13 @@ const MAPPINGS = {
     "discourse/ui-kit/d-page-action-button",
   "discourse/components/d-page-header": "discourse/ui-kit/d-page-header",
   "discourse/components/d-page-subheader": "discourse/ui-kit/d-page-subheader",
-  "discourse/components/d-select": "discourse/ui-kit/d-select",
   "discourse/components/d-stat-tiles": "discourse/ui-kit/d-stat-tiles",
   "discourse/components/d-textarea": "discourse/ui-kit/d-textarea",
   "discourse/components/d-toggle-switch": "discourse/ui-kit/d-toggle-switch",
+
+  // Components — renamed within ui-kit
+  "discourse/components/d-select": "discourse/ui-kit/d-native-select",
+  "discourse/ui-kit/d-select": "discourse/ui-kit/d-native-select",
 
   // Components — renamed (old unprefixed → new d-prefixed)
   "discourse/components/async-content": "discourse/ui-kit/d-async-content",
