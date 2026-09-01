@@ -57,6 +57,33 @@ ruleTester.run("lines-between-class-members", rule, {
         }
       `,
     },
+    {
+      code: `
+        class Foo {
+          @tracked bar;
+
+          /**
+           * Documented.
+           */
+          @tracked baz;
+
+          /* plain block */
+          quux = 1;
+        }
+      `,
+    },
+    {
+      code: `
+        class Foo {
+          /**
+           * First member may follow the brace directly.
+           */
+          @tracked bar;
+          // line comments do not require padding
+          @tracked baz;
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -154,6 +181,36 @@ ruleTester.run("lines-between-class-members", rule, {
           }
 
           <template></template>
+        }
+      `,
+    },
+    {
+      code: `
+        class Foo {
+          @tracked bar;
+          /**
+           * Documented.
+           */
+          @tracked baz;
+          /* plain block */
+          quux = 1;
+        }
+      `,
+      errors: [
+        { message: "Expected blank line between class members." },
+        { message: "Expected blank line between class members." },
+      ],
+      output: `
+        class Foo {
+          @tracked bar;
+
+          /**
+           * Documented.
+           */
+          @tracked baz;
+
+          /* plain block */
+          quux = 1;
         }
       `,
     },
