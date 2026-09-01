@@ -4,8 +4,9 @@ import DiscourseRecommended from "../../lint-configs/eslint.mjs";
 import rule from "../../lint-configs/eslint-rules/sort-class-members.mjs";
 
 const RULE_ID = "discourse/sort-class-members";
-const options = DiscourseRecommended.find((config) => config.rules?.[RULE_ID])
-  .rules[RULE_ID].slice(1);
+const options = DiscourseRecommended.find(
+  (config) => config.rules?.[RULE_ID]
+).rules[RULE_ID].slice(1);
 
 const ruleTester = new RuleTester({
   languageOptions: { parser: EmberESLintParser },
