@@ -142,7 +142,7 @@ export function analyzeDiscourseComputedUsage(
 
   return info;
 
-  // ---- local helpers ----
+  /* local helpers */
 
   function analyzeClassBody(classBody, infoObj) {
     if (!classBody || !classBody.body) {

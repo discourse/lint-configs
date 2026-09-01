@@ -210,9 +210,7 @@ export default {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Import fix builder
-// ---------------------------------------------------------------------------
+/* Import fix builder */
 
 /**
  * Build import-related fixes for ALL fixable macro usages.
@@ -400,9 +398,7 @@ function resolveNewImportLine(source, names, allImportedNames) {
   return buildImportStatement(source, { defaultImport, namedImports });
 }
 
-// ---------------------------------------------------------------------------
-// Import helpers
-// ---------------------------------------------------------------------------
+/* Import helpers */
 
 /**
  * Collect all required imports from fixable usages into a Map.

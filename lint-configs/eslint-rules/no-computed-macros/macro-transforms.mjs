@@ -8,9 +8,7 @@
 
 import { propertyPathToOptionalChaining } from "../utils/property-path.mjs";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+/* Helpers */
 
 /**
  * Convert a property-path string to a `this.`-prefixed accessor.
@@ -69,9 +67,7 @@ export function isLocalKey(key) {
   return !key.includes(".");
 }
 
-// ---------------------------------------------------------------------------
-// Individual transforms
-// ---------------------------------------------------------------------------
+/* Individual transforms */
 
 /** @typedef {{ name: string, source: string, isDefault?: boolean }} RequiredImport */
 
@@ -108,7 +104,7 @@ export function isLocalKey(key) {
 const EMBER_SOURCE = "@ember/object/computed";
 const DISCOURSE_SOURCE = "discourse/lib/computed";
 
-// ---- @ember/object/computed ------------------------------------------------
+/* @ember/object/computed */
 
 const simpleAccess = {
   source: EMBER_SOURCE,
@@ -447,7 +443,7 @@ const map = {
   reason: "callback-based macro requires manual conversion",
 };
 
-// ---- discourse/lib/computed ------------------------------------------------
+/* discourse/lib/computed */
 
 const propertyEqual = {
   source: DISCOURSE_SOURCE,
@@ -580,9 +576,7 @@ const endWith = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Registry
-// ---------------------------------------------------------------------------
+/* Registry */
 
 /** @type {Map<string, MacroTransform>} */
 export const MACRO_TRANSFORMS = new Map([

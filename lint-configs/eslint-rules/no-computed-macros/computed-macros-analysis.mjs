@@ -14,9 +14,7 @@ import {
   SOURCE_ALIASES,
 } from "./macro-transforms.mjs";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+/* Types */
 
 /**
  * @typedef {Object} MacroUsage
@@ -44,9 +42,7 @@ import {
  * @property {Map<string, import('estree').ImportDeclaration>} macroImportNodes - Import nodes by source
  */
 
-// ---------------------------------------------------------------------------
-// Analysis
-// ---------------------------------------------------------------------------
+/* Analysis */
 
 /**
  * Analyze the source AST for computed property macro usage.
@@ -90,9 +86,7 @@ export function analyzeMacroUsage(sourceCode, imports) {
   return { usages, importedMacros, macroImportNodes };
 }
 
-// ---------------------------------------------------------------------------
-// Import collection
-// ---------------------------------------------------------------------------
+/* Import collection */
 
 /**
  * Scan the imports map for macro names from all target sources.
@@ -162,9 +156,7 @@ function collectMacroImportNodes(imports) {
   return result;
 }
 
-// ---------------------------------------------------------------------------
-// PropertyDefinition analysis (native class decorators)
-// ---------------------------------------------------------------------------
+/* PropertyDefinition analysis (native class decorators) */
 
 /**
  * Analyze a PropertyDefinition node for macro decorator usage.
@@ -216,9 +208,7 @@ function analyzePropertyDefinition(node, importedMacros, usages, sourceCode) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Usage builder
-// ---------------------------------------------------------------------------
+/* Usage builder */
 
 /**
  * Build a MacroUsage object from the gathered information, determining
@@ -346,9 +336,7 @@ function buildUsage({
   };
 }
 
-// ---------------------------------------------------------------------------
-// Tracked dep post-processing
-// ---------------------------------------------------------------------------
+/* Tracked dep post-processing */
 
 /**
  * Remove tracked deps and nodes-to-decorate that correspond to other macro
@@ -394,9 +382,7 @@ function excludeDepsBeingConverted(usages) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Implicit injection exclusion
-// ---------------------------------------------------------------------------
+/* Implicit injection exclusion */
 
 // Property names implicitly injected into Ember framework classes by
 // Discourse's registerDiscourseImplicitInjections() (see
@@ -447,9 +433,7 @@ function excludeImplicitInjectionDeps(usages) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Classic component detection
-// ---------------------------------------------------------------------------
+/* Classic component detection */
 
 // Decorators from @ember-decorators/component that are exclusively used on
 // classic Ember components (those extending @ember/component).
@@ -579,9 +563,7 @@ function forceComputedForClassicComponents(usages, importsMap) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Undeclared dep exclusion for subclasses
-// ---------------------------------------------------------------------------
+/* Undeclared dep exclusion for subclasses */
 
 /**
  * Promote usages to `@computed` when a class extends an unknown (non-framework)
@@ -788,9 +770,7 @@ function deduplicateTrackedDeps(usages) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// @tracked dependency detection
-// ---------------------------------------------------------------------------
+/* @tracked dependency detection */
 
 /**
  * @typedef {Object} TrackedDepsInfo
@@ -868,9 +848,7 @@ function findDepsNeedingTracked(propertyNode, dependentKeys) {
   return { depsToInsert, existingNodesToDecorate };
 }
 
-// ---------------------------------------------------------------------------
-// AST walker
-// ---------------------------------------------------------------------------
+/* AST walker */
 
 /**
  * Simple recursive AST walker that calls `visitor(node)` for every node.
