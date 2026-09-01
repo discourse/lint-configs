@@ -38,7 +38,6 @@
     "eslint-plugin-ember": "^13.4.1",
     "eslint-plugin-qunit": "^8.2.6",
     "eslint-plugin-simple-import-sort": "^13.0.0",
-    "eslint-plugin-sort-class-members": "^1.22.1",
     "eslint-plugin-tsdoc": "^0.5.2",
     "globals": "^17.7.0",
     "prettier-plugin-ember-template-tag": "^2.1.3",

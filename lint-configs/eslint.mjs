@@ -8,7 +8,6 @@ import EmberTemplateLintMigration from "eslint-plugin-ember/configs/template-lin
 import QUnitPlugin from "eslint-plugin-qunit";
 import QUnitRecommended from "eslint-plugin-qunit/configs/recommended";
 import SimpleImportSort from "eslint-plugin-simple-import-sort";
-import SortClassMembers from "eslint-plugin-sort-class-members";
 import TSDoc from "eslint-plugin-tsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -26,6 +25,7 @@ import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members
 import migrateTrackedBuiltInsToEmberCollections from "./eslint-rules/migrate-tracked-built-ins-to-ember-collections.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
 import noAtClass from "./eslint-rules/no-at-class.mjs";
+import noBannerComments from "./eslint-rules/no-banner-comments.mjs";
 import noComputedMacros from "./eslint-rules/no-computed-macros.mjs";
 import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
@@ -39,6 +39,8 @@ import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import pluginOutletLazyHash from "./eslint-rules/plugin-outlet-lazy-hash.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
+import sortClassMembers from "./eslint-rules/sort-class-members.mjs";
+import templateAttributeGrouping from "./eslint-rules/template-attribute-grouping.mjs";
 import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs";
 import testFilenameSuffix from "./eslint-rules/test-filename-suffix.mjs";
 import themeImports from "./eslint-rules/theme-imports.mjs";
@@ -135,7 +137,6 @@ export default [
     },
     plugins: {
       ember: EmberPlugin,
-      "sort-class-members": SortClassMembers,
       "decorator-position": DecoratorPosition,
       "simple-import-sort": SimpleImportSort,
       qunit: QUnitPlugin,
@@ -162,6 +163,7 @@ export default [
           "no-onclick": noOnclick,
           "no-redundant-destroyed-check": noRedundantDestroyedCheck,
           "no-route-template": noRouteTemplate,
+          "template-attribute-grouping": templateAttributeGrouping,
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
           "no-computed-macros": noComputedMacros,
@@ -173,7 +175,9 @@ export default [
             migrateTrackedBuiltInsToEmberCollections,
           "ui-kit-imports": uiKitImports,
           "no-at-class": noAtClass,
+          "no-banner-comments": noBannerComments,
           "plugin-outlet-lazy-hash": pluginOutletLazyHash,
+          "sort-class-members": sortClassMembers,
         },
       },
     },
@@ -276,7 +280,7 @@ export default [
 
       "qunit/no-loose-assertions": "error",
       "qunit/no-identical-names": "off", // the rule doesn't consider that tests might be in different `acceptance` modules
-      "sort-class-members/sort-class-members": [
+      "discourse/sort-class-members": [
         "error",
         {
           order: [
@@ -290,17 +294,16 @@ export default [
             "constructor",
             "init",
             "willDestroy",
+            "[accessor-pairs]",
+            "[getters]",
+            "[setters]",
+            "[public-methods]",
+            "[hash-private-methods]",
+            "[underscore-private-methods]",
             "[everything-else]",
             "[template-tag]",
           ],
           groups: {
-            // https://github.com/ember-cli/eslint-plugin-ember/issues/1896
-            // This only sort of works: in addition to the issues mentioned
-            // above, it doesn't seem to reliably enforce the order, e.g.
-            // [injected-services] -> <template> -> [injected-services]
-            // doesn't seem to trigger the error. That being said, it does
-            // work sometimes and this is needed to avoid emitting errors
-            // in the limited cases where it does work.
             "template-tag": [
               { type: "property", name: `/${TEMPLATE_TAG_PLACEHOLDER}/` },
             ],
@@ -317,6 +320,34 @@ export default [
             "private-properties": [
               { type: "property", private: true },
               { type: "property", name: "/_.+/" },
+            ],
+            // Method groups carry no `name` matcher: a name match outscores
+            // every other matcher and would pull `constructor`, `init` and
+            // `willDestroy` out of their own slots.
+            "public-methods": [
+              {
+                type: "method",
+                kind: "nonAccessor",
+                private: false,
+                static: false,
+              },
+            ],
+            "hash-private-methods": [
+              {
+                type: "method",
+                kind: "nonAccessor",
+                private: true,
+                static: false,
+              },
+            ],
+            "underscore-private-methods": [
+              {
+                type: "method",
+                kind: "nonAccessor",
+                private: false,
+                static: false,
+                name: "/^_.+/",
+              },
             ],
           },
           accessorPairPositioning: "getThenSet",
@@ -365,6 +396,7 @@ export default [
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
       "discourse/no-redundant-destroyed-check": ["error"],
+      "discourse/template-attribute-grouping": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
@@ -376,6 +408,7 @@ export default [
       "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
       "discourse/ui-kit-imports": ["error"],
       "discourse/no-at-class": ["error"],
+      "discourse/no-banner-comments": ["error"],
       "discourse/plugin-outlet-lazy-hash": ["error"],
     },
   },
