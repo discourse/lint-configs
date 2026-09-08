@@ -31,6 +31,7 @@ import noCurlyComponents from "./eslint-rules/no-curly-components.mjs";
 import noDiscourseComputed from "./eslint-rules/no-discourse-computed.mjs";
 import noDuplicateImports from "./eslint-rules/no-duplicate-imports.mjs";
 import noOnclick from "./eslint-rules/no-onclick.mjs";
+import noRedundantDestroyedCheck from "./eslint-rules/no-redundant-destroyed-check.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
 import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
@@ -159,6 +160,7 @@ export default [
           "no-curly-components": noCurlyComponents,
           "capital-components": capitalComponents,
           "no-onclick": noOnclick,
+          "no-redundant-destroyed-check": noRedundantDestroyedCheck,
           "no-route-template": noRouteTemplate,
           "template-tag-no-self-this": templateTagNoSelfThis,
           "moved-packages-import-paths": movedPackagesImportPaths,
@@ -362,6 +364,7 @@ export default [
       "discourse/no-curly-components": ["error"],
       "discourse/capital-components": ["error"],
       "discourse/no-onclick": ["error"],
+      "discourse/no-redundant-destroyed-check": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
