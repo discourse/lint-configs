@@ -28,9 +28,7 @@ const TRACKED_DECORATORS = new Set([
   "resettableTracked",
 ]);
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
+/* Public API */
 
 /**
  * Create a combined fixer function for ALL fixable macro usages in one class.
@@ -57,7 +55,7 @@ export function createClassFix(
     const indent = detectIndent(classUsages[0].propertyNode, sourceCode);
     const macroNodeSet = new Set(classUsages.map((u) => u.propertyNode));
 
-    // ---- 1. Remove all macro PropertyDefinitions ----
+    /* 1. Remove all macro PropertyDefinitions */
     for (const usage of classUsages) {
       let start = getNodeStart(usage, sourceCode);
       let end = getNodeEnd(usage.propertyNode, sourceCode);
@@ -73,7 +71,7 @@ export function createClassFix(
       fixes.push(fixer.replaceTextRange([start, end], ""));
     }
 
-    // ---- 2. Collect @tracked declarations ----
+    /* 2. Collect @tracked declarations */
     // Regular tracked (from trackedDeps / existingNodesToDecorate) go to
     // [tracked-properties]; override fields (from overrideTrackedFields,
     // e.g. oneWay's `_propOverride`) go to [private-properties] because
@@ -201,7 +199,7 @@ export function createClassFix(
       }
     }
 
-    // ---- 3. Insert all getters at the correct position ----
+    /* 3. Insert all getters at the correct position */
     const getterTexts = classUsages.map((u) =>
       buildGetterCode(u, indent, sourceCode)
     );
@@ -232,9 +230,7 @@ export function createClassFix(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Getter code generation
-// ---------------------------------------------------------------------------
+/* Getter code generation */
 
 /**
  * Build the full getter code string including decorator.
@@ -299,9 +295,7 @@ function buildGetterCode(usage, indent, sourceCode) {
   return parts.join("\n");
 }
 
-// ---------------------------------------------------------------------------
-// Insertion point logic
-// ---------------------------------------------------------------------------
+/* Insertion point logic */
 
 /**
  * Find the character position where generated getters should be inserted.
@@ -548,9 +542,7 @@ function hasContentBeforeInsertion(
   );
 }
 
-// ---------------------------------------------------------------------------
-// Node range helpers
-// ---------------------------------------------------------------------------
+/* Node range helpers */
 
 /**
  * Get the start position of a usage, including its decorators AND any
@@ -586,9 +578,7 @@ function getNodeEnd(node, sourceCode) {
   return end;
 }
 
-// ---------------------------------------------------------------------------
-// Indentation helpers
-// ---------------------------------------------------------------------------
+/* Indentation helpers */
 
 /**
  * Detect the indentation of a node by looking at leading whitespace.

@@ -105,8 +105,18 @@ export default {
             body[i + 1]
           );
           const singleLine = isTokenOnSameLine(curFirst, curLast);
+          // A member introduced by a block comment forms one visual unit with
+          // its doc, so it never packs against the previous member.
+          const documented = sourceCode
+            .getCommentsBefore(nextFirst)
+            .some(
+              (comment) =>
+                comment.type === "Block" && comment.range[0] >= curLast.range[1]
+            );
           const skip =
-            singleLine && nodeType(body[i]) === nodeType(body[i + 1]);
+            !documented &&
+            singleLine &&
+            nodeType(body[i]) === nodeType(body[i + 1]);
           const beforePadding = findLastConsecutiveTokenAfter(
             sourceCode,
             curLast,
@@ -132,7 +142,9 @@ export default {
             nextFirst,
             0
           );
-          const paddingType = getPaddingType(body[i], body[i + 1]);
+          const paddingType = documented
+            ? "always"
+            : getPaddingType(body[i], body[i + 1]);
 
           if (paddingType === "never" && isPadded) {
             context.report({

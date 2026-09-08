@@ -16,9 +16,7 @@ const ruleTester = new RuleTester({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+/* Tests */
 
 ruleTester.run("no-computed-macros", rule, {
   valid: [
@@ -59,7 +57,7 @@ const Foo = EmberObject.extend({
   ],
 
   invalid: [
-    // ---- alias (nested dep → @computed) ----
+    /* alias (nested dep → @computed) */
     {
       name: "@alias with nested path → @computed getter",
       code: `import { alias } from "@ember/object/computed";
@@ -79,7 +77,7 @@ class C {
 }`,
     },
 
-    // ---- alias (local dep → @dependentKeyCompat + @tracked) ----
+    /* alias (local dep → @dependentKeyCompat + @tracked) */
     {
       name: "@alias with local path → @dependentKeyCompat + @tracked",
       code: `import { alias } from "@ember/object/computed";
@@ -102,7 +100,7 @@ class C {
 }`,
     },
 
-    // ---- readOnly (nested) ----
+    /* readOnly (nested) */
     {
       name: "@readOnly with nested path",
       code: `import { readOnly } from "@ember/object/computed";
@@ -119,7 +117,7 @@ class C {
 }`,
     },
 
-    // ---- oneWay (local) — diverge-from-source setter ----
+    /* oneWay (local) — diverge-from-source setter */
     {
       name: "@oneWay with local dep → override setter + @dependentKeyCompat",
       code: `import { oneWay } from "@ember/object/computed";
@@ -147,7 +145,7 @@ class C {
 }`,
     },
 
-    // ---- oneWay (nested) — diverge-from-source setter ----
+    /* oneWay (nested) — diverge-from-source setter */
     {
       name: "@oneWay with nested dep → override setter + @computed",
       code: `import { oneWay } from "@ember/object/computed";
@@ -173,7 +171,7 @@ class C {
 }`,
     },
 
-    // ---- reads (alias for oneWay) ----
+    /* reads (alias for oneWay) */
     {
       name: "@reads with nested dep (alias for oneWay)",
       code: `import { reads } from "@ember/object/computed";
@@ -199,7 +197,7 @@ class C {
 }`,
     },
 
-    // ---- not (local) ----
+    /* not (local) */
     {
       name: "@not with local dep",
       code: `import { not } from "@ember/object/computed";
@@ -219,7 +217,7 @@ class C {
 }`,
     },
 
-    // ---- bool ----
+    /* bool */
     {
       name: "@bool with local dep",
       code: `import { bool } from "@ember/object/computed";
@@ -239,7 +237,7 @@ class C {
 }`,
     },
 
-    // ---- and (local) ----
+    /* and (local) */
     {
       name: "@and with local deps",
       code: `import { and } from "@ember/object/computed";
@@ -260,7 +258,7 @@ class C {
 }`,
     },
 
-    // ---- or (nested) ----
+    /* or (nested) */
     {
       name: "@or with nested deps",
       code: `import { or } from "@ember/object/computed";
@@ -277,7 +275,7 @@ class C {
 }`,
     },
 
-    // ---- equal ----
+    /* equal */
     {
       name: "@equal with local dep",
       code: `import { equal } from "@ember/object/computed";
@@ -297,7 +295,7 @@ class C {
 }`,
     },
 
-    // ---- gt (nested) ----
+    /* gt (nested) */
     {
       name: "@gt with nested dep",
       code: `import { gt } from "@ember/object/computed";
@@ -314,7 +312,7 @@ class C {
 }`,
     },
 
-    // ---- notEmpty ----
+    /* notEmpty */
     {
       name: "@notEmpty with local dep (dep key uses .length)",
       code: `import { notEmpty } from "@ember/object/computed";
@@ -332,7 +330,7 @@ class C {
 }`,
     },
 
-    // ---- empty ----
+    /* empty */
     {
       name: "@empty with local dep",
       code: `import { empty } from "@ember/object/computed";
@@ -350,7 +348,7 @@ class C {
 }`,
     },
 
-    // ---- none ----
+    /* none */
     {
       name: "@none with local dep",
       code: `import { none } from "@ember/object/computed";
@@ -370,7 +368,7 @@ class C {
 }`,
     },
 
-    // ---- match (nested) ----
+    /* match (nested) */
     {
       name: "@match with nested dep",
       code: `import { match } from "@ember/object/computed";
@@ -387,7 +385,7 @@ class C {
 }`,
     },
 
-    // ---- mapBy ----
+    /* mapBy */
     {
       name: "@mapBy always uses @computed (dep has @each)",
       code: `import { mapBy } from "@ember/object/computed";
@@ -404,7 +402,7 @@ class C {
 }`,
     },
 
-    // ---- filterBy without value ----
+    /* filterBy without value */
     {
       name: "@filterBy without value arg",
       code: `import { filterBy } from "@ember/object/computed";
@@ -421,7 +419,7 @@ class C {
 }`,
     },
 
-    // ---- filterBy with value ----
+    /* filterBy with value */
     {
       name: "@filterBy with value arg",
       code: `import { filterBy } from "@ember/object/computed";
@@ -438,7 +436,7 @@ class C {
 }`,
     },
 
-    // ---- sort ----
+    /* sort */
     {
       name: "@sort with two deps",
       code: `import { sort } from "@ember/object/computed";
@@ -460,7 +458,7 @@ class C {
 }`,
     },
 
-    // ---- collect (local) ----
+    /* collect (local) */
     {
       name: "@collect with local deps",
       code: `import { collect } from "@ember/object/computed";
@@ -481,7 +479,7 @@ class C {
 }`,
     },
 
-    // ---- uniq ----
+    /* uniq */
     {
       name: "@uniq macro",
       code: `import { uniq } from "@ember/object/computed";
@@ -502,7 +500,7 @@ class C {
 }`,
     },
 
-    // ---- union ----
+    /* union */
     {
       name: "@union macro with two arrays",
       code: `import { union } from "@ember/object/computed";
@@ -524,7 +522,7 @@ class C {
 }`,
     },
 
-    // ---- intersect ----
+    /* intersect */
     {
       name: "@intersect macro",
       code: `import { intersect } from "@ember/object/computed";
@@ -545,7 +543,7 @@ class C {
 }`,
     },
 
-    // ---- setDiff ----
+    /* setDiff */
     {
       name: "@setDiff macro",
       code: `import { setDiff } from "@ember/object/computed";
@@ -566,7 +564,7 @@ class C {
 }`,
     },
 
-    // ---- sum ----
+    /* sum */
     {
       name: "@sum macro",
       code: `import { sum } from "@ember/object/computed";
@@ -586,7 +584,7 @@ class C {
 }`,
     },
 
-    // ---- filter (non-fixable) ----
+    /* filter (non-fixable) */
     {
       name: "@filter with callback is not auto-fixable",
       code: `import { filter } from "@ember/object/computed";
@@ -599,7 +597,7 @@ class C {
       ],
     },
 
-    // ---- discourse/lib/computed: propertyEqual (nested) ----
+    /* discourse/lib/computed: propertyEqual (nested) */
     {
       name: "@propertyEqual with nested deps",
       code: `import { propertyEqual } from "discourse/lib/computed";
@@ -617,7 +615,7 @@ class C {
 }`,
     },
 
-    // ---- propertyNotEqual (local) ----
+    /* propertyNotEqual (local) */
     {
       name: "@propertyNotEqual with local deps",
       code: `import { propertyNotEqual } from "discourse/lib/computed";
@@ -639,7 +637,7 @@ class C {
 }`,
     },
 
-    // ---- setting ----
+    /* setting */
     {
       name: "@setting always produces @computed (nested: siteSettings.x)",
       code: `import { setting } from "discourse/lib/computed";
@@ -656,7 +654,7 @@ class C {
 }`,
     },
 
-    // ---- fmt (local) ----
+    /* fmt (local) */
     {
       name: "@fmt with local dep",
       code: `import { fmt } from "discourse/lib/computed";
@@ -676,7 +674,7 @@ class C {
 }`,
     },
 
-    // ---- url (local) ----
+    /* url (local) */
     {
       name: "@url with local deps",
       code: `import { url } from "discourse/lib/computed";
@@ -698,7 +696,7 @@ class C {
 }`,
     },
 
-    // ---- i18n ----
+    /* i18n */
     {
       name: "@i18n with local dep",
       code: `import { i18n } from "discourse/lib/computed";
@@ -738,7 +736,7 @@ class C {
 }`,
     },
 
-    // ---- htmlSafe ----
+    /* htmlSafe */
     {
       name: "@htmlSafe with local dep",
       code: `import { htmlSafe } from "discourse/lib/computed";
@@ -759,7 +757,7 @@ class C {
 }`,
     },
 
-    // ---- endWith ----
+    /* endWith */
     {
       name: "@endWith with local dep",
       code: `import { endWith } from "discourse/lib/computed";
@@ -779,7 +777,7 @@ class C {
 }`,
     },
 
-    // ---- existing @tracked dep should not be duplicated ----
+    /* existing @tracked dep should not be duplicated */
     {
       name: "does not add @tracked for already tracked deps",
       code: `import { tracked } from "@glimmer/tracking";
@@ -935,7 +933,7 @@ class C {
 }`,
     },
 
-    // ---- @equal with non-literal value arg ----
+    /* @equal with non-literal value arg */
     {
       name: "@equal with constant value arg auto-fixes using source text",
       code: `import { equal } from "@ember/object/computed";
@@ -995,7 +993,7 @@ class C {
 }`,
     },
 
-    // ---- @tracked on existing member does not block other fixes ----
+    /* @tracked on existing member does not block other fixes */
     {
       name: "@tracked on existing member does not block other property fixes",
       code: `import { alias, gte, not } from "@ember/object/computed";
@@ -1048,7 +1046,7 @@ class C {
 }`,
     },
 
-    // ---- import alias ----
+    /* import alias */
     {
       name: "handles import aliases",
       code: `import { alias as emberAlias } from "@ember/object/computed";
@@ -1068,7 +1066,7 @@ class C {
 }`,
     },
 
-    // ---- discourse/lib/decorators alias source ----
+    /* discourse/lib/decorators alias source */
     {
       name: "macro imported from discourse/lib/decorators",
       code: `import { not } from "discourse/lib/decorators";
@@ -1088,7 +1086,7 @@ class C {
 }`,
     },
 
-    // ---- mixed local/nested deps → @computed wins ----
+    /* mixed local/nested deps → @computed wins */
     {
       name: "mixed local and nested deps → uses @computed",
       code: `import { and } from "@ember/object/computed";
@@ -1105,7 +1103,7 @@ class C {
 }`,
     },
 
-    // ---- non-literal args → report only ----
+    /* non-literal args → report only */
     {
       name: "non-literal args are not auto-fixable",
       code: `import { alias } from "@ember/object/computed";
@@ -1119,7 +1117,7 @@ class C {
       ],
     },
 
-    // ---- dual source: macros from both @ember/object/computed AND discourse/lib/computed ----
+    /* dual source: macros from both @ember/object/computed AND discourse/lib/computed */
     {
       name: "dual source does not duplicate shared imports",
       code: `import { notEmpty } from "@ember/object/computed";
@@ -1153,7 +1151,7 @@ class C {
   }
 }`,
     },
-    // ---- static methods should not affect getter insertion point ----
+    /* static methods should not affect getter insertion point */
     {
       name: "getters are placed after instance properties, not among static methods",
       code: `import { alias, not } from "@ember/object/computed";
@@ -1202,7 +1200,7 @@ class C {
   }
 }`,
     },
-    // ---- @tracked added to existing dep with surrounding properties ----
+    /* @tracked added to existing dep with surrounding properties */
     {
       name: "adds @tracked to existing dep, preserves surrounding properties",
       code: `import { tracked } from "@glimmer/tracking";
@@ -1243,7 +1241,7 @@ class C {
 }`,
     },
 
-    // ---- @computed propagation: dep is another macro with nested deps ----
+    /* @computed propagation: dep is another macro with nested deps */
     {
       name: "macro depending on @computed macro also uses @computed",
       code: `import { alias, not } from "@ember/object/computed";
@@ -1347,7 +1345,7 @@ class C {
 }`,
     },
 
-    // ---- @computed propagation from existing @computed getter ----
+    /* @computed propagation from existing @computed getter */
     {
       name: "macro depending on existing @computed getter uses @computed",
       code: `import { computed } from "@ember/object";
@@ -1376,7 +1374,7 @@ class C {
 }`,
     },
 
-    // ---- decorated property treated as reactive (no @tracked added) ----
+    /* decorated property treated as reactive (no @tracked added) */
     {
       name: "decorated property (@service) is treated as reactive",
       code: `import { not } from "@ember/object/computed";
@@ -1396,7 +1394,7 @@ class C {
 }`,
     },
 
-    // ---- implicit injection exclusion: promote to @computed ----
+    /* implicit injection exclusion: promote to @computed */
     {
       name: "undeclared auto-injected dep promotes to @computed",
       code: `import { not } from "@ember/object/computed";
@@ -1428,7 +1426,7 @@ class C {
 }`,
     },
 
-    // ---- classic component detection: force @computed ----
+    /* classic component detection: force @computed */
     {
       name: "classic component: forces @computed instead of @dependentKeyCompat",
       code: `import Component from "@ember/component";
@@ -1510,7 +1508,7 @@ class C extends GlimmerComponent {
 }`,
     },
 
-    // ---- undeclared dep exclusion for unknown superclasses ----
+    /* undeclared dep exclusion for unknown superclasses */
     {
       name: "unknown superclass with undeclared dep: promotes to @computed",
       code: `import { alias } from "@ember/object/computed";
