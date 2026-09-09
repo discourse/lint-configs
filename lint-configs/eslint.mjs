@@ -54,6 +54,12 @@ let decoratorsPluginPath = import.meta
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
 
+const unusedExpressionOptions = {
+  allowShortCircuit: true,
+  allowTernary: true,
+  allowTaggedTemplates: true,
+};
+
 export default [
   js.configs.recommended,
   QUnitRecommended,
@@ -214,6 +220,7 @@ export default [
       "no-this-before-super": "error",
       "no-undef": "error",
       "no-unexpected-multiline": "off",
+      "no-unused-expressions": ["error", unusedExpressionOptions],
       "no-unused-vars": "error",
       "no-useless-escape": "off",
       "no-var": "error",
@@ -420,7 +427,13 @@ export default [
     rules: Object.assign(
       {},
       ...tseslint.configs.recommended.map((config) => config.rules),
-      { "tsdoc/syntax": "error" }
+      {
+        "@typescript-eslint/no-unused-expressions": [
+          "error",
+          unusedExpressionOptions,
+        ],
+        "tsdoc/syntax": "error",
+      }
     ),
   },
 ];
