@@ -38,6 +38,7 @@ import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import pluginOutletLazyHash from "./eslint-rules/plugin-outlet-lazy-hash.mjs";
+import relativeImportExtensions from "./eslint-rules/relative-import-extensions.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import sortClassMembers from "./eslint-rules/sort-class-members.mjs";
 import templateAttributeGrouping from "./eslint-rules/template-attribute-grouping.mjs";
@@ -183,6 +184,7 @@ export default [
           "no-at-class": noAtClass,
           "no-banner-comments": noBannerComments,
           "plugin-outlet-lazy-hash": pluginOutletLazyHash,
+          "relative-import-extensions": relativeImportExtensions,
           "sort-class-members": sortClassMembers,
         },
       },
@@ -417,6 +419,7 @@ export default [
       "discourse/no-at-class": ["error"],
       "discourse/no-banner-comments": ["error"],
       "discourse/plugin-outlet-lazy-hash": ["error"],
+      "discourse/relative-import-extensions": ["error"],
     },
   },
 
