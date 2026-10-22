@@ -14,11 +14,12 @@ const expectedEslintOutput = `
 /path-prefix/my-component.gjs
    1:1   error  Use 'discourse/truth-helpers' instead of 'truth-helpers'                    discourse/moved-packages-import-paths
    1:1   error  Run autofix to sort these imports!                                          simple-import-sort/imports
+   1:10  error  Use the built-in \`or\` template keyword instead of importing \`or\`            discourse/truth-helpers-keywords
    5:1   error  Use \`discourse/ui-kit/d-button\` instead of \`discourse/components/d-button\`  discourse/ui-kit-imports
   14:17  error  Use \`class\` instead of \`@class\` for DButton                                 discourse/no-at-class
 
-✖ 4 problems (4 errors, 0 warnings)
-  4 errors and 0 warnings potentially fixable with the \`--fix\` option.
+✖ 5 problems (5 errors, 0 warnings)
+  5 errors and 0 warnings potentially fixable with the \`--fix\` option.
 `;
 
 const expectedEslintTsOutput = `
