@@ -46,6 +46,7 @@ import templateTagNoSelfThis from "./eslint-rules/template-tag-no-self-this.mjs"
 import testFilenameSuffix from "./eslint-rules/test-filename-suffix.mjs";
 import themeImports from "./eslint-rules/theme-imports.mjs";
 import truthHelpersImports from "./eslint-rules/truth-helpers-imports.mjs";
+import truthHelpersKeywords from "./eslint-rules/truth-helpers-keywords.mjs";
 import uiKitImports from "./eslint-rules/ui-kit-imports.mjs";
 
 let decoratorsPluginPath = import.meta
@@ -54,6 +55,9 @@ let decoratorsPluginPath = import.meta
 
 // Copied from "ember-template-imports/lib/utils"
 const TEMPLATE_TAG_PLACEHOLDER = "__GLIMMER_TEMPLATE";
+
+// The Ember version of Discourse core
+const EMBER_VERSION = "7.3.0";
 
 const unusedExpressionOptions = {
   allowShortCircuit: true,
@@ -85,6 +89,7 @@ export default [
       ecmaVersion: 2022,
       sourceType: "module",
       parserOptions: {
+        emberSourceVersion: EMBER_VERSION,
         useBabel: true,
         requireConfigFile: false,
         babelOptions: {
@@ -142,6 +147,9 @@ export default [
         waitUntil: "off",
       },
     },
+    settings: {
+      ember: { version: EMBER_VERSION },
+    },
     plugins: {
       ember: EmberPlugin,
       "decorator-position": DecoratorPosition,
@@ -154,6 +162,7 @@ export default [
           "keep-array-sorted": keepArraySorted,
           "service-inject-import": serviceInjectImport,
           "truth-helpers-imports": truthHelpersImports,
+          "truth-helpers-keywords": truthHelpersKeywords,
           "no-unused-services": noUnusedServices,
           "plugin-api-no-version": pluginApiNoVersion,
           "theme-imports": themeImports,
@@ -390,6 +399,7 @@ export default [
       "discourse/i18n-t": ["error"],
       "discourse/service-inject-import": ["error"],
       "discourse/truth-helpers-imports": ["error"],
+      "discourse/truth-helpers-keywords": ["error"],
       "discourse/no-unused-services": ["error"],
       "discourse/plugin-api-no-version": ["error"],
       "discourse/theme-imports": ["error"],

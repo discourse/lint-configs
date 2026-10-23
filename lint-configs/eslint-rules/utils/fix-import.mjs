@@ -27,7 +27,7 @@ export function buildImportStatement(
 }
 
 /**
- * Fix an import declaration
+ * Fix an import declaration. Removes it when no imports are left.
  *
  * @param {ASTNode} importDeclarationNode - The AST node representing the import declaration.
  * @param {Object} options - Options for modifying the import statement.
@@ -78,6 +78,10 @@ export function fixImport(
       ...namedImportsToAdd,
     ])
   );
+
+  if (!finalDefaultImport && finalNamedImports.length === 0) {
+    return fixer.remove(importDeclarationNode);
+  }
 
   const newImportStatement = buildImportStatement(
     importDeclarationNode.source.value,
