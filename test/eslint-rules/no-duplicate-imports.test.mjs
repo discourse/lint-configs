@@ -1,3 +1,4 @@
+import EmberESLintParser from "ember-eslint-parser";
 import { RuleTester } from "eslint";
 import rule from "../../lint-configs/eslint-rules/no-duplicate-imports.mjs";
 
@@ -63,6 +64,61 @@ ruleTester.run("no-duplicate-imports", rule, {
       code: 'import foo from "foo";\nimport bar from "foo";',
       errors: [{ messageId: "duplicateManual" }],
       output: null,
+    },
+  ],
+});
+
+const typeScriptRuleTester = new RuleTester({
+  languageOptions: { parser: EmberESLintParser },
+});
+
+typeScriptRuleTester.run("no-duplicate-imports (TypeScript)", rule, {
+  valid: [
+    // A type-only import and a value import of one module are kept apart.
+    {
+      filename: "file.ts",
+      code: 'import type { A } from "foo";\nimport { b } from "foo";',
+    },
+    {
+      filename: "file.ts",
+      code: 'import type A from "foo";\nimport b from "foo";',
+    },
+  ],
+  invalid: [
+    // Type-only imports merge into one type-only import.
+    {
+      filename: "file.ts",
+      code: 'import type { A } from "foo";\nimport type { B } from "foo";',
+      errors: [{ messageId: "duplicate" }],
+      output: 'import type { A, B } from "foo";\n',
+    },
+    // A type-only default can't sit beside named bindings, so it is named.
+    {
+      filename: "file.ts",
+      code: 'import type A from "foo";\nimport type { B } from "foo";',
+      errors: [{ messageId: "duplicate" }],
+      output: 'import type { default as A, B } from "foo";\n',
+    },
+    // Inline type specifiers keep their `type` marker.
+    {
+      filename: "file.ts",
+      code: 'import A from "foo";\nimport { type B, c } from "foo";',
+      errors: [{ messageId: "duplicate" }],
+      output: 'import A, { type B, c } from "foo";\n',
+    },
+    // A name imported as both a value and a type keeps the value import.
+    {
+      filename: "file.ts",
+      code: 'import { type B } from "foo";\nimport { B } from "foo";',
+      errors: [{ messageId: "duplicate" }],
+      output: 'import { B } from "foo";\n',
+    },
+    // Type-only duplicates merge without touching the value import between them.
+    {
+      filename: "file.ts",
+      code: 'import type { A } from "foo";\nimport { b } from "foo";\nimport type { C } from "foo";',
+      errors: [{ messageId: "duplicate" }],
+      output: 'import type { A, C } from "foo";\nimport { b } from "foo";\n',
     },
   ],
 });
