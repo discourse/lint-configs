@@ -22,10 +22,12 @@ export default {
 
     return {
       ImportDeclaration(node) {
-        const source = node.source.value;
-        let declarations = groups.get(source);
+        // A TypeScript `import type` and a value import of the same module are
+        // separate statements by design, so each kind is grouped on its own.
+        const key = `${node.importKind === "type" ? "type" : "value"}:${node.source.value}`;
+        let declarations = groups.get(key);
         if (!declarations) {
-          groups.set(source, (declarations = []));
+          groups.set(key, (declarations = []));
         }
         declarations.push(node);
       },
@@ -80,22 +82,31 @@ function reportDuplicateGroup(context, sourceCode, declarations) {
 
 // Returns the merged import statement, or null when it can't be expressed as one.
 function mergeSpecifiers(declarations) {
+  const typeOnly = declarations[0].importKind === "type";
   const defaultNames = new Set();
-  const namedImports = new Set();
+  // Keyed by text without the inline `type` marker; the value is whether every
+  // occurrence was type-only, so a value import of the same name wins.
+  const namedImports = new Map();
   let hasUnsupportedSpecifier = false;
 
   for (const declaration of declarations) {
     for (const specifier of declaration.specifiers) {
       if (specifier.type === "ImportDefaultSpecifier") {
-        defaultNames.add(specifier.local.name);
+        if (typeOnly) {
+          // `import type A, { B }` is invalid, so the default becomes a named binding.
+          namedImports.set(`default as ${specifier.local.name}`, false);
+        } else {
+          defaultNames.add(specifier.local.name);
+        }
       } else if (specifier.imported.type !== "Identifier") {
         hasUnsupportedSpecifier = true;
       } else {
-        namedImports.add(
+        const text =
           specifier.imported.name === specifier.local.name
             ? specifier.local.name
-            : `${specifier.imported.name} as ${specifier.local.name}`
-        );
+            : `${specifier.imported.name} as ${specifier.local.name}`;
+        const isType = specifier.importKind === "type";
+        namedImports.set(text, (namedImports.get(text) ?? true) && isType);
       }
     }
   }
@@ -107,12 +118,15 @@ function mergeSpecifiers(declarations) {
   const source = declarations[0].source.value;
 
   if (defaultNames.size === 0 && namedImports.size === 0) {
-    return `import "${source}";`;
+    return typeOnly ? null : `import "${source}";`;
   }
 
   return buildImportStatement(source, {
     defaultImport: defaultNames.size === 1 ? [...defaultNames][0] : null,
-    namedImports: [...namedImports],
+    namedImports: [...namedImports].map(([text, isType]) =>
+      isType ? `type ${text}` : text
+    ),
+    typeOnly,
   });
 }
 

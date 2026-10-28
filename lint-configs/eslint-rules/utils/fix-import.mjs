@@ -5,14 +5,15 @@
  * @param {Object} [options]
  * @param {string|null} [options.defaultImport] - Default import name, or null.
  * @param {string[]} [options.namedImports] - Named import specifiers (may include aliases like "foo as bar").
+ * @param {boolean} [options.typeOnly] - Emit a TypeScript `import type` statement.
  * @param {string} [options.quote] - Quote style: `"` (default) or `'`.
  * @returns {string} A complete import statement string.
  */
 export function buildImportStatement(
   source,
-  { defaultImport = null, namedImports = [] } = {}
+  { defaultImport = null, namedImports = [], typeOnly = false } = {}
 ) {
-  let stmt = "import ";
+  let stmt = typeOnly ? "import type " : "import ";
   if (defaultImport) {
     stmt += defaultImport;
     if (namedImports.length > 0) {
