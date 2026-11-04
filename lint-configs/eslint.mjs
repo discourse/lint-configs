@@ -24,6 +24,7 @@ import lineBeforeDefaultExport from "./eslint-rules/line-before-default-export.m
 import linesBetweenClassMembers from "./eslint-rules/lines-between-class-members.mjs";
 import migrateTrackedBuiltInsToEmberCollections from "./eslint-rules/migrate-tracked-built-ins-to-ember-collections.mjs";
 import movedPackagesImportPaths from "./eslint-rules/moved-packages-import-paths.mjs";
+import noAccidentalTrackedDecorator from "./eslint-rules/no-accidental-tracked-decorator.mjs";
 import noAtClass from "./eslint-rules/no-at-class.mjs";
 import noBannerComments from "./eslint-rules/no-banner-comments.mjs";
 import noComputedMacros from "./eslint-rules/no-computed-macros.mjs";
@@ -34,6 +35,8 @@ import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRedundantDestroyedCheck from "./eslint-rules/no-redundant-destroyed-check.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
+import noThisSetAfterRender from "./eslint-rules/no-this-set-after-render.mjs";
+import noTrackedStateClass from "./eslint-rules/no-tracked-state-class.mjs";
 import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
@@ -187,6 +190,9 @@ export default [
           "no-duplicate-imports": noDuplicateImports,
           "test-filename-suffix": testFilenameSuffix,
           "no-unnecessary-tracked": noUnnecessaryTracked,
+          "no-accidental-tracked-decorator": noAccidentalTrackedDecorator,
+          "no-tracked-state-class": noTrackedStateClass,
+          "no-this-set-after-render": noThisSetAfterRender,
           "migrate-tracked-built-ins-to-ember-collections":
             migrateTrackedBuiltInsToEmberCollections,
           "ui-kit-imports": uiKitImports,
@@ -424,6 +430,9 @@ export default [
       "discourse/no-discourse-computed": ["error"],
       "discourse/keep-array-sorted": ["error"],
       "discourse/no-unnecessary-tracked": ["warn"],
+      "discourse/no-accidental-tracked-decorator": ["error"],
+      "discourse/no-tracked-state-class": ["error"],
+      "discourse/no-this-set-after-render": ["warn"],
       "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
       "discourse/ui-kit-imports": ["error"],
       "discourse/no-at-class": ["error"],

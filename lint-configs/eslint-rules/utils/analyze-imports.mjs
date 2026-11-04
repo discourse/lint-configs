@@ -63,3 +63,37 @@ export function getImportedLocalNames(sourceCode) {
 
   return names;
 }
+
+/**
+ * Returns the local names a named export is imported as from a module, e.g.
+ * `tracked` from `@glimmer/tracking` (usually one name, but aliases are
+ * possible).
+ *
+ * @param {import('eslint').SourceCode} sourceCode - ESLint SourceCode object
+ * @param {string} source - the module specifier
+ * @param {string} importedName - the exported name
+ * @returns {Set<string>} Set of local names
+ */
+export function getNamedImportLocalNames(sourceCode, source, importedName) {
+  const names = new Set();
+
+  for (const statement of sourceCode.ast.body) {
+    if (
+      statement.type !== "ImportDeclaration" ||
+      statement.source.value !== source
+    ) {
+      continue;
+    }
+
+    for (const specifier of statement.specifiers) {
+      if (
+        specifier.type === "ImportSpecifier" &&
+        specifier.imported.name === importedName
+      ) {
+        names.add(specifier.local.name);
+      }
+    }
+  }
+
+  return names;
+}
