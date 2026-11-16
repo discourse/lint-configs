@@ -1,5 +1,3 @@
-import { getNamedImportLocalNames } from "./analyze-imports.mjs";
-
 /**
  * Returns the local names `tracked` is imported as from `@glimmer/tracking`.
  *
@@ -7,7 +5,22 @@ import { getNamedImportLocalNames } from "./analyze-imports.mjs";
  * @returns {Set<string>}
  */
 export function getTrackedImportNames(sourceCode) {
-  return getNamedImportLocalNames(sourceCode, "@glimmer/tracking", "tracked");
+  const names = new Set();
+
+  for (const statement of sourceCode.ast.body) {
+    if (
+      statement.type === "ImportDeclaration" &&
+      statement.source.value === "@glimmer/tracking"
+    ) {
+      for (const specifier of statement.specifiers) {
+        if (specifier.imported?.name === "tracked") {
+          names.add(specifier.local.name);
+        }
+      }
+    }
+  }
+
+  return names;
 }
 
 /**

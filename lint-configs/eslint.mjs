@@ -35,7 +35,7 @@ import noOnclick from "./eslint-rules/no-onclick.mjs";
 import noRedundantDestroyedCheck from "./eslint-rules/no-redundant-destroyed-check.mjs";
 import noRouteTemplate from "./eslint-rules/no-route-template.mjs";
 import noSimpleQuerySelector from "./eslint-rules/no-simple-query-selector.mjs";
-import noThisSetAfterRender from "./eslint-rules/no-this-set-after-render.mjs";
+import noTestContextSet from "./eslint-rules/no-test-context-set.mjs";
 import noTrackedStateClass from "./eslint-rules/no-tracked-state-class.mjs";
 import noUnnecessaryTracked from "./eslint-rules/no-unnecessary-tracked.mjs";
 import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
@@ -192,7 +192,7 @@ export default [
           "no-unnecessary-tracked": noUnnecessaryTracked,
           "no-accidental-tracked-decorator": noAccidentalTrackedDecorator,
           "no-tracked-state-class": noTrackedStateClass,
-          "no-this-set-after-render": noThisSetAfterRender,
+          "no-test-context-set": noTestContextSet,
           "migrate-tracked-built-ins-to-ember-collections":
             migrateTrackedBuiltInsToEmberCollections,
           "ui-kit-imports": uiKitImports,
@@ -432,7 +432,7 @@ export default [
       "discourse/no-unnecessary-tracked": ["warn"],
       "discourse/no-accidental-tracked-decorator": ["error"],
       "discourse/no-tracked-state-class": ["error"],
-      "discourse/no-this-set-after-render": ["warn"],
+      "discourse/no-test-context-set": ["warn"],
       "discourse/migrate-tracked-built-ins-to-ember-collections": ["error"],
       "discourse/ui-kit-imports": ["error"],
       "discourse/no-at-class": ["error"],
