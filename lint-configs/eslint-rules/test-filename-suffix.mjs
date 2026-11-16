@@ -1,5 +1,8 @@
 import path from "node:path";
-import { isTestFile } from "./utils/test-files.mjs";
+
+function isTestFile(filename) {
+  return /tests?\/(javascripts\/)?(acceptance|integration|unit)/.test(filename);
+}
 
 function hasTestSuffix(filename) {
   return path.parse(filename).name.endsWith("-test");

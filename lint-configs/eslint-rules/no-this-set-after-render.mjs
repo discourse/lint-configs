@@ -87,10 +87,17 @@ export default {
     }
 
     let renderNames;
-    const renderedScopes = new WeakSet();
-    // Callbacks run after render even when defined before it, so they're
-    // reported once the whole function is known to render a template.
-    const pendingCallbacks = new Map();
+    // Per function: where it first renders a `<template>`, and its `this.set`
+    // calls. Callbacks run after render even when defined before it, so the
+    // calls are only judged once the whole function has been seen.
+    const functions = new Map();
+
+    function functionInfo(scope) {
+      if (!functions.has(scope)) {
+        functions.set(scope, { renderStart: Infinity, calls: [] });
+      }
+      return functions.get(scope);
+    }
 
     function isTemplateRender(node) {
       return (
@@ -100,18 +107,19 @@ export default {
       );
     }
 
-    function report(node, messageId, method) {
-      context.report({ node, messageId, data: { method } });
-    }
+    function reportCalls(scope) {
+      const { renderStart, calls } = functions.get(scope) ?? { calls: [] };
+      functions.delete(scope);
 
-    function reportPendingCallbacks(scope) {
-      if (renderedScopes.has(scope)) {
-        for (const { node, method } of pendingCallbacks.get(scope) ?? []) {
-          report(node, "inCallback", method);
+      for (const { node, method, inArrow } of calls) {
+        if (inArrow ? renderStart < Infinity : node.range[0] > renderStart) {
+          context.report({
+            node,
+            messageId: inArrow ? "inCallback" : "afterRender",
+            data: { method },
+          });
         }
       }
-
-      pendingCallbacks.delete(scope);
     }
 
     return {
@@ -129,27 +137,17 @@ export default {
           return;
         }
 
-        if (isTemplateRender(node)) {
-          renderedScopes.add(scope);
-          return;
-        }
-
         const method = thisSetMethod(node);
-        if (!method) {
-          return;
-        }
-
-        if (inArrow) {
-          const pending = pendingCallbacks.get(scope) ?? [];
-          pending.push({ node, method });
-          pendingCallbacks.set(scope, pending);
-        } else if (renderedScopes.has(scope)) {
-          report(node, "afterRender", method);
+        if (method) {
+          functionInfo(scope).calls.push({ node, method, inArrow });
+        } else if (isTemplateRender(node)) {
+          const info = functionInfo(scope);
+          info.renderStart = Math.min(info.renderStart, node.range[0]);
         }
       },
 
-      "FunctionExpression:exit": reportPendingCallbacks,
-      "FunctionDeclaration:exit": reportPendingCallbacks,
+      "FunctionExpression:exit": reportCalls,
+      "FunctionDeclaration:exit": reportCalls,
     };
   },
 };
