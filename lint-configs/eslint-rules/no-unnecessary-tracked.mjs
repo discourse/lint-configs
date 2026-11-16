@@ -1,3 +1,5 @@
+import { hasTrackedDecorator } from "./utils/tracked.mjs";
+
 // key: the mutable argument name
 // value array: component names
 const MUTATING_COMPONENTS = {
@@ -67,15 +69,6 @@ function getAssignedPropertyName(node) {
   if (node.computed && node.property?.type === "Literal") {
     return node.property.value;
   }
-}
-
-function hasTrackedDecorator(node) {
-  return node.decorators.some((decorator) => {
-    return (
-      decorator.expression.type === "Identifier" &&
-      decorator.expression.name === "tracked"
-    );
-  });
 }
 
 export default {
