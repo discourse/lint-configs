@@ -13,6 +13,8 @@ ruleTester.run("deprecated-imports", rule, {
   valid: [
     `import getUrl from "discourse/lib/get-url";`,
     `import { trustHTML } from "@ember/template";`,
+    `import { isTrustedHTML } from "@ember/template";`,
+    `import { isHTMLSafe } from "some-other-package";\nisHTMLSafe(value);`,
     `import { getOwner } from "@ember/owner";`,
     `import { isArray } from "@ember/array";`,
     `import { registerTransformer } from "discourse/lib/registry/transformers";`,
@@ -84,6 +86,96 @@ ruleTester.run("deprecated-imports", rule, {
         },
       ],
       output: `import { trustHTML as emberHtmlSafe } from "@ember/template";`,
+    },
+    {
+      code: `import { htmlSafe, trustHTML } from "@ember/template";\nhtmlSafe(a) + trustHTML(b);`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: null,
+    },
+
+    // isHTMLSafe → isTrustedHTML
+    {
+      code: `import { isHTMLSafe } from "@ember/template";`,
+      errors: [
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { isTrustedHTML } from "@ember/template";`,
+    },
+    {
+      code: `import { isHTMLSafe } from "@ember/template";\nif (isHTMLSafe(value)) {}\nconst check = isHTMLSafe;`,
+      errors: [
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { isTrustedHTML } from "@ember/template";\nif (isTrustedHTML(value)) {}\nconst check = isTrustedHTML;`,
+    },
+    {
+      code: `import { isHTMLSafe as isSafe } from "@ember/template";\nisSafe(value);`,
+      errors: [
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { isTrustedHTML as isSafe } from "@ember/template";\nisSafe(value);`,
+    },
+    {
+      code: `import { htmlSafe, isHTMLSafe } from "@ember/template";`,
+      errors: [
+        {
+          message:
+            "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
+        },
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { trustHTML, isTrustedHTML } from "@ember/template";`,
+    },
+    {
+      languageOptions: { parser: EmberEslintParser },
+      filename: "component.gjs",
+      code: `import { isHTMLSafe } from "@ember/template";\n<template>{{if (isHTMLSafe @html) "trusted"}}</template>`,
+      errors: [
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: `import { isTrustedHTML } from "@ember/template";\n<template>{{if (isTrustedHTML @html) "trusted"}}</template>`,
+    },
+    {
+      // The new name is already imported, so a rename would declare it twice.
+      code: `import { isHTMLSafe, isTrustedHTML } from "@ember/template";\nisHTMLSafe(a) || isTrustedHTML(b);`,
+      errors: [
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: null,
+    },
+    {
+      // A local `isTrustedHTML` would capture the renamed reference.
+      code: `import { isHTMLSafe } from "@ember/template";\nfunction check(isTrustedHTML, value) {\n  return isTrustedHTML && isHTMLSafe(value);\n}`,
+      errors: [
+        {
+          message:
+            "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+        },
+      ],
+      output: null,
     },
     {
       code: `import { getOwner } from "@ember/application";`,
