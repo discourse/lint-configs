@@ -1,3 +1,53 @@
+/**
+ * Builds a fix that renames an imported specifier to `newName`. When the import
+ * isn't aliased, the fix also renames every reference to it.
+ *
+ * The fix is skipped when `newName` is already bound where a renamed identifier
+ * would land: in the module, the rename would declare the name twice, and in an
+ * inner scope, it would point the reference at a different variable.
+ *
+ * @param {import("eslint").Rule.RuleContext} context - The rule context.
+ * @param {string} newName - The name to rename the import to.
+ * @returns {(fixer: import("eslint").Rule.RuleFixer, specifier: import("estree").ImportSpecifier) => import("eslint").Rule.Fix[] | null}
+ *   The fix function, which returns `null` when renaming isn't safe.
+ */
+function renameImport(context, newName) {
+  return (fixer, specifier) => {
+    const fixes = [fixer.replaceText(specifier.imported, newName)];
+
+    if (specifier.local.name !== specifier.imported.name) {
+      return fixes;
+    }
+
+    const [variable] = context.sourceCode.getDeclaredVariables(specifier);
+    if (!variable) {
+      return fixes;
+    }
+
+    if (variable.scope.set.has(newName)) {
+      return null;
+    }
+
+    for (const ref of variable.references) {
+      for (
+        let scope = ref.from;
+        scope && scope !== variable.scope;
+        scope = scope.upper
+      ) {
+        if (scope.set.has(newName)) {
+          return null;
+        }
+      }
+
+      if (ref.identifier !== specifier.local) {
+        fixes.push(fixer.replaceText(ref.identifier, newName));
+      }
+    }
+
+    return fixes;
+  };
+}
+
 export default {
   meta: {
     type: "suggestion",
@@ -94,32 +144,13 @@ export default {
             "htmlSafe",
             () =>
               "'htmlSafe' is deprecated. Use 'trustHTML' from '@ember/template' instead.",
-            (fixer, specifier) => {
-              const fixes = [
-                fixer.replaceText(specifier.imported, "trustHTML"),
-              ];
-
-              if (specifier.local.name === specifier.imported.name) {
-                const moduleScope = context.sourceCode.scopeManager.scopes.find(
-                  (s) => s.type === "module"
-                );
-                const variable = moduleScope?.variables.find(
-                  (v) => v.name === specifier.local.name
-                );
-
-                if (variable) {
-                  for (const ref of variable.references) {
-                    if (ref.identifier !== specifier.local) {
-                      fixes.push(
-                        fixer.replaceText(ref.identifier, "trustHTML")
-                      );
-                    }
-                  }
-                }
-              }
-
-              return fixes;
-            }
+            renameImport(context, "trustHTML")
+          );
+          denyImporting(
+            "isHTMLSafe",
+            () =>
+              "'isHTMLSafe' is deprecated. Use 'isTrustedHTML' from '@ember/template' instead.",
+            renameImport(context, "isTrustedHTML")
           );
         } else if (node.source.value === "@ember/array") {
           const messageTemplate = (symbolName) =>
@@ -145,32 +176,7 @@ export default {
             "trackedArray",
             () =>
               "'trackedArray' is deprecated. Use 'autoTrackedArray' from 'discourse/lib/tracked-tools' instead.",
-            (fixer, specifier) => {
-              const fixes = [
-                fixer.replaceText(specifier.imported, "autoTrackedArray"),
-              ];
-
-              if (specifier.local.name === specifier.imported.name) {
-                const moduleScope = context.sourceCode.scopeManager.scopes.find(
-                  (s) => s.type === "module"
-                );
-                const variable = moduleScope?.variables.find(
-                  (v) => v.name === specifier.local.name
-                );
-
-                if (variable) {
-                  for (const ref of variable.references) {
-                    if (ref.identifier !== specifier.local) {
-                      fixes.push(
-                        fixer.replaceText(ref.identifier, "autoTrackedArray")
-                      );
-                    }
-                  }
-                }
-              }
-
-              return fixes;
-            }
+            renameImport(context, "autoTrackedArray")
           );
         }
       },
