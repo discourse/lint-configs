@@ -119,6 +119,23 @@ ruleTester.run("no-unnecessary-tracked", rule, {
         }
       `,
     },
+    // they forward the arg to a mutating child
+    {
+      filename: "javascripts/discourse/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked enabled = false;
+          @tracked selectedId;
+
+          <template>
+            <PreferenceCheckbox @checked={{this.enabled}} />
+            <InstallThemeItem @selection={{this.selectedId}} />
+          </template>
+        }
+      `,
+    },
     {
       filename: "frontend/discourse/app/service/baz.js",
       code: `
@@ -186,6 +203,60 @@ ruleTester.run("no-unnecessary-tracked", rule, {
       errors: [
         {
           message: "`count` property is @tracked but isn't modified anywhere.",
+        },
+      ],
+    },
+    // these report changes through callbacks instead of writing the arg
+    {
+      filename: "frontend/discourse/admin/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked postAction = "delete";
+          @tracked reason;
+
+          <template>
+            <AdminPenaltyPostAction @postAction={{this.postAction}} />
+            <AdminPenaltyReason @reason={{this.reason}} />
+          </template>
+        }
+      `,
+      errors: [
+        {
+          message:
+            "`postAction` property is @tracked but isn't modified anywhere.",
+        },
+        {
+          message: "`reason` property is @tracked but isn't modified anywhere.",
+        },
+      ],
+    },
+    {
+      filename: "frontend/discourse/app/components/foo-bar.gjs",
+      code: `
+        import Component from "@glimmer/component";
+
+        export default class FooBar extends Component {
+          @tracked message;
+          @tracked isConfirmed = false;
+
+          <template>
+            <FlagActionType
+              @message={{this.message}}
+              @isConfirmed={{this.isConfirmed}}
+            />
+          </template>
+        }
+      `,
+      errors: [
+        {
+          message:
+            "`message` property is @tracked but isn't modified anywhere.",
+        },
+        {
+          message:
+            "`isConfirmed` property is @tracked but isn't modified anywhere.",
         },
       ],
     },

@@ -1,7 +1,7 @@
 import { hasTrackedDecorator } from "./utils/tracked.mjs";
 
-// key: the mutable argument name
-// value array: component names
+// Components that write an arg back to the caller, directly or through a child they
+// forward it to. key: the arg, value: local component names
 const MUTATING_COMPONENTS = {
   "@value": [
     "Input",
@@ -20,12 +20,8 @@ const MUTATING_COMPONENTS = {
     "InstallThemeItem",
     "ChatToTopicSelector",
   ],
-  "@postAction": ["AdminPenaltyPostAction"],
-  "@reason": ["AdminPenaltyReason"],
   "@tags": ["TagChooser", "ChatToTopicSelector"],
   "@capsLockOn": ["PasswordField", "DPasswordField"],
-  "@message": ["FlagActionType"],
-  "@isConfirmed": ["FlagActionType"],
   "@topicTitle": ["ChatToTopicSelector"],
   "@categoryId": ["ChatToTopicSelector"],
 };
