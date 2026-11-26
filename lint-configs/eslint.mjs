@@ -42,6 +42,7 @@ import noUnusedServices from "./eslint-rules/no-unused-services.mjs";
 import pluginApiNoVersion from "./eslint-rules/plugin-api-no-version.mjs";
 import pluginOutletLazyHash from "./eslint-rules/plugin-outlet-lazy-hash.mjs";
 import relativeImportExtensions from "./eslint-rules/relative-import-extensions.mjs";
+import renderGlimmerNoInlineComponent from "./eslint-rules/render-glimmer-no-inline-component.mjs";
 import serviceInjectImport from "./eslint-rules/service-inject-import.mjs";
 import sortClassMembers from "./eslint-rules/sort-class-members.mjs";
 import templateAttributeGrouping from "./eslint-rules/template-attribute-grouping.mjs";
@@ -184,6 +185,7 @@ export default [
           "no-route-template": noRouteTemplate,
           "template-attribute-grouping": templateAttributeGrouping,
           "template-tag-no-self-this": templateTagNoSelfThis,
+          "render-glimmer-no-inline-component": renderGlimmerNoInlineComponent,
           "moved-packages-import-paths": movedPackagesImportPaths,
           "no-computed-macros": noComputedMacros,
           "no-discourse-computed": noDiscourseComputed,
@@ -423,6 +425,7 @@ export default [
       "discourse/no-redundant-destroyed-check": ["error"],
       "discourse/template-attribute-grouping": ["error"],
       "discourse/template-tag-no-self-this": ["error"],
+      "discourse/render-glimmer-no-inline-component": ["error"],
       "discourse/no-route-template": ["error"],
       "discourse/moved-packages-import-paths": ["error"],
       "discourse/test-filename-suffix": ["error"],
