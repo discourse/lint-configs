@@ -11,9 +11,32 @@ const fixtures = join(
 );
 const filename = join(fixtures, "importer.js");
 const nestedFilename = join(fixtures, "folder", "importer.js");
+const themeTestFilename = join(
+  fixtures,
+  "theme",
+  "test",
+  "acceptance",
+  "importer-test.gjs"
+);
+const themeScriptFilename = join(
+  fixtures,
+  "theme",
+  "javascripts",
+  "discourse",
+  "components",
+  "importer.gjs"
+);
 
 function useExtension(specifier, fixed) {
   return [{ messageId: "useExtension", data: { specifier, fixed } }];
+}
+
+function replaceExtension(specifier, fixed) {
+  return [{ messageId: "replaceExtension", data: { specifier, fixed } }];
+}
+
+function missingFile(specifier) {
+  return [{ messageId: "missingFile", data: { specifier } }];
 }
 
 ruleTester.run("relative-import-extensions", rule, {
@@ -62,6 +85,26 @@ ruleTester.run("relative-import-extensions", rule, {
       name: "a call that is not importSync",
       code: `require("./helper");`,
       filename,
+    },
+    {
+      name: "a `.js` import of a `.ts` file, which TypeScript resolves",
+      code: `import service from "./service.js";`,
+      filename,
+    },
+    {
+      name: "a theme test importing through the theme's module layout",
+      code: `import Card from "../../discourse/components/card.gjs";`,
+      filename: themeTestFilename,
+    },
+    {
+      name: "a theme test importing another test file",
+      code: `import helper from "./helper.js";`,
+      filename: themeTestFilename,
+    },
+    {
+      name: "a theme script importing a sibling",
+      code: `import Card from "./card.gjs";`,
+      filename: themeScriptFilename,
     },
   ],
 
@@ -177,6 +220,67 @@ ruleTester.run("relative-import-extensions", rule, {
       filename,
       output: null,
       errors: [{ messageId: "addExtension", data: { specifier: "./missing" } }],
+    },
+    {
+      name: "a `.gjs` renamed to `.gts`",
+      code: `import TypedComponent from "./typed-component.gjs";`,
+      filename,
+      output: `import TypedComponent from "./typed-component.gts";`,
+      errors: replaceExtension(
+        "./typed-component.gjs",
+        "./typed-component.gts"
+      ),
+    },
+    {
+      name: "a `.gts` renamed to `.gjs`",
+      code: `import Component from "./component.gts";`,
+      filename,
+      output: `import Component from "./component.gjs";`,
+      errors: replaceExtension("./component.gts", "./component.gjs"),
+    },
+    {
+      name: "a stale extension in a dynamic import",
+      code: `import("./typed-component.gjs");`,
+      filename,
+      output: `import("./typed-component.gts");`,
+      errors: replaceExtension(
+        "./typed-component.gjs",
+        "./typed-component.gts"
+      ),
+    },
+    {
+      name: "a missing file with an extension and no sibling",
+      code: `import missing from "./missing.gjs";`,
+      filename,
+      output: null,
+      errors: missingFile("./missing.gjs"),
+    },
+    {
+      name: "a theme test with a stale extension",
+      code: `import Card from "../../discourse/components/card.gts";`,
+      filename: themeTestFilename,
+      output: `import Card from "../../discourse/components/card.gjs";`,
+      errors: replaceExtension(
+        "../../discourse/components/card.gts",
+        "../../discourse/components/card.gjs"
+      ),
+    },
+    {
+      name: "a theme test without an extension",
+      code: `import Card from "../../discourse/components/card";`,
+      filename: themeTestFilename,
+      output: `import Card from "../../discourse/components/card.gjs";`,
+      errors: useExtension(
+        "../../discourse/components/card",
+        "../../discourse/components/card.gjs"
+      ),
+    },
+    {
+      name: "a theme test importing a missing file",
+      code: `import Missing from "../../discourse/components/missing.gjs";`,
+      filename: themeTestFilename,
+      output: null,
+      errors: missingFile("../../discourse/components/missing.gjs"),
     },
   ],
 });
